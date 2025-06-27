@@ -20,7 +20,6 @@
 
 // late allocation flag
 #define USE_PNR
-#define LSQ_LATE_EXECUTED 1
 
 /* }}} */
 
@@ -28,13 +27,13 @@ Resource::Resource(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<Po
     /* constructor {{{1 */
     : cluster(cls)
     , gen(aGen)
-    , avgRenameTime(fmt::format("({})_{}_{}_avgRenameTime", cpuid, cls->getName(), type))
-    , avgIssueTime(fmt::format("({})_{}_{}_avgIssueTime", cpuid, cls->getName(), type))
-    , avgExecuteTime(fmt::format("({})_{}_{}_avgExecuteTime", cpuid, cls->getName(), type))
-    , avgRetireTime(fmt::format("({})_{}_{}_avgRetireTime", cpuid, cls->getName(), type))
-    , safeHitTimeHist(fmt::format("({})_{}_{}_safeHitTimeHist", cpuid, cls->getName(), type))
-    , specHitTimeHist(fmt::format("({})_{}_{}_specHitTimeHist", cpuid, cls->getName(), type))
-    , latencyHitTimeHist(fmt::format("({})_{}_{}_latencyHitTimeHist", cpuid, cls->getName(), type))
+    , avgRenameTime(fmt::format("P({})_{}_{}_avgRenameTime", cpuid, cls->getName(), type))
+    , avgIssueTime(fmt::format("P({})_{}_{}_avgIssueTime", cpuid, cls->getName(), type))
+    , avgExecuteTime(fmt::format("P({})_{}_{}_avgExecuteTime", cpuid, cls->getName(), type))
+    , avgRetireTime(fmt::format("P({})_{}_{}_avgRetireTime", cpuid, cls->getName(), type))
+    , safeHitTimeHist(fmt::format("P({})_{}_{}_safeHitTimeHist", cpuid, cls->getName(), type))
+    , specHitTimeHist(fmt::format("P({})_{}_{}_specHitTimeHist", cpuid, cls->getName(), type))
+    , latencyHitTimeHist(fmt::format("P({})_{}_{}_latencyHitTimeHist", cpuid, cls->getName(), type))
     , lat(l)
     , coreid(cpuid)
     , usedTime(0) {
@@ -244,13 +243,11 @@ FULoad::FULoad(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGe
 StallCause FULoad::canIssue(Dinst *dinst) {
   /* canIssue {{{1 */
 
-  // FULoad::freeEntries <=0
   if (freeEntries <= 0) {
     I(freeEntries == 0);  // Can't be negative
     return OutsLoadsStall;
   }
 
-  // LSQ::freeEntries<0
   if (!lsq->hasFreeEntries()) {
     return OutsLoadsStall;
   }
@@ -271,10 +268,8 @@ StallCause FULoad::canIssue(Dinst *dinst) {
   storeset->insert(dinst);
   // call vtage->rename() here????
 
-  /*decFreeEntries():: lsq->unresolved++; lsq->freeEntries--;*/
   lsq->decFreeEntries();
 
-  // FULoad::freeEntries--
   if (!LSQlateAlloc) {
     freeEntries--;
   }
@@ -285,7 +280,6 @@ StallCause FULoad::canIssue(Dinst *dinst) {
 void FULoad::executing(Dinst *dinst) {
   /* executing {{{1 */
 
-  /*LSQlateAlloc = false*/
   if (LSQlateAlloc) {
     freeEntries--;
   }
@@ -568,6 +562,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
     return true;
   }
   if (flushing) {
+    freeEntries++;
     performed(dinst);
     return true;
   }
@@ -734,6 +729,10 @@ FUBranch::FUBranch(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<Po
     /* constructor {{{1 */
     : Resource(type, cls, aGen, l, cpuid), freeBranches(mb), drainOnMiss(dom) {
   I(freeBranches > 0);
+
+  auto cpu_section   = Config::get_string("soc", "core", cpuid);
+  auto bpred_section = Config::get_array_string(cpu_section, "bpred", 0);
+  bpred_delay        = Config::get_integer(bpred_section, "delay", 1);
 }
 /* }}} */
 
@@ -754,7 +753,7 @@ StallCause FUBranch::canIssue(Dinst *dinst) {
 void FUBranch::executing(Dinst *dinst) {
   /* executing {{{1 */
   cluster->executing(dinst);
-  executedCB::scheduleAbs(gen->nextSlot(dinst->has_stats()) + lat, this, dinst);
+  executedCB::scheduleAbs(gen->nextSlot(dinst->has_stats()) + lat + bpred_delay, this, dinst);
 }
 /* }}} */
 

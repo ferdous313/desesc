@@ -20,19 +20,19 @@ GProcessor::GProcessor(std::shared_ptr<Gmemory_system> gm, Hartid_t i)
     , IssueWidth(Config::get_integer("soc", "core", i, "issue_width"))
     , RetireWidth(Config::get_integer("soc", "core", i, "retire_width"))
     , RealisticWidth(RetireWidth < IssueWidth ? RetireWidth : IssueWidth)
-    , InstQueueSize(Config::get_integer("soc", "core", i, "instq_size"))
+    , InstQueueSize(Config::get_integer("soc", "core", i, "rename_instq_size"))
     , MaxROBSize(Config::get_integer("soc", "core", i, "rob_size", 4))
     , do_random_transients(Config::get_bool("soc", "core", i, "do_random_transients"))
     , memorySystem(gm)
     , rROB(Config::get_integer("soc", "core", i, "rob_size"))
     , ROB(MaxROBSize)
     , avgFetchWidth(fmt::format("P({})_avgFetchWidth", i))
-    , rrobUsed(fmt::format("({})_rrobUsed", i))  // avg
-    , robUsed(fmt::format("({})_robUsed", i))    // avg
-    , nReplayInst(fmt::format("({})_nReplayInst", i))
-    , nCommitted(fmt::format("({}):nCommitted", i))  // Should be the same as robUsed - replayed
-    , noFetch(fmt::format("({}):noFetch", i))
-    , noFetch2(fmt::format("({}):noFetch2", i))
+    , rrobUsed(fmt::format("P({})_rrobUsed", i))  // avg
+    , robUsed(fmt::format("P({})_robUsed", i))    // avg
+    , nReplayInst(fmt::format("P({})_nReplayInst", i))
+    , nCommitted(fmt::format("P({}):nCommitted", i))  // Should be the same as robUsed - replayed
+    , noFetch(fmt::format("P({}):noFetch", i))
+    , noFetch2(fmt::format("P({}):noFetch2", i))
     , pipeQ(i) {
   smt_size = Config::get_integer("soc", "core", i, "smt", 1, 32);
 
@@ -138,8 +138,6 @@ void GProcessor::fetch() {
         busy = true;
       }
     }
-  } else {
-    fmt::print("z");
   }
 }
 
@@ -349,7 +347,6 @@ void GProcessor::flush_transient_from_rob() {
         I(dstReady->isTransient());
       }
 
-<<<<<<< HEAD
         dinst->clearRATEntry();
 
        //printf("GPROCCESOR::flush_Rob : isRenamed current instID %ld and getParentScr1 ID is: %ld and and getParentScr2 ID is :
@@ -370,23 +367,10 @@ void GProcessor::flush_transient_from_rob() {
         }
     }//if_renamed*/
 
-  /*=======
-        bool hasDest = (dinst->getInst()->hasDstRegister());
-        if (hasDest) {
-          dinst->getCluster()->add_reg_pool();
-        }
-
-        dinst->getCluster()->delEntry();
-        dinst->destroyTransientInst();
-      }
-
-  >>>>>>> upstream/main*/
   // ROB.pop_from_back();
   // }
   while (!ROB.empty_pipe_in_cluster()) {
     auto *dinst = ROB.back_pipe_in_cluster();  // get last element from vector:back()
-
-    //<<<<<<< HEAD
 
     if (dinst->is_flush_transient() && dinst->isExecuted() && !dinst->hasDeps() && !dinst->hasPending()) {
       if (dinst->getCluster()->get_window_size() < dinst->getCluster()->get_window_maxsize() - 1) {
@@ -457,7 +441,6 @@ void GProcessor::flush_transient_inst_from_inst_queue() {
   }
   // printf("gprocessor::flush_transient_inst_queue Leaving  before new fetch!!!\n");
 }
-//<<<<<<< HEADDownward
 
 /*
 Addr_t GProcessor::random_addr_gen(){

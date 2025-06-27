@@ -235,6 +235,64 @@ public:
   Outcome predict(Dinst *dinst, bool doUpdate, bool doStats);
 };
 
+// FIXME: convert to just class Tahead;
+class Tahead;
+/*
+class Tahead {
+public:
+  bool getPrediction(uint64_t PCBRANCH) {
+    (void)PCBRANCH;
+    return false;
+  }
+};
+*/
+class BPTahead : public BPred {
+private:
+  BPBTB btb;
+
+  std::unique_ptr<Tahead> tahead;
+
+  const bool FetchPredict;
+
+protected:
+public:
+  BPTahead(int32_t i, const std::string &section, const std::string &sname);
+
+  void    fetchBoundaryBegin(Dinst *dinst);
+  void    fetchBoundaryEnd();
+  Outcome predict(Dinst *dinst, bool doUpdate, bool doStats);
+};
+
+// FIXME: convert to just class Tahead;
+class Tahead1;
+/*
+class Tahead1 {
+public:
+  bool getPrediction(uint64_t PCBRANCH) {
+    (void)PCBRANCH;
+    return false;
+  }
+};
+*/
+class BPTahead1 : public BPred {
+private:
+  BPBTB btb;
+
+  std::unique_ptr<Tahead1> tahead1;
+
+  const bool FetchPredict;
+
+protected:
+public:
+  BPTahead1(int32_t i, const std::string &section, const std::string &sname);
+
+  void    fetchBoundaryBegin(Dinst *dinst);
+  void    fetchBoundaryEnd();
+  Outcome predict(Dinst *dinst, bool doUpdate, bool doStats);
+};
+
+
+
 // class PREDICTOR;
 #include "predictor.hpp"
 class BPSuperbp : public BPred {
@@ -242,8 +300,10 @@ private:
   BPBTB btb;
 
   std::unique_ptr<PREDICTOR> superbp_p;
-
-  const bool FetchPredict;
+  const bool                 FetchPredict;
+  Stats_cntr                 gshare_must;
+  Stats_cntr                 gshare_correct;
+  Stats_cntr                 gshare_incorrect;
 
 protected:
 public:
@@ -581,8 +641,9 @@ private:
   int32_t bpredDelay2;
   int32_t bpredDelay3;
 
-  bool       Miss_Pred_Bool;
   Stats_cntr nBTAC;
+
+  Stats_cntr nZero_taken_delay;
 
   Stats_cntr nControl;
   Stats_cntr nBranch;
@@ -607,6 +668,8 @@ private:
   Stats_cntr nControlMiss3;
   Stats_cntr nBranchMiss3;
   Stats_cntr nBranchBTBMiss3;
+  Stats_cntr nFirstBias;
+  Stats_cntr nFirstBias_wrong;
 
   Stats_cntr nFixes1;
   Stats_cntr nFixes2;
@@ -628,13 +691,4 @@ public:
   TimeDelta_t predict(Dinst *dinst, bool *fastfix);
   bool        Miss_Prediction(Dinst *dinst);
   void        dump(const std::string &str) const;
-
-  void set_Miss_Pred_Bool() {
-    Miss_Pred_Bool = 1;  // Correct_Prediction==0 in enum before
-  }
-  void unset_Miss_Pred_Bool() {
-    Miss_Pred_Bool = 0;  // Correct_Prediction==0 in enum before
-  }
-
-  bool get_Miss_Pred_Bool_Val() { return Miss_Pred_Bool; }
 };
