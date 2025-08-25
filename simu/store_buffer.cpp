@@ -73,7 +73,7 @@ void Store_buffer::add_st(Dinst *dinst) {
     line.set_waiting_wb();
 
     CallbackBase *cb = ownership_doneCB::create(this, st_addr);
-    if (dl1) {
+    if (dl1 && !dinst->isTransient()) {
       MemRequest::sendReqWrite(dl1, dinst->has_stats(), st_addr, dinst->getPC(), cb);
     } else {
       cb->schedule(1);

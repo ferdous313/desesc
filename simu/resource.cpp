@@ -18,6 +18,9 @@
 #include "resource.hpp"
 #include "tracer.hpp"
 
+// Comment if you need to benchmark without SCB
+#define ENABLE_SCB
+
 // late allocation flag
 #define USE_PNR
 
@@ -566,17 +569,31 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
     performed(dinst);
     return true;
   }
+
+#ifdef ENABLE_SCB
   if (!scb->can_accept_st(dinst->getAddr())) {
     return false;
   }
+#endif
 
   if (firstLevelMemObj->isBusy(dinst->getAddr())) {
     return false;
   }
 
-  scb->add_st(dinst);
+#ifdef ENABLE_SCB
+    scb->add_st(dinst);
+    performed(dinst);
+#else
+    if (enableDcache && !dinst->isTransient()) {
+    MemRequest::sendReqWrite(firstLevelMemObj,
+                             dinst->has_stats(),
+                             dinst->getAddr(),
+                             dinst->getPC(),
+                             performedCB::create(this, dinst));
+    }
+#endif
 
-  if (enableDcache && !dinst->isTransient()) {
+ /*original if (enableDcache && !dinst->isTransient()) {
     MemRequest::sendReqWrite(firstLevelMemObj,
                              dinst->has_stats(),
                              dinst->getAddr(),
@@ -584,7 +601,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
                              performedCB::create(this, dinst));
   } else {
     performed(dinst);
-  }
+  }original*/
 
   freeEntries++;
 
