@@ -302,7 +302,12 @@ void FULoad::executing(Dinst *dinst) {
     storeset->stldViolation(qdinst, dinst);
   }
 
-  if (dinst->isLoadForwarded() || scb->is_ld_forward(dinst->getAddr()) || !enableDcache || dinst->is_destroy_transient()) {
+#ifdef ENABLE_SCB
+  if (dinst->isLoadForwarded() || scb->is_ld_forward(dinst->getAddr()) || !enableDcache || dinst->is_destroy_transient())
+#else
+  if (dinst->isLoadForwarded() || !enableDcache || dinst->is_destroy_transient())
+#endif
+  {
     performedCB::scheduleAbs(when + LSDelay, this, dinst);
     dinst->markDispatched();
 

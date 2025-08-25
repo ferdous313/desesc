@@ -5,7 +5,7 @@ module(
 )
 
 # Compiler rules
-bazel_dep(name = "rules_cc", version = "0.1.2")
+bazel_dep(name = "rules_cc", version = "0.2.0")
 bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 
 bazel_dep(name = "abseil-cpp", version = "20250512.1") # 20240722.0.bcr.2")
@@ -58,10 +58,10 @@ http_archive(
 # superbp
 http_archive(
     name = "superbp",
-    sha256 = "6a64e6b9083a6935f1c541e966600eda70f01c0abf7adeb495d54470909d680a",
-    strip_prefix = "superbp-defafae5f352970c292887538cd91d05d4cf3cbc",
+    sha256 = "ae02a45d835c5a3ebb772cfeba4bb97a6c87996d4fbed9725bb12c6698a1f037",
+    strip_prefix = "superbp-6ca757ec5bd7b6560077eb2b898a8fa06cac8b41",
     urls = [
-      "https://github.com/masc-ucsc/superbp/archive/defafae5f352970c292887538cd91d05d4cf3cbc.zip",
+      "https://github.com/masc-ucsc/superbp/archive/6ca757ec5bd7b6560077eb2b898a8fa06cac8b41.zip",
     ],
 )
 
