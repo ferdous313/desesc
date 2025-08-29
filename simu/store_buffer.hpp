@@ -42,7 +42,6 @@ public:
   bool is_ld_forward(Addr_t addr_off) const { return word_present[addr_off >> 2]; }
 
   void set_clean() { state = State::Clean; }
-
   bool is_clean() const { return state == State::Clean; }
   bool is_waiting_wb() const { return state == State::Uncoherent; }
 };
@@ -52,10 +51,11 @@ protected:
   MemObj* dl1;
 
   // FA structure, so a map is fine
-  absl::flat_hash_map<Addr_t, Store_buffer_line> lines;
+  absl::flat_hash_map<Addr_t, Store_buffer_line> scb_lines_map;
 
   int    scb_size;
   int    scb_clean_lines;
+  int    scb_lines_num;
   size_t line_size;
   size_t line_size_addr_bits;
   size_t line_size_mask;
@@ -72,7 +72,11 @@ public:
   ~Store_buffer() {}
 
   bool can_accept_st(Addr_t st_addr) const;
+  bool can_accept(Addr_t st_addr)    const;
   void add_st(Dinst* dinst);
+  void insert(Dinst* dinst);
+  void remove(Dinst* dinst);
+  bool find(Dinst *dinst);
 
   bool is_ld_forward(Addr_t ld_addr) const;
 };
