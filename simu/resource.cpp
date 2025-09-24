@@ -19,7 +19,7 @@
 #include "tracer.hpp"
 
 // Comment if you need to benchmark without SCB
-#define ENABLE_SCB
+//#define ENABLE_SCB
 
 // late allocation flag
 #define USE_PNR
@@ -313,8 +313,14 @@ void FULoad::executing(Dinst *dinst) {
   {
     printf("FULoad::Resource::Executing::isLoadForwared::cache::dinst  %ld\n", dinst->getID());
     if (dinst->is_spec()) {  // Future Spectre Related
-    performed_spec_CB::scheduleAbs(when + LSDelay, this, dinst);
-    dinst->markDispatched();
+#ifdef ENABLE_SCB
+      performed_spec_CB::scheduleAbs(when + LSDelay, this, dinst);
+      dinst->markDispatched();
+#endif
+#ifndef ENABLE_SCB
+      performedCB::scheduleAbs(when + LSDelay, this, dinst);
+      dinst->markDispatched();
+#endif
     } else if(dinst->is_safe()){
     performedCB::scheduleAbs(when + LSDelay, this, dinst);
     dinst->markDispatched();
