@@ -101,7 +101,7 @@ void Dinst::dump(std::string_view str) {
 }
 
 void Dinst::clearRATEntry() {
-  // printf("Dinst:clearRATEntry :: instID %ld\n", this->getID());
+   printf("Dinst:clearRATEntry :: instID %ld\n", this->getID());
   I(RAT1Entry);
   if ((*RAT1Entry) == this) {
     // printf("Dinst:clearRATEntry :: setting RAT1entry =0 for instID %ld\n", this->getID());
@@ -245,6 +245,7 @@ void Dinst::destroy() {
   resource = nullptr;  // Needed to have GC
   cluster  = nullptr;
   dInstPool.in(this);
+  printf("Dinst::Destroy() :: dinst  %ld\n", getID());
 }
 void Dinst::destroyTransientInst() {
   // I(nDeps == 0);  // No deps src

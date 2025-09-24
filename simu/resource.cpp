@@ -245,6 +245,7 @@ FULoad::FULoad(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGe
 
 StallCause FULoad::canIssue(Dinst *dinst) {
   /* canIssue {{{1 */
+  printf("FULoad::Resource::canIssue():: Entering Canissue() dinst  %ld\n", dinst->getID());
 
   if (freeEntries <= 0) {
     I(freeEntries == 0);  // Can't be negative
@@ -276,6 +277,8 @@ StallCause FULoad::canIssue(Dinst *dinst) {
   if (!LSQlateAlloc) {
     freeEntries--;
   }
+
+  printf("FULoad::Resource::canIssue():: successfully Canissue() dinst  %ld\n", dinst->getID());
   return NoStall;
 }
 /* }}} */
@@ -308,33 +311,54 @@ void FULoad::executing(Dinst *dinst) {
   if (dinst->isLoadForwarded() || !enableDcache || dinst->is_destroy_transient())
 #endif
   {
+    printf("FULoad::Resource::Executing::isLoadForwared::cache::dinst  %ld\n", dinst->getID());
+    if (dinst->is_spec()) {  // Future Spectre Related
+    performed_spec_CB::scheduleAbs(when + LSDelay, this, dinst);
+    dinst->markDispatched();
+    } else if(dinst->is_safe()){
     performedCB::scheduleAbs(when + LSDelay, this, dinst);
     dinst->markDispatched();
 
     pref->exe(dinst);
-  } else {
+  } 
+  }else {
     cacheDispatchedCB::scheduleAbs(when, this, dinst);
   }
 }
+
 
 /* }}} */
 
 void FULoad::cacheDispatched(Dinst *dinst) {
   /* cacheDispatched {{{1 */
 
+  printf("Resource::cacheDispatched::Entering CacheDispatched dinst  %ld\n", dinst->getID());
   I(enableDcache);
   I(!dinst->isLoadForwarded());
 
   dinst->markDispatched();
-
-  if (false && dinst->is_spec()) {  // Future Spectre Related
+//make sure retire() do not destroy befor the performcb comes::
+  //mark->retired();
+  //printf("Resource::cacheDispatched::Entering CacheDispatched dinst  %ld\n", dinst->getID());
+  if (dinst->is_spec()) {  // Future Spectre Related
+#ifdef ENABLE_SCB
+    printf("Resource::cacheDispatched::sendSpecL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+    MemRequest::sendSpecReqDL1Read(firstLevelMemObj,
+                                   dinst->has_stats(),
+                                   dinst->getAddr(),
+                                   dinst->getPC(),
+                                   dinst,
+                                   performed_spec_CB::create(this, dinst));
+#else
     MemRequest::sendSpecReqDL1Read(firstLevelMemObj,
                                    dinst->has_stats(),
                                    dinst->getAddr(),
                                    dinst->getPC(),
                                    dinst,
                                    performedCB::create(this, dinst));
+#endif
   } else {
+    printf("Resource::cacheDispatched::sendsafeL1LoadREAD cache::dinst  %ld\n", dinst->getID());
     MemRequest::sendSafeReqDL1Read(firstLevelMemObj,
                                    dinst->has_stats(),
                                    dinst->getAddr(),
@@ -343,6 +367,7 @@ void FULoad::cacheDispatched(Dinst *dinst) {
                                    performedCB::create(this, dinst));
   }
 
+
   pref->exe(dinst);
 }
 /* }}} */
@@ -350,6 +375,11 @@ void FULoad::cacheDispatched(Dinst *dinst) {
 void FULoad::executed(Dinst *dinst) {
   /* executed {{{1 */
 
+  printf("FULoad::Resource::executed:: Entering executed() dinst  %ld\n", dinst->getID());
+  if(dinst->isExecuted()){
+    printf("FULoad::Resource::executed:: Already executed() so return from here!!! dinst  %ld\n", dinst->getID());
+    return;
+  }
   if (dinst->getChained()) {
     I(dinst->getFetchEngine());
     dinst->getFetchEngine()->chainLoadDone(dinst);
@@ -371,11 +401,55 @@ void FULoad::executed(Dinst *dinst) {
 bool FULoad::preretire(Dinst *dinst, [[maybe_unused]] bool flushing)
 /* retire {{{1 */
 {
+  printf("FULoad::Resource::Preretire:: Entering preretire()dinst  %ld\n", dinst->getID());
   bool done = dinst->isDispatched();
+  //L1 req sent to cache(done ==1)
   if (!done) {
+    printf("FULoad::Resource::Preretire:: Leaving preretire() readreq !done + not sent to cache:: NoT dispatched to cache read req !!! dinst  %ld\n", dinst->getID());
     return false;
   }
 
+#ifdef ENABLE_SCB
+  printf("FULoad::Resource::Preretire::cache req will dispatched shortly for dinst  %ld\n", dinst->getID());
+  if(dinst->is_spec()){
+    if(dinst->is_present_in_scb()){
+      printf("Resource::Preretire:: spec() + present_in_scb removing from scb and set_safe::dinst  %ld\n", dinst->getID());
+      scb->remove(dinst);
+      dinst->reset_present_in_scb();
+    }
+    dinst->set_safe();
+    executed(dinst);
+    dinst->markPerformed();
+    printf("Resource::Preretire::Before sending in preretire() spec::sendSafeL1Write::dinst  %ld\n", dinst->getID());
+    if (enableDcache && !dinst->isTransient()) {
+      printf("Resource::Preretire::sendSafeL1Write after PNR to Dcache::dinst  %ld\n", dinst->getID());
+      if(scb->is_clean_disp(dinst)){
+          /*MemRequest::sendReqWrite(firstLevelMemObj,
+                             dinst->has_stats(),
+                             dinst->getAddr(),
+                             dinst->getPC(),
+                             performed_safe_write_CB::create(this, dinst));*/
+          MemRequest::send_scb_clean_disp(firstLevelMemObj,
+                             dinst->has_stats(),
+                             dinst->getAddr(),
+                             dinst->getPC(),
+                             performed_safe_write_CB::create(this, dinst));
+          } else {
+           /*MemRequest::sendReqWrite(firstLevelMemObj, 
+                             dinst->has_stats(),
+                             dinst->getAddr(),
+                             dinst->getPC(),
+                             performed_safe_write_CB::create(this, dinst));*/
+          MemRequest::send_scb_dirty_disp(firstLevelMemObj,
+                             dinst->has_stats(),
+                             dinst->getAddr(),
+                             dinst->getPC(),
+                             performed_safe_write_CB::create(this, dinst));
+          }
+
+    }
+  }
+#endif
   if (!dinst->is_try_flush_transient()) {
 #ifdef USE_PNR
     freeEntries++;
@@ -466,11 +540,102 @@ bool FULoad::try_flushed(Dinst *dinst)
 
 void FULoad::performed(Dinst *dinst) {
   /* memory operation was globally performed {{{1 */
-  dinst->markPerformed();
-
-  executed(dinst);
+   printf("Resource::performed::Entering performed  dinst  %ld\n", dinst->getID());
+   dinst->markPerformed();
+   if(!dinst->isExecuted()){
+     printf("Resource::performed::executed in performed  dinst  %ld\n", dinst->getID());
+     executed(dinst);
+   }
+  /*if(dinst->isRetired()){
+    printf("Resource::performed_Safe_write:: LOADDestroying  dinst  %ld\n", dinst->getID());
+    dinst->destroy();
+   } else {
+    dinst->set_load_destroyed_retired();
+    printf("Resource::performed_Safe_write::NOT LOADDestroying  dinst  %ld\n", dinst->getID());
+   */
+  
 }
+ 
+
 /* }}} */
+
+void FULoad::performed_spec(Dinst *dinst) {
+  /* memory operation was globally performed {{{1 */
+ 
+/* if spec then put in the scb and send to core to execute;
+   but donot perform;wait until PNR/preretire()*/
+  printf("Resource::performed_SPEC::Entering SPEC performed dinst  %ld\n", dinst->getID());
+#ifdef ENABLE_SCB
+  if(dinst->is_spec()) {
+    printf("Resource::Performed_spec:: spec() + inserting in scb ::setting present_in_scb dinst  %ld\n", dinst->getID());
+    //scb->insert(dinst);
+    scb->add_st(dinst);
+    dinst->set_present_in_scb();
+  if(!dinst->isExecuted()){
+     executed(dinst);
+  }
+  printf("Resource::performed_spec::insert into scb + executed+ !perfomed yet(spec) dinst  %ld\n", dinst->getID());
+  }else if(dinst->is_safe()){
+    /*already preretire() happened before performedspec comes */
+    dinst->markPerformed();
+    if(!dinst->isExecuted()){
+      executed(dinst);
+    printf("Resource::FULoad::performed_spec::issafe() in preretire()+ no scb +L1loadwrite send from preretire() dinst  %ld\n", dinst->getID());
+    }
+  }
+  if(dinst->isRetired()){
+    if(dinst->is_load_destroyed_performed_spec()){
+    printf("Resource::performed_Spec::retired + performed_safe_write already done:: LOADDestroying  dinst  %ld\n", dinst->getID());
+    dinst->destroy();
+   } else {
+    dinst->set_load_destroyed_performed_safe_write();
+    printf("Resource::performed_Safe_write::retired + !performed_safe_write :: NOT done:: :NOT LOADDestroying  dinst  %ld\n", dinst->getID());
+   }
+  } else {
+    dinst->set_load_destroyed_performed_safe_write();
+    dinst->set_load_destroyed_retired_spec();
+    printf("Resource::performed_Safe_write:: !Retired::NOT LOADDestroying  dinst  %ld\n", dinst->getID());
+   }
+#endif
+}
+  
+void FULoad::performed_safe_write(Dinst *dinst) {
+  printf("Resource::performed_Safe_write::Entering  performed_safe_write dinst  %ld\n", dinst->getID());
+  dinst->markPerformed();
+  if(dinst->is_present_in_scb()){
+    scb->remove(dinst);
+    dinst->reset_present_in_scb();
+  }
+  //not in ooop::retire()::destroy
+  if(dinst->isRetired()){
+    if(dinst->is_load_destroyed_performed_safe_write()){
+      /*already performed_spec happened; so can be destroyed*/
+      printf("Resource::performed_Safe_write:: LOADDestroying  dinst  %ld\n", dinst->getID());
+      dinst->destroy();
+   }else {
+     /*setting destroyed to happen in performed_spec as performed_safe_write happens before*/
+     dinst->set_load_destroyed_performed_spec();
+     printf("Resource::performed_Safe_write:: retired + !performed_spec ::not done::NOT LOADDestroying  dinst  %ld\n", dinst->getID());
+   }
+  }else{
+    dinst->set_load_destroyed_performed_spec();
+    dinst->set_load_destroyed_retired_safe_write();
+    printf("Resource::performed_Safe_write:: !Retired::NOT LOADDestroying  dinst  %ld\n", dinst->getID());
+   }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /***********************************************/
 
@@ -514,6 +679,7 @@ StallCause FUStore::canIssue(Dinst *dinst) {
   lsq->decFreeEntries();
   freeEntries--;
 
+  printf("FUStore::Resource::Can issue for dinst  %ld\n", dinst->getID());
   return NoStall;
 }
 /* }}} */
@@ -521,6 +687,7 @@ StallCause FUStore::canIssue(Dinst *dinst) {
 void FUStore::executing(Dinst *dinst) {
   /* executing {{{1 */
 
+  printf("FUStore::Resource::Executing for dinst  %ld\n", dinst->getID());
   if (!dinst->getInst()->isStoreAddress()) {
     Dinst *qdinst = lsq->executing(dinst);
     if (qdinst) {
@@ -552,6 +719,7 @@ void FUStore::executing(Dinst *dinst) {
 
 void FUStore::executed(Dinst *dinst) {
   /* executed */
+  printf("FUStore::Resource::Executed for dinst  %ld\n", dinst->getID());
 
   if (dinst->getInst()->isStore()) {
     storeset->remove(dinst);
@@ -562,8 +730,10 @@ void FUStore::executed(Dinst *dinst) {
 
 bool FUStore::preretire(Dinst *dinst, bool flushing) {
   /* retire {{{1 */
+  printf("FUStore::Resource::Entering preretire() for dinst  %ld\n", dinst->getID());
 
   if (!dinst->isExecuted()) {
+    printf("FUStore::Resource:: !dinst->executed .so leaving preretire() for dinst  %ld\n", dinst->getID());
     return false;
   }
   if (dinst->getInst()->isStoreAddress()) {
@@ -577,11 +747,13 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
 
 #ifdef ENABLE_SCB
   if (!scb->can_accept_st(dinst->getAddr())) {
+    printf("FUStore::Resource:: scb !can_accept_st .so leaving preretire() for dinst  %ld\n", dinst->getID());
     return false;
   }
 #endif
 
   if (firstLevelMemObj->isBusy(dinst->getAddr())) {
+    printf("FUStore:: memObj busy .so leaving preretire() for dinst  %ld\n", dinst->getID());
     return false;
   }
 
@@ -590,6 +762,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
     performed(dinst);
 #else
     if (enableDcache && !dinst->isTransient()) {
+    printf("FUStore::Resource::preretire() sendReqWrite for dinst  %ld\n", dinst->getID());
     MemRequest::sendReqWrite(firstLevelMemObj,
                              dinst->has_stats(),
                              dinst->getAddr(),
@@ -609,6 +782,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
   }original*/
 
   freeEntries++;
+  printf("FUStore::Resource::Leaving preretire() for dinst  %ld\n", dinst->getID());
 
   return true;
 }
@@ -636,6 +810,7 @@ bool FUStore::try_flushed(Dinst *dinst)
 void FUStore::performed(Dinst *dinst) {
   /* memory operation was globally performed {{{1 */
 
+  printf("Resource::FUStore::performed::Entering  dinst  %ld\n", dinst->getID());
   setStats(dinst);  // Not retire for stores
   if (!dinst->isTransient()) {
     I(!dinst->isPerformed());
@@ -644,14 +819,17 @@ void FUStore::performed(Dinst *dinst) {
     dinst->destroy();
   }
   dinst->markPerformed();
+  printf("Resource::FUStore::performed::Leaving  markperformed() dinst  %ld\n", dinst->getID());
 }
 /* }}} */
 
 bool FUStore::retire(Dinst *dinst, bool flushing) {
   (void)flushing;
 
+  printf("FUStore::Resource::Entering retire() for dinst  %ld\n", dinst->getID());
   if (dinst->getInst()->isStoreAddress()) {
     setStats(dinst);
+    printf("FUStore::Resource::Leaving retire() for dinst  %ld\n", dinst->getID());
     return true;
   }
 
@@ -662,8 +840,13 @@ bool FUStore::retire(Dinst *dinst, bool flushing) {
 
   lsq->remove(dinst);
   lsq->incFreeEntries();
+  printf("FUStore::Resource::Leaving retire() for dinst  %ld\n", dinst->getID());
 
   return true;
+}
+void FUStore::performed_spec(Dinst*) {
+}
+void FUStore::performed_safe_write(Dinst*) {
 }
 
 /***********************************************/
@@ -741,6 +924,10 @@ void FUGeneric::performed(Dinst *dinst) {
   /* memory operation was globally performed {{{1 */
   dinst->markPerformed();
   I(0);  // It should be called only for memory operations
+}
+void FUGeneric::performed_spec(Dinst*) {
+}
+void FUGeneric::performed_safe_write(Dinst*) {
 }
 /* }}} */
 
@@ -833,6 +1020,12 @@ void FUBranch::performed(Dinst *dinst) {
   /* memory operation was globally performed {{{1 */
   dinst->markPerformed();
   I(0);  // It should be called only for memory operations
+}
+
+void FUBranch::performed_spec(Dinst*) {
+}
+
+void FUBranch::performed_safe_write(Dinst*) {
 }
 /* }}} */
 
@@ -967,3 +1160,9 @@ void FURALU::performed(Dinst *dinst)
   I(0);  // It should be called only for memory operations
 }
 /* }}} */
+void FURALU::performed_spec(Dinst*) {
+}
+void FURALU::performed_safe_write(Dinst*) {
+}
+
+

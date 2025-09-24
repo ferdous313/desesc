@@ -163,11 +163,17 @@ private:
   bool del_entry;
   bool is_rrob;
   bool present_in_rob;
+  bool present_in_scb;
   bool in_cluster;
 
   bool flush_transient;
   bool try_flush_transient;
   bool to_be_destroyed;
+  bool to_be_load_destroyed;
+  bool load_destroyed_retired_spec;
+  bool load_destroyed_retired_safe_write;
+  bool load_destroyed_performed_spec;
+  bool load_destroyed_performed_safe_write;
   bool destroy_transient;
   // END Boolean flags
 
@@ -271,12 +277,18 @@ private:
     del_entry      = false;
     is_rrob        = false;
     present_in_rob = false;
+    present_in_rob = false;
     in_cluster     = false;
 
-    flush_transient     = false;
-    try_flush_transient = false;
-    to_be_destroyed     = false;
-    destroy_transient   = false;
+    flush_transient                      = false;
+    try_flush_transient                  = false;
+    to_be_destroyed                      = false;
+    to_be_load_destroyed                 = false;
+    load_destroyed_retired_spec          = false;
+    load_destroyed_retired_safe_write    = false;
+    load_destroyed_performed_spec        = false;
+    load_destroyed_performed_safe_write  = false;
+    destroy_transient                    = false;
 
 #ifdef DINST_PARENT
     pend[0].setParentDinst(0);
@@ -306,15 +318,14 @@ protected:
 public:
   Dinst();
 #if 0
-  bool   isSpec       = false;
-  bool   isSafe       = false;
   bool   isLdCache    = false;
   Time_t memReqTimeL1 = 0;
 #endif
 
   bool is_safe() const { return !speculative; }
   bool is_spec() const { return speculative; }
-  void mark_safe() { speculative = false; }
+  void set_safe() { speculative = false; }
+  void set_spec() { speculative = true; }
 
   bool isTransient() const { return transient; }
   void setTransient() {
@@ -325,11 +336,54 @@ public:
     to_be_destroyed = true;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
   }
-
+  void set_to_be_load_destroyed() {
+    to_be_load_destroyed = true;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
   void clear_to_be_destroyed() {
     to_be_destroyed = false;
     // printf("Clearing is_to_be_destroyed_transient to false ::dinst %ld\n", ID);
   }
+
+   void set_load_destroyed_retired_spec() {
+    load_destroyed_retired_spec = true;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+   }
+  bool is_load_destroyed_retired_spec() {
+    return load_destroyed_retired_spec;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+
+
+  void set_load_destroyed_retired_safe_write() {
+    load_destroyed_retired_safe_write = true;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+  bool is_load_destroyed_retired_safe_write() {
+    return load_destroyed_retired_safe_write;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+
+
+  void set_load_destroyed_performed_spec() {
+    load_destroyed_performed_spec = true;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+  bool is_load_destroyed_performed_spec() {
+    return load_destroyed_performed_spec;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+
+
+  void set_load_destroyed_performed_safe_write() {
+    load_destroyed_performed_safe_write = true;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+  bool is_load_destroyed_performed_safe_write() {
+    return load_destroyed_performed_safe_write;
+    // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
+  }
+
 
   void mark_destroy_transient() {
     destroy_transient = true;
@@ -376,12 +430,16 @@ public:
 
   bool is_present_in_rob() { return present_in_rob; }
   void set_present_in_rob() { present_in_rob = true; }
+  bool is_present_in_scb() { return present_in_scb; }
+  void set_present_in_scb() { present_in_scb = true; }
+  void reset_present_in_scb() { present_in_scb = false;}
   bool is_flush_transient() { return flush_transient; }
   bool is_try_flush_transient() { return try_flush_transient; }
   bool has_stats() const { return keep_stats; }
   bool is_del_entry() { return del_entry; }
   bool is_present_rrob() { return is_rrob; }
   bool is_to_be_destroyed() { return to_be_destroyed; }
+  bool is_to_be_load_destroyed() { return to_be_load_destroyed; }
   //=======
 
   static Dinst *create(Instruction &&inst, Addr_t pc, Addr_t address, Hartid_t fid, bool keep_stats) {
@@ -883,8 +941,10 @@ public:
 
   bool isExecuted() const { return executed; }
   void markExecuted() {
-    I(issued != 0);
-    I(executed == 0);
+    if(!this->is_spec()){
+      I(issued != 0);
+      I(executed == 0);
+    }
     executed = globalClock;
   }
   void markExecutedTransient() {
@@ -892,7 +952,7 @@ public:
     // I(executed == 0);
     executed = globalClock;
   }
-
+  
   bool isExecuting() const { return executing; }
   void markExecuting() {
     I(issued != 0);
@@ -934,7 +994,7 @@ public:
     // std::cout << "Dinst::markperformed:: inst asm is " << getInst()->get_asm() << std::endl;
     //=======
     //>>>>>>> upstream/main
-    if (!this->isTransient()) {
+    if (!this->isTransient() && !this->is_spec()) {
       GI(!inst.isLoad(), executed != 0);
     }
 

@@ -120,9 +120,9 @@ void DepWindow::executed(Dinst *dinst) {
     dinst->markExecuted();
   }
 
-  // printf("DepWindow::::Executed mark_executed Inst %ld\n", dinst->getID());
+  printf("DepWindow::::Executed mark_executed Inst %ld\n", dinst->getID());
   dinst->clearRATEntry();
-  // printf("DepWindow::::Executed clear RAT  Inst %ld\n", dinst->getID());
+  printf("DepWindow::::Executed clear RAT  Inst %ld\n", dinst->getID());
   Tracer::stage(dinst, "WB");
   // printf("DepWindow::::Executed stage WB Inst %ld\n", dinst->getID());
 

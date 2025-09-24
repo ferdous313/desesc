@@ -50,13 +50,13 @@ type      = "dromajo"
 #xalancebk_load_FIXME 
 #load = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/xalancebmk/xalancebmk"
 #1.6%
-load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/xz_cpu2006docs/xz_cpu2006docs"
+#load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/xz_cpu2006docs/xz_cpu2006docs"
 
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/xz_cld/xz_cld"
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/gcc_fselective-scheduling/gcc_fselective-scheduling"
 #.7#
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_checkspam/perlbench_checkspam"
-#load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_diffmail/perlbench_diffmail"
+load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_diffmail/perlbench_diffmail"
 
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_splitmail/perlbench_splitmail"
 
@@ -229,6 +229,7 @@ smt = 1 # Number of STM context
 caches        = true  # set true to enable caches...
 #na caches        = falsm
 scb_size      = 32
+#scb_size      = 128
 memory_replay = false
 st_fwd_delay  = 2
 ldq_size      = 256

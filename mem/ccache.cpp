@@ -477,12 +477,14 @@ void CCache::CState::adjustState(MemRequest *mreq, int16_t portid) {
   state            = calcAdjustState(mreq);
 
   // I(ostate != state); // only if we have full MSHR
+  if(!mreq->notifyScbDirectly) {
   GI(mreq->isReq(), mreq->getAction() == ma_setExclusive || mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setValid);
   GI(mreq->isReqAck(),
      mreq->getAction() == ma_setExclusive || mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setShared);
   GI(mreq->isDisp(), mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setValid);
   GI(mreq->isSetStateAck(), mreq->getAction() == ma_setShared || mreq->getAction() == ma_setInvalid);
   GI(mreq->isSetState(), mreq->getAction() == ma_setShared || mreq->getAction() == ma_setInvalid);
+  }
 
   if (mreq->isDisp()) {
     I(state != I);
@@ -516,7 +518,9 @@ void CCache::CState::adjustState(MemRequest *mreq, int16_t portid) {
     //      shareState = state;
     // I(portid<0);
   } else {
+  if(!mreq->notifyScbDirectly) {
     I(state != I);
+  }
     I(mreq->isReq() || mreq->isReqAck());
     if (ostate != I && !mreq->isTopCoherentNode()) {
       // I(!mreq->isHomeNode());

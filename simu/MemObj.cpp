@@ -36,6 +36,7 @@ MemObj::MemObj(const std::string &sSection, const std::string &sName)
 
   // Create router (different objects may override the default router)
   router = new MRouter(this);
+  //scb    = new Store_buffer(this);
 
   if (!name.empty()) {
     std::string name_lc(name);

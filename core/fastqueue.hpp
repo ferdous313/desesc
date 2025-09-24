@@ -77,7 +77,9 @@ public:
 
   void pop() {
     I(nElems);
+    printf("fastqueue::pop()::Before nElems is %ld\n",nElems);
     nElems--;
+    printf("fastqueue::pop()::After nElems-- is %ld\n",nElems);
     start = (start + 1) & pipeMask;
   }
 

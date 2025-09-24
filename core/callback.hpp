@@ -803,6 +803,7 @@ protected:
 public:
   static CallbackMember1 *create(ClassType *i, Parameter1 a1) {
     CallbackMember1 *cb = cbPool.out();
+   // printf("callback::create:: dinst %ld\n", a1.getID());
     cb->instance        = i;
     cb->p1              = a1;
 

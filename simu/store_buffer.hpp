@@ -53,9 +53,10 @@ protected:
   // FA structure, so a map is fine
   absl::flat_hash_map<Addr_t, Store_buffer_line> scb_lines_map;
 
+  /*scb_size=32*/
   int    scb_size;
   int    scb_clean_lines;
-  int    scb_lines_num;
+  //int    scb_lines_num;
   size_t line_size;
   size_t line_size_addr_bits;
   size_t line_size_mask;
@@ -77,6 +78,7 @@ public:
   void insert(Dinst* dinst);
   void remove(Dinst* dinst);
   bool find(Dinst *dinst);
+  bool is_clean_disp(Dinst *dinst);
 
   bool is_ld_forward(Addr_t ld_addr) const;
 };

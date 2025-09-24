@@ -27,7 +27,8 @@ MemRequest::MemRequest()
     , startReqAckCB(this)
     , startSetStateCB(this)
     , startSetStateAckCB(this)
-    , startDispCB(this) {}
+    , startDispCB(this) {
+    }
 /*  */
 
 MemRequest::~MemRequest()
@@ -72,12 +73,17 @@ void MemRequest::startSetState() {
   currMemObj->setState(this);
 }
 void MemRequest::startSetStateAck() {
+  if(!notifyScbDirectly){
   I(mt == mt_setStateAck);
   I(!prefetch);
+  }
+
   currMemObj->setStateAck(this);
 }
 void MemRequest::startDisp() {
-  I(mt == mt_disp);
+  if(!notifyScbDirectly){
+    I(mt == mt_disp);
+  }
   currMemObj->disp(this);
 }
 
@@ -144,6 +150,7 @@ MemRequest *MemRequest::create(MemObj *mobj, Addr_t addr, bool keep_stats, Callb
   r->cb                 = cb;
   r->startClock         = globalClock;
   r->prefetch           = false;
+  r-> notifyScbDirectly = false;
   r->spec               = false;
   r->dropped            = false;
   r->retrying           = false;

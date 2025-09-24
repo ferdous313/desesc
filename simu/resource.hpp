@@ -87,12 +87,16 @@ public:
   virtual bool       preretire(Dinst *dinst, bool flushing) = 0;
   virtual bool       retire(Dinst *dinst, bool flushing)    = 0;
   virtual void       performed(Dinst *dinst)                = 0;
+  virtual void       performed_spec(Dinst *dinst)           = 0;
+  virtual void       performed_safe_write(Dinst *dinst)     = 0;
   virtual bool       flushed(Dinst *dinst)                  = 0;
   virtual bool       try_flushed(Dinst *dinst)              = 0;
 
-  using executingCB = CallbackMember1<Resource, Dinst *, &Resource::executing>;
-  using executedCB  = CallbackMember1<Resource, Dinst *, &Resource::executed>;
-  using performedCB = CallbackMember1<Resource, Dinst *, &Resource::performed>;
+  using executingCB                 = CallbackMember1<Resource, Dinst *, &Resource::executing>;
+  using executedCB                  = CallbackMember1<Resource, Dinst *, &Resource::executed>;
+  using performedCB                 = CallbackMember1<Resource, Dinst *, &Resource::performed>;
+  using performed_spec_CB           = CallbackMember1<Resource, Dinst *, &Resource::performed_spec>;
+  using performed_safe_write_CB     = CallbackMember1<Resource, Dinst *, &Resource::performed_safe_write>;
 
   [[nodiscard]] Time_t getUsedTime() const { return usedTime; }
   void                 setUsedTime() { usedTime = globalClock; }
@@ -164,6 +168,8 @@ public:
   bool       preretire(Dinst *dinst, bool flushing) final;
   bool       retire(Dinst *dinst, bool flushing) final;
   void       performed(Dinst *dinst) final;
+  void       performed_spec(Dinst *dinst) final;
+  void       performed_safe_write(Dinst *dinst) final;
   bool       flushed(Dinst *dinst) final;
   bool       try_flushed(Dinst *dinst) final;
 };
@@ -184,6 +190,8 @@ public:
   bool       preretire(Dinst *dinst, bool flushing) final;
   bool       retire(Dinst *dinst, bool flushing) final;
   void       performed(Dinst *dinst) final;
+  void       performed_spec(Dinst *dinst) final;
+  void       performed_safe_write(Dinst *dinst) final;
   bool       flushed(Dinst *dinst) final;
   bool       try_flushed(Dinst *dinst) final;
 };
@@ -200,6 +208,8 @@ public:
   bool       preretire(Dinst *dinst, bool flushing) final;
   bool       retire(Dinst *dinst, bool flushing) final;
   void       performed(Dinst *dinst) final;
+  void       performed_spec(Dinst *dinst) final;
+  void       performed_safe_write(Dinst *dinst) final;
   bool       flushed(Dinst *dinst) final;
   bool       try_flushed(Dinst *dinst) final;
 };
@@ -221,6 +231,8 @@ public:
   bool       preretire(Dinst *dinst, bool flushing) final;
   bool       retire(Dinst *dinst, bool flushing) final;
   void       performed(Dinst *dinst) final;
+  void       performed_spec(Dinst *dinst) final;
+  void       performed_safe_write(Dinst *dinst) final;
   bool       flushed(Dinst *dinst) final;
   bool       try_flushed(Dinst *dinst) final;
 };
@@ -241,6 +253,8 @@ public:
   bool       preretire(Dinst *dinst, bool flushing) final;
   bool       retire(Dinst *dinst, bool flushing) final;
   void       performed(Dinst *dinst) final;
+  void       performed_spec(Dinst *dinst) final;
+  void       performed_safe_write(Dinst *dinst) final;
   bool       flushed(Dinst *dinst) final;
   bool       try_flushed(Dinst *dinst) final;
 };

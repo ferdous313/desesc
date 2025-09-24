@@ -10,6 +10,7 @@
 #include "dinst.hpp"
 #include "iassert.hpp"
 #include "mrouter.hpp"
+#include "store_buffer.hpp"
 #include "port.hpp"
 
 class MemRequest;
@@ -38,11 +39,13 @@ class MemObj {
 private:
 protected:
   friend class MRouter;
+  friend class Store_buffer;
 
-  MRouter    *router;
-  std::string section;
-  std::string name;
-  std::string mem_type;
+  MRouter      *router;
+  //Store_buffer *scb;
+  std::string  section;
+  std::string  name;
+  std::string  mem_type;
 
   const uint16_t  id;
   static uint16_t id_counter;
@@ -77,7 +80,8 @@ public:
   bool isFirstLevelDL1() const { return firstLevelDL1; };
   bool isFirstLevelIL1() const { return firstLevelIL1; };
 
-  MRouter *getRouter() { return router; }
+  MRouter      *getRouter() { return router; }
+  //Store_buffer *get_scb() { return scb; }
 
   virtual void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase *cb = 0) = 0;
 

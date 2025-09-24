@@ -262,7 +262,7 @@ void Cluster::add_inst(Dinst *dinst) {
   //>>>>>>> upstream/main
 }
 
-//************ Executing Cluster Class
+//************ Executing Cluster Class is active here!!!
 
 void ExecutingCluster::executing(Dinst *dinst) {
   nready--;
