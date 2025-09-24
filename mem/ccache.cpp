@@ -909,7 +909,7 @@ void CCache::doDisp(MemRequest *mreq) {
     l = cacheBank->writeLine(addr, mreq->getPC());
   }
 
-  if (l == nullptr && victim && allocateMiss && !mreq->isPrefetch()) {
+  if (l == nullptr && !mreq->isPrefetch()) {
     MTRACE("doDisp allocateLine");
     l = allocateLine(addr, mreq);
   }
