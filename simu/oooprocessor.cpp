@@ -812,6 +812,13 @@ void OoOProcessor::retire() {
       printf("OOOProcessor::retire::Destroying  Inst %ld and TOTAL_ROB size is %ld\n ", dinst->getID(), ROB.size()+rROB.size());
       dinst->destroy();
     }
+    if(dinst->isPerformed() && dinst->is_load_scb_all()) {  // Stores can perform after retirement
+      printf("OOOProcessor::retire::Destroying  Inst %ld and TOTAL_ROB size is %ld\n ", dinst->getID(), ROB.size()+rROB.size());
+      dinst->destroy();
+    }
+
+
+
      if(dinst->is_load_destroyed_retired_spec() && dinst->is_load_destroyed_retired_safe_write()){
        /*both the FULoad::performed_spec and FULoad::performed_safe_write need to be execute before destroy in retire*/
         printf("OOOProcessor::retire::Destroying LOADdestroying Inst %ld and TOTAL_ROB size is %ld\n ", dinst->getID(), ROB.size()+rROB.size());

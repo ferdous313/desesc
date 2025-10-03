@@ -23,6 +23,12 @@ emul = ["drom_emu"]
 
 [drom_emu]
 type      = "dromajo"
+# Load big one
+load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/mcf/sp3"
+
+
+
+
 # Load a Checkpoint option
 #load_orginal_path_      = "../benchmarks/gcc_fgcse/gcc_fgcse"
 #.6%
@@ -56,7 +62,7 @@ type      = "dromajo"
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/gcc_fselective-scheduling/gcc_fselective-scheduling"
 #.7#
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_checkspam/perlbench_checkspam"
-load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_diffmail/perlbench_diffmail"
+#load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_diffmail/perlbench_diffmail"
 
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_splitmail/perlbench_splitmail"
 
@@ -66,15 +72,22 @@ load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_diffmail
 
 start_roi = false
 #<<<<<<< HEAD
-rabbit    = 1024
-detail    = 1024
-#time      = 100e3 #Number of Insts
-time      =1000000
+#rabbit    = 1024
+#detail    = 1024
+#time      = 100e3 
+#Number of Insts
+#time      =1000000
 #=======
 #rabbit    = 100000
 #detail    = 30000000
 #time      = 20000000
-
+#<<<<<<<<<<<<<
+rabbit    = 0
+detail    = 0
+#Number of Insts
+#time      = 10000
+time      = 50000000
+#time      = 100000000
 #>>>>>>> upstream/main
 [rand_emu]
 type = "random"  # Generate random instructions (coverage testing?)
@@ -213,8 +226,8 @@ frequency_mhz = 1000
 #=======
 bpred         = ["bp0","bp1"]
 #bpred         = ["bp1"]
-#do_random_transients = true
-do_random_transients = false
+do_random_transients = true
+#do_random_transients = false
 
 # Fetch parameters
 fetch_align       = true
@@ -350,12 +363,14 @@ port_banks = 32
 send_port_num = 1
 
 max_requests  = 32
+#Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
+#Free running cache::inlcusive ==false for free running cache
 
-#allocate_miss = true   # allocate on cache miss
+#allocate_miss = true   # allocate on cache miss 
 allocate_miss = false   # allocate_miss =false for free runing cache
 victim        = false   # victim cache allocation style
 coherent      = true
-#inclusive     = true
+#inclusive     = true   # inlcusive = false for free running cache
 inclusive     = false   # inlcusive = false for free running cache
 directory     = false
 
@@ -386,6 +401,9 @@ port_banks = 32
 send_port_num = 1
 
 max_requests  = 32
+
+#Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
+#Free running cache::inlcusive ==false for free running cache
 
 allocate_miss = true   # allocate on cache miss
 victim        = false  # victim cache allocation style
@@ -419,6 +437,9 @@ port_banks = 32
 send_port_num = 1
 
 max_requests  = 32
+
+#Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
+#Free running cache::inlcusive ==false for free running cache
 
 allocate_miss = true   # allocate on cache miss
 #allocate_miss = false   # allocate on free running cache 

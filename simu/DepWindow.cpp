@@ -95,6 +95,7 @@ void DepWindow::executed_flushed(Dinst *dinst) {
   }
 
   dinst->clearRATEntry();
+  printf("Resource::DepWindow::Entering   dinst  %ld\n", dinst->getID());
   Tracer::stage(dinst, "WB");
 }
 
@@ -108,6 +109,7 @@ void DepWindow::executed(Dinst *dinst) {
   // }
   // if(!dinst->isTransient()){
   //=======
+  printf("DepWindow::Executed:: Entering  executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
 
   if (!dinst->isTransient()) {
     //>>>>>>> upstream/main
@@ -123,6 +125,7 @@ void DepWindow::executed(Dinst *dinst) {
   printf("DepWindow::::Executed mark_executed Inst %ld\n", dinst->getID());
   dinst->clearRATEntry();
   printf("DepWindow::::Executed clear RAT  Inst %ld\n", dinst->getID());
+  printf("Resource::DepWindow::Stage WB  dinst  %ld\n", dinst->getID());
   Tracer::stage(dinst, "WB");
   // printf("DepWindow::::Executed stage WB Inst %ld\n", dinst->getID());
 
@@ -207,6 +210,7 @@ void DepWindow::executed(Dinst *dinst) {
       preSelect(dstReady);
     }
   }
+  printf("DepWindow::Executed:: Leaving  executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
 
   // dinst->flushfirst();//parent->first=0
   // printf("DepWindow::::Executed Exiting Transient Inst %ld\n", dinst->getID());

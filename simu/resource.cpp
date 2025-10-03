@@ -18,8 +18,10 @@
 #include "resource.hpp"
 #include "tracer.hpp"
 
-// Comment if you need to benchmark without SCB
-//#define ENABLE_SCB
+// SCB SPEC buffer : directly L3->SCB 
+//#define ENABLE_SCB_SPEC
+//SCB on for all stores and all loads: normalSCB
+#define ENABLE_SCB_ALL
 
 // late allocation flag
 #define USE_PNR
@@ -305,23 +307,25 @@ void FULoad::executing(Dinst *dinst) {
     storeset->stldViolation(qdinst, dinst);
   }
 
-#ifdef ENABLE_SCB
+#ifdef ENABLE_SCB_SPEC
   if (dinst->isLoadForwarded() || scb->is_ld_forward(dinst->getAddr()) || !enableDcache || dinst->is_destroy_transient())
 #else
-  if (dinst->isLoadForwarded() || !enableDcache || dinst->is_destroy_transient())
+  if (dinst->isLoadForwarded() || !enableDcache || dinst->is_destroy_transient() || scb->is_ld_forward(dinst->getAddr()))
 #endif
   {
     printf("FULoad::Resource::Executing::isLoadForwared::cache::dinst  %ld\n", dinst->getID());
     if (dinst->is_spec()) {  // Future Spectre Related
-#ifdef ENABLE_SCB
+#ifdef ENABLE_SCB_SPEC
       performed_spec_CB::scheduleAbs(when + LSDelay, this, dinst);
       dinst->markDispatched();
 #endif
-#ifndef ENABLE_SCB
+#ifndef ENABLE_SCB_SPEC
+      dinst->set_load_scb_all();
       performedCB::scheduleAbs(when + LSDelay, this, dinst);
       dinst->markDispatched();
 #endif
     } else if(dinst->is_safe()){
+    dinst->set_load_scb_all();
     performedCB::scheduleAbs(when + LSDelay, this, dinst);
     dinst->markDispatched();
 
@@ -347,8 +351,9 @@ void FULoad::cacheDispatched(Dinst *dinst) {
   //mark->retired();
   //printf("Resource::cacheDispatched::Entering CacheDispatched dinst  %ld\n", dinst->getID());
   if (dinst->is_spec()) {  // Future Spectre Related
-#ifdef ENABLE_SCB
-    printf("Resource::cacheDispatched::sendSpecL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+#ifdef ENABLE_SCB_SPEC
+    printf("Resource::cacheDispatched::SPEC_LOAD_SCB_SPEC::Performed_spec_CB::sendSpecL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+    printf("FULoad::Resource::Cachedispatched::dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
     MemRequest::sendSpecReqDL1Read(firstLevelMemObj,
                                    dinst->has_stats(),
                                    dinst->getAddr(),
@@ -356,6 +361,9 @@ void FULoad::cacheDispatched(Dinst *dinst) {
                                    dinst,
                                    performed_spec_CB::create(this, dinst));
 #else
+    printf("Resource::cacheDispatched::SPEC_LOAD_SCB_ALL::PerformedCB::sendSpecL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+    printf("FULoad::Resource::Cachedispatched::dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
+    dinst->set_load_scb_all();
     MemRequest::sendSpecReqDL1Read(firstLevelMemObj,
                                    dinst->has_stats(),
                                    dinst->getAddr(),
@@ -364,7 +372,9 @@ void FULoad::cacheDispatched(Dinst *dinst) {
                                    performedCB::create(this, dinst));
 #endif
   } else {
-    printf("Resource::cacheDispatched::sendsafeL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+    printf("Resource::cacheDispatched::SAFE_LOAD_SCB_ALL::PerformedCB::sendsafeL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+    printf("FULoad::Resource::Cachedispatched::dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
+    dinst->set_load_scb_all();
     MemRequest::sendSafeReqDL1Read(firstLevelMemObj,
                                    dinst->has_stats(),
                                    dinst->getAddr(),
@@ -381,7 +391,7 @@ void FULoad::cacheDispatched(Dinst *dinst) {
 void FULoad::executed(Dinst *dinst) {
   /* executed {{{1 */
 
-  printf("FULoad::Resource::executed:: Entering executed() dinst  %ld\n", dinst->getID());
+  printf("FULoad::Resource::executed:: Entering executed() dinst  %ld ai clockcycle %ld\n", dinst->getID(), globalClock);
   if(dinst->isExecuted()){
     printf("FULoad::Resource::executed:: Already executed() so return from here!!! dinst  %ld\n", dinst->getID());
     return;
@@ -400,7 +410,9 @@ void FULoad::executed(Dinst *dinst) {
   // dataRAT[dinst->getinst()->getDst1()] = dinst->getData();)
   //         dataRATptr[...] = 0 if dataRATotr[...] == dinst
 
+  printf("FULoad::Resource::executed:: Entering Cluster->executed() dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
   cluster->executed(dinst);
+  printf("FULoad::Resource::executed:: Leaving Resource::executed() dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
 }
 /* }}} */
 
@@ -415,17 +427,18 @@ bool FULoad::preretire(Dinst *dinst, [[maybe_unused]] bool flushing)
     return false;
   }
 
-#ifdef ENABLE_SCB
+#ifdef ENABLE_SCB_SPEC
   printf("FULoad::Resource::Preretire::cache req will dispatched shortly for dinst  %ld\n", dinst->getID());
   if(dinst->is_spec()){
+    printf("FULoad::Resource::Preretire::cache SPEC_LOAD will dispatched to L1 and then return to SPEC_BUFFER for dinst  %ld\n", dinst->getID());
     if(dinst->is_present_in_scb()){
       printf("Resource::Preretire:: spec() + present_in_scb removing from scb and set_safe::dinst  %ld\n", dinst->getID());
       scb->remove(dinst);
       dinst->reset_present_in_scb();
     }
     dinst->set_safe();
-    executed(dinst);
-    dinst->markPerformed();
+    //executed(dinst);
+    //dinst->markPerformed();
     printf("Resource::Preretire::Before sending in preretire() spec::sendSafeL1Write::dinst  %ld\n", dinst->getID());
     if (enableDcache && !dinst->isTransient()) {
       printf("Resource::Preretire::sendSafeL1Write after PNR to Dcache::dinst  %ld\n", dinst->getID());
@@ -546,11 +559,15 @@ bool FULoad::try_flushed(Dinst *dinst)
 
 void FULoad::performed(Dinst *dinst) {
   /* memory operation was globally performed {{{1 */
+   printf("FULoad::Resource::Performed:: Entering Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
    printf("Resource::performed::Entering performed  dinst  %ld\n", dinst->getID());
    dinst->markPerformed();
    if(!dinst->isExecuted()){
      printf("Resource::performed::executed in performed  dinst  %ld\n", dinst->getID());
+     printf("Resource::performed::Entering executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
+
      executed(dinst);
+     printf("Resource::performed:: Leaving executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
    }
   /*if(dinst->isRetired()){
     printf("Resource::performed_Safe_write:: LOADDestroying  dinst  %ld\n", dinst->getID());
@@ -560,6 +577,7 @@ void FULoad::performed(Dinst *dinst) {
     printf("Resource::performed_Safe_write::NOT LOADDestroying  dinst  %ld\n", dinst->getID());
    */
   
+   printf("FULoad::Resource::Performed:: Leaving Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
 }
  
 
@@ -571,7 +589,8 @@ void FULoad::performed_spec(Dinst *dinst) {
 /* if spec then put in the scb and send to core to execute;
    but donot perform;wait until PNR/preretire()*/
   printf("Resource::performed_SPEC::Entering SPEC performed dinst  %ld\n", dinst->getID());
-#ifdef ENABLE_SCB
+  printf("FULoad::Resource::Performed_SPEC:: Entering Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
+#ifdef ENABLE_SCB_SPEC
   if(dinst->is_spec()) {
     printf("Resource::Performed_spec:: spec() + inserting in scb ::setting present_in_scb dinst  %ld\n", dinst->getID());
     //scb->insert(dinst);
@@ -603,10 +622,12 @@ void FULoad::performed_spec(Dinst *dinst) {
     printf("Resource::performed_Safe_write:: !Retired::NOT LOADDestroying  dinst  %ld\n", dinst->getID());
    }
 #endif
+  printf("FULoad::Resource::Performed_SPEC:: Leaving Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
 }
   
 void FULoad::performed_safe_write(Dinst *dinst) {
   printf("Resource::performed_Safe_write::Entering  performed_safe_write dinst  %ld\n", dinst->getID());
+  printf("FULoad::Resource::Performed_Safe_write:: Entering Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
   dinst->markPerformed();
   if(dinst->is_present_in_scb()){
     scb->remove(dinst);
@@ -751,7 +772,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
     return true;
   }
 
-#ifdef ENABLE_SCB
+#ifdef ENABLE_SCB_ALL
   if (!scb->can_accept_st(dinst->getAddr())) {
     printf("FUStore::Resource:: scb !can_accept_st .so leaving preretire() for dinst  %ld\n", dinst->getID());
     return false;
@@ -763,7 +784,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
     return false;
   }
 
-#ifdef ENABLE_SCB
+#ifdef ENABLE_SCB_ALL 
     scb->add_st(dinst);
     performed(dinst);
 #else
@@ -777,7 +798,11 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
     }
 #endif
 
- /*original if (enableDcache && !dinst->isTransient()) {
+  
+  
+  /*scb->add_st(dinst);
+  
+  if (enableDcache && !dinst->isTransient()) {
     MemRequest::sendReqWrite(firstLevelMemObj,
                              dinst->has_stats(),
                              dinst->getAddr(),
@@ -785,7 +810,7 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
                              performedCB::create(this, dinst));
   } else {
     performed(dinst);
-  }original*/
+  }*/
 
   freeEntries++;
   printf("FUStore::Resource::Leaving preretire() for dinst  %ld\n", dinst->getID());

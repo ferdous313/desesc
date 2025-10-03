@@ -352,7 +352,7 @@ void ExecutedCluster::executing(Dinst *dinst) {
 }
 
 void ExecutedCluster::executed(Dinst *dinst) {
-  // printf("Cluster::ExecutedCluster::executed: for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
+  printf("Cluster::ExecutedCluster::executed:  Start executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
   window.executed(dinst);
   dinst->getGProc()->executed(dinst);
   if (!dinst->isTransient()) {
@@ -372,6 +372,7 @@ void ExecutedCluster::executed(Dinst *dinst) {
   //        get_window_size(),
   //        dinst->getID(),
   //        globalClock);
+  printf("Cluster::ExecutedCluster::executed:  Leaving  executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
 }
 void ExecutedCluster::flushed(Dinst *dinst) {
   window.executed_flushed(dinst);

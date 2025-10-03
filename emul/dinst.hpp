@@ -175,6 +175,7 @@ private:
   bool load_destroyed_performed_spec;
   bool load_destroyed_performed_safe_write;
   bool destroy_transient;
+  bool to_be_load_scb_all;
   // END Boolean flags
 
   SSID_t      SSID;
@@ -289,6 +290,7 @@ private:
     load_destroyed_performed_spec        = false;
     load_destroyed_performed_safe_write  = false;
     destroy_transient                    = false;
+    to_be_load_scb_all                   = false;
 
 #ifdef DINST_PARENT
     pend[0].setParentDinst(0);
@@ -440,6 +442,8 @@ public:
   bool is_present_rrob() { return is_rrob; }
   bool is_to_be_destroyed() { return to_be_destroyed; }
   bool is_to_be_load_destroyed() { return to_be_load_destroyed; }
+  bool is_load_scb_all() { return to_be_load_scb_all; }
+  bool set_load_scb_all() { return to_be_load_scb_all = true; }
   //=======
 
   static Dinst *create(Instruction &&inst, Addr_t pc, Addr_t address, Hartid_t fid, bool keep_stats) {
