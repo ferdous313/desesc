@@ -19,6 +19,7 @@ class FetchEngine;
 class BPredictor;
 class Cluster;
 class Resource;
+class Store_buffer;
 class GProcessor;
 
 // #define ESESC_TRACE 1
@@ -176,6 +177,7 @@ private:
   bool load_destroyed_performed_safe_write;
   bool destroy_transient;
   bool to_be_load_scb_all;
+  bool write_scb_r;
   // END Boolean flags
 
   SSID_t      SSID;
@@ -207,13 +209,14 @@ private:
   bool     br_ld_chain;
 #endif
 
-  std::shared_ptr<Cluster>  cluster;
-  std::shared_ptr<Resource> resource;
-  Dinst                   **RAT1Entry;
-  Dinst                   **RAT2Entry;
-  Dinst                   **serializeEntry;
-  FetchEngine              *fetch;
-  GProcessor               *gproc;
+  std::shared_ptr<Cluster>      cluster;
+  std::shared_ptr<Resource>     resource;
+  std::shared_ptr<Store_buffer> scb;
+  Dinst                         **RAT1Entry;
+  Dinst                         **RAT2Entry;
+  Dinst                         **serializeEntry;
+  FetchEngine                   *fetch;
+  GProcessor                    *gproc;
 
   char nDeps;  // 0, 1 or 2 for RISC processors
 
@@ -236,6 +239,7 @@ private:
     fetch          = nullptr;
     cluster        = nullptr;
     resource       = nullptr;
+    scb            = nullptr;
 
     gproc           = nullptr;
     SSID            = -1;
@@ -291,6 +295,7 @@ private:
     load_destroyed_performed_safe_write  = false;
     destroy_transient                    = false;
     to_be_load_scb_all                   = false;
+    write_scb_r                          = false;
 
 #ifdef DINST_PARENT
     pend[0].setParentDinst(0);
@@ -347,6 +352,12 @@ public:
     // printf("Clearing is_to_be_destroyed_transient to false ::dinst %ld\n", ID);
   }
 
+  void set_write_scb_r() {
+    write_scb_r = true;   
+  }      
+  bool is_write_scb_r() {
+    return write_scb_r;  
+  }      
    void set_load_destroyed_retired_spec() {
     load_destroyed_retired_spec = true;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
@@ -596,8 +607,13 @@ public:
     cluster  = cls;
     resource = res;
   }
+  void set_scb(std::shared_ptr<Store_buffer> storebuffer) {
+    scb  = storebuffer;
+  }
+  
   std::shared_ptr<Cluster>  getCluster() const { return cluster; }
   std::shared_ptr<Resource> getClusterResource() const { return resource; }
+  std::shared_ptr<Store_buffer> get_scb() const { return scb; }
 
   void clearRATEntry();
   void setRAT1Entry(Dinst **rentry) {

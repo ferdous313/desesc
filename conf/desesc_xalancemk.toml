@@ -25,7 +25,7 @@ emul = ["drom_emu"]
 type      = "dromajo"
 # Load big one: weight maximum:.45::sp4
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/mcf/sp3"
-load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
+#load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fipa-pta/sp1"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/leela/sp2"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/exchange2/sp1"
@@ -34,7 +34,7 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/omnetpp/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/x264/sp7"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/deepsjeng/sp1"
-#load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xalancebmk/sp5"
+load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xalancebmk/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xz_cpu2006docs/sp6"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/perlbench_diffmail/sp2"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/perlbench_splitmail/sp2"
@@ -96,16 +96,15 @@ start_roi = false
 #detail    = 30000000
 #time      = 20000000
 #<<<<<<<<<<<<<
-rabbit    = 0
-#rabbit    = 800000
-detail    = 0
-#detail    = 800000
+#rabbit    = 0
+rabbit    = 800000
+#detail    = 0
+detail    = 800000
 #Number of Insts
 #time      = 10000
 #time      = 1000000
 #time       = 1500000
 time      = 50000000
-#time      = 100000000
 #time      = 100_000_000
 #>>>>>>> upstream/main
 [rand_emu]
@@ -406,13 +405,11 @@ lower_level = "privl2 L2 sharedby 2"
 
 [il1_cache]
 type       = "nice"   # or nice
-#type       = "cache"   # or nice
 cold_misses = true
 size       = 32768
 line_size  = 64
 delay      = 2         # hit delay
-#miss_delay = 8
-miss_delay = 2
+miss_delay = 8
 assoc      = 4
 repl_policy = "lru"
 
@@ -439,12 +436,11 @@ nlp_stride   = 1
 
 drop_prefetch = true
 prefetch_degree = 0    # 0 disabled
-#mega_lines1K    = 8    # 8 lines touched, triggers mega/carped prefetch
-mega_lines1K    = 0    # 8 lines touched, triggers mega/carped prefetch
+mega_lines1K    = 8    # 8 lines touched, triggers mega/carped prefetch
 lower_level = "privl2 L2 sharedby 2"
 
 [privl2]
-type       = "cache"   # or nice(all hit)
+type       = "cache"   # or nice
 #type       = "nice"   # or nice
 cold_misses = true
 size       = 2097152  # 2MB
@@ -464,22 +460,13 @@ max_requests  = 32
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
 
-
-#allocate_miss = true   # allocate miss = true for inclusive cache
-allocate_miss = false   # allocate_miss =false for free runing cache
-victim        = false   # victim cache allocation style
-coherent      = true
-#inclusive     = true   # inlcusive = false for free running cache
-inclusive     = false   # inlcusive = false for free running cache
-directory     = false
-
 #allocate_miss = true   # allocate on cache miss
-#allocate_miss = false   # allocate on free running cache 
-#victim        = false  # victim cache allocation style
-#coherent      = true
+allocate_miss = false   # allocate on free running cache 
+victim        = false  # victim cache allocation style
+coherent      = true
 #inclusive     = true
-#inclusive     = false
-#directory     = false
+inclusive     = false
+directory     = false
 
 nlp_distance = 2
 nlp_degree   = 1       # 0 disabled
@@ -488,7 +475,7 @@ nlp_stride   = 1
 drop_prefetch = true
 prefetch_degree = 0    # 0 disabled
 #mega_lines1K    = 8    # 8 lines touched, triggers mega/carped prefetch
-mega_lines1K    = 0    # 8 lines touched, triggers mega/carped prefetch
+mega_lines1K    = 0    # 0 lines touched, disable megaration prefetcher for free running cache, triggers mega/carped prefetch
 
 lower_level = "l3 l3 shared"
 

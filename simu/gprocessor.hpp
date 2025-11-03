@@ -150,6 +150,7 @@ public:
   void flush_transient_inst_on_fetch_ready();
   void flush_transient_inst_from_inst_queue();
   void flush_transient_from_rob();
+  void flush_transient_from_scb();
   void dump_rob();
   void report(const std::string &str);
 

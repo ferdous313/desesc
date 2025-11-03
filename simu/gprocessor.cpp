@@ -150,7 +150,14 @@ void GProcessor::flush_transient_inst_on_fetch_ready() {
   flush_transient_inst_from_inst_queue();
   pipeQ.pipeLine.flush_transient_inst_from_buffer();
   flush_transient_from_rob();
+  flush_transient_from_scb();
 }
+
+void GProcessor::flush_transient_from_scb(){
+  scb->flush_transient();
+}
+
+
 void GProcessor::dump_rob()
 // {{{1 Dump rob statistics
 {
@@ -516,6 +523,7 @@ void GProcessor::add_inst_transient_on_branch_miss(IBucket *bucket, Addr_t pc) {
     }
 
     alu_dinst->setTransient();
+    alu_dinst->set_spec();
     if (bucket) {
       // alu_dinst->setFetchTime();
       bucket->push(alu_dinst);

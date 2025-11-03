@@ -18,9 +18,9 @@
 #include "resource.hpp"
 #include "tracer.hpp"
 
-// SCB SPEC buffer : directly L3->SCB 
+// SCB SPEC buffer : directly L3->SCB //#define ENABLE_SCB_SPEC
 //#define ENABLE_SCB_SPEC
-//SCB on for all stores and all loads: normalSCB
+//SCB: Basic on for all stores and all loads: normalSCB
 #define ENABLE_SCB_ALL
 
 // late allocation flag
@@ -249,6 +249,7 @@ StallCause FULoad::canIssue(Dinst *dinst) {
   /* canIssue {{{1 */
   printf("FULoad::Resource::canIssue():: Entering Canissue() dinst  %ld\n", dinst->getID());
 
+  dinst->set_scb(scb);
   if (freeEntries <= 0) {
     I(freeEntries == 0);  // Can't be negative
     return OutsLoadsStall;
@@ -418,7 +419,7 @@ void FULoad::executed(Dinst *dinst) {
 
 bool FULoad::preretire(Dinst *dinst, [[maybe_unused]] bool flushing)
 /* retire {{{1 */
-{
+{//PNR: POINT OF NO RETURN:NO SPEC after this point: only safe instructions continue
   printf("FULoad::Resource::Preretire:: Entering preretire()dinst  %ld\n", dinst->getID());
   bool done = dinst->isDispatched();
   //L1 req sent to cache(done ==1)
@@ -433,7 +434,7 @@ bool FULoad::preretire(Dinst *dinst, [[maybe_unused]] bool flushing)
     printf("FULoad::Resource::Preretire::cache SPEC_LOAD will dispatched to L1 and then return to SPEC_BUFFER for dinst  %ld\n", dinst->getID());
     if(dinst->is_present_in_scb()){
       printf("Resource::Preretire:: spec() + present_in_scb removing from scb and set_safe::dinst  %ld\n", dinst->getID());
-      scb->remove(dinst);
+      scb->remove_spec_load(dinst);
       dinst->reset_present_in_scb();
     }
     dinst->set_safe();
@@ -484,6 +485,7 @@ bool FULoad::preretire(Dinst *dinst, [[maybe_unused]] bool flushing)
 bool FULoad::retire(Dinst *dinst, [[maybe_unused]] bool flushing)
 /* retire {{{1 */
 {
+  //both spec->become safe+ safe from origin may come
   if (!dinst->isPerformed()) {
     return false;
   }
@@ -591,11 +593,17 @@ void FULoad::performed_spec(Dinst *dinst) {
   printf("Resource::performed_SPEC::Entering SPEC performed dinst  %ld\n", dinst->getID());
   printf("FULoad::Resource::Performed_SPEC:: Entering Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
 #ifdef ENABLE_SCB_SPEC
+  //if(dinst->is_spec() || if(dinst->isTransient()) {
   if(dinst->is_spec()) {
     printf("Resource::Performed_spec:: spec() + inserting in scb ::setting present_in_scb dinst  %ld\n", dinst->getID());
-    //scb->insert(dinst);
+    Addr_t addr = dinst->getAddr();
+    if(scb->can_accept_st(addr)){
+    printf("Resource::FULOAD::performed_spec::can_accept_st::TRUE return can accept::  addr %ld", addr);
     scb->add_st(dinst);
     dinst->set_present_in_scb();
+    } else {
+      printf("Resource::FULOAD::performed_spec::can_accept_st::FALSE return cannot accept::  addr %ld", addr);
+    }
   if(!dinst->isExecuted()){
      executed(dinst);
   }
@@ -630,7 +638,7 @@ void FULoad::performed_safe_write(Dinst *dinst) {
   printf("FULoad::Resource::Performed_Safe_write:: Entering Performed for dinst  %ld and clock cycle %ld \n", dinst->getID(), globalClock);
   dinst->markPerformed();
   if(dinst->is_present_in_scb()){
-    scb->remove(dinst);
+    scb->remove_spec_load(dinst);
     dinst->reset_present_in_scb();
   }
   //not in ooop::retire()::destroy
@@ -679,6 +687,7 @@ FUStore::FUStore(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<Port
 StallCause FUStore::canIssue(Dinst *dinst) {
   /* canIssue {{{1 */
 
+  dinst->set_scb(scb);
   if (dinst->getInst()->isStoreAddress()) {
     return NoStall;
   }
@@ -753,6 +762,12 @@ void FUStore::executed(Dinst *dinst) {
   }
 
   cluster->executed(dinst);
+/*  #ifdef ENABLE_SCB_ALL 
+//Basic SCB is on
+    scb->add_st(dinst);
+   //if(!dinst->is_spec()){
+     performed(dinst);
+#endif*/
 }
 
 bool FUStore::preretire(Dinst *dinst, bool flushing) {
@@ -785,10 +800,14 @@ bool FUStore::preretire(Dinst *dinst, bool flushing) {
   }
 
 #ifdef ENABLE_SCB_ALL 
-    scb->add_st(dinst);
-    performed(dinst);
+//Basic SCB is on  
+     if(!dinst->isTransient() || !dinst->is_spec()){
+       scb->add_st(dinst);
+     }
+       performed(dinst);
 #else
-    if (enableDcache && !dinst->isTransient()) {
+/*SCB is not  used here*/
+    if (enableDcache && !dinst->isTransient() && !dinst->is_spec()) {
     printf("FUStore::Resource::preretire() sendReqWrite for dinst  %ld\n", dinst->getID());
     MemRequest::sendReqWrite(firstLevelMemObj,
                              dinst->has_stats(),
@@ -842,11 +861,17 @@ void FUStore::performed(Dinst *dinst) {
   /* memory operation was globally performed {{{1 */
 
   printf("Resource::FUStore::performed::Entering  dinst  %ld\n", dinst->getID());
+  if (dinst->is_write_scb_r()) {
+    printf("Resource::FUStore::performed:: Spec_write_scb_retire  dinst  %ld\n", dinst->getID());
+    scb->set_clean_scb(dinst);
+  }
   setStats(dinst);  // Not retire for stores
   if (!dinst->isTransient()) {
+    printf("Resource::FUStore::performed:: !transient so notdestroyed dinst  %ld\n", dinst->getID());
     I(!dinst->isPerformed());
   }
   if (dinst->isRetired()) {
+    printf("Resource::FUStore::performed:: Not retired so notdestroyed dinst  %ld\n", dinst->getID());
     dinst->destroy();
   }
   dinst->markPerformed();
@@ -855,8 +880,17 @@ void FUStore::performed(Dinst *dinst) {
 /* }}} */
 
 bool FUStore::retire(Dinst *dinst, bool flushing) {
+  //both spec->become safe+ safe from origin may come;; set_safe is not done so ispec() is ok
   (void)flushing;
-
+   /* if (enableDcache && dinst->is_write_scb_r() && !dinst->isPerformed()&& !dinst-isTransient() && !dinst->is_spec()) {
+    printf("FUStore::Resource::preretire() sendReqWrite for dinst  %ld\n", dinst->getID());
+    MemRequest::sendReqWrite(firstLevelMemObj,
+                             dinst->has_stats(),
+                             dinst->getAddr(),
+                             dinst->getPC(),
+                             performedCB::create(this, dinst));
+    }
+*/
   printf("FUStore::Resource::Entering retire() for dinst  %ld\n", dinst->getID());
   if (dinst->getInst()->isStoreAddress()) {
     setStats(dinst);
@@ -878,6 +912,7 @@ bool FUStore::retire(Dinst *dinst, bool flushing) {
 void FUStore::performed_spec(Dinst*) {
 }
 void FUStore::performed_safe_write(Dinst*) {
+ // scb->set_clean(dinst)
 }
 
 /***********************************************/
