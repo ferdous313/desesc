@@ -41,11 +41,11 @@ protected:
   friend class MRouter;
   friend class Store_buffer;
 
-  MRouter      *router;
-  //Store_buffer *scb;
-  std::string  section;
-  std::string  name;
-  std::string  mem_type;
+
+  MRouter*    router;
+  std::string section;
+  std::string name;
+  std::string mem_type;
 
   const uint16_t  id;
   static uint16_t id_counter;
@@ -53,19 +53,19 @@ protected:
   bool            firstLevelIL1;
   bool            firstLevelDL1;
   bool            isLLC;
-  void            addLowerLevel(MemObj *obj);
-  void            addUpperLevel(MemObj *obj);
+  void            addLowerLevel(MemObj* obj);
+  void            addUpperLevel(MemObj* obj);
 
 public:
-  MemObj(const std::string &section, const std::string &sName);
+  MemObj(const std::string& section, const std::string& sName);
   MemObj();
   virtual ~MemObj();
 
   bool isLastLevelCache();
 
-  const std::string &getSection() const { return section; }
-  const std::string &getName() const { return name; }
-  const std::string &get_type() const { return mem_type; }
+  const std::string& getSection() const { return section; }
+  const std::string& getName() const { return name; }
+  const std::string& get_type() const { return mem_type; }
   uint16_t           getID() const { return id; }
   int16_t            getCoreID() const { return coreid; }
   void               setCoreDL1(int16_t cid) {
@@ -80,31 +80,30 @@ public:
   bool isFirstLevelDL1() const { return firstLevelDL1; };
   bool isFirstLevelIL1() const { return firstLevelIL1; };
 
-  MRouter      *getRouter() { return router; }
-  //Store_buffer *get_scb() { return scb; }
+  MRouter* getRouter() { return router; }
 
-  virtual void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase *cb = 0) = 0;
+  virtual void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase* cb = 0) = 0;
 
   // Interface for fast-forward (no BW, just warmup caches)
   virtual TimeDelta_t ffread(Addr_t addr)  = 0;
   virtual TimeDelta_t ffwrite(Addr_t addr) = 0;
 
   // DOWN
-  virtual void req(MemRequest *req)         = 0;
-  virtual void setStateAck(MemRequest *req) = 0;
-  virtual void disp(MemRequest *req)        = 0;
+  virtual void req(MemRequest* req)         = 0;
+  virtual void setStateAck(MemRequest* req) = 0;
+  virtual void disp(MemRequest* req)        = 0;
 
-  virtual void doReq(MemRequest *req)         = 0;
-  virtual void doSetStateAck(MemRequest *req) = 0;
-  virtual void doDisp(MemRequest *req)        = 0;
+  virtual void doReq(MemRequest* req)         = 0;
+  virtual void doSetStateAck(MemRequest* req) = 0;
+  virtual void doDisp(MemRequest* req)        = 0;
 
   // UP
-  virtual void blockFill(MemRequest *req);
-  virtual void reqAck(MemRequest *req)   = 0;
-  virtual void setState(MemRequest *req) = 0;
+  virtual void blockFill(MemRequest* req);
+  virtual void reqAck(MemRequest* req)   = 0;
+  virtual void setState(MemRequest* req) = 0;
 
-  virtual void doReqAck(MemRequest *req)   = 0;
-  virtual void doSetState(MemRequest *req) = 0;
+  virtual void doReqAck(MemRequest* req)   = 0;
+  virtual void doSetState(MemRequest* req) = 0;
 
   virtual bool isBusy(Addr_t addr) const = 0;
 
@@ -112,8 +111,8 @@ public:
   virtual void dump() const;
 
   // Optional virtual methods
-  virtual bool checkL2TLBHit(MemRequest *req);
-  virtual void replayCheckLSQ_removeStore(Dinst *);
+  virtual bool checkL2TLBHit(MemRequest* req);
+  virtual void replayCheckLSQ_removeStore(Dinst*);
   virtual void updateXCoreStores(Addr_t addr);
   virtual void replayflush();
   virtual void plug();
@@ -129,26 +128,26 @@ private:
 protected:
 public:
   DummyMemObj();
-  DummyMemObj(const std::string &section, const std::string &sName);
+  DummyMemObj(const std::string& section, const std::string& sName);
 
   // Entry points to schedule that may schedule a do?? if needed
-  void req(MemRequest *req) { doReq(req); };
-  void reqAck(MemRequest *req) { doReqAck(req); };
-  void setState(MemRequest *req) { doSetState(req); };
-  void setStateAck(MemRequest *req) { doSetStateAck(req); };
-  void disp(MemRequest *req) { doDisp(req); }
+  void req(MemRequest* req) { doReq(req); };
+  void reqAck(MemRequest* req) { doReqAck(req); };
+  void setState(MemRequest* req) { doSetState(req); };
+  void setStateAck(MemRequest* req) { doSetStateAck(req); };
+  void disp(MemRequest* req) { doDisp(req); }
 
   // This do the real work
-  void doReq(MemRequest *req);
-  void doReqAck(MemRequest *req);
-  void doSetState(MemRequest *req);
-  void doSetStateAck(MemRequest *req);
-  void doDisp(MemRequest *req);
+  void doReq(MemRequest* req);
+  void doReqAck(MemRequest* req);
+  void doSetState(MemRequest* req);
+  void doSetStateAck(MemRequest* req);
+  void doDisp(MemRequest* req);
 
   TimeDelta_t ffread(Addr_t addr);
   TimeDelta_t ffwrite(Addr_t addr);
 
-  void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase *cb = 0);
+  void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase* cb = 0);
 
   bool isBusy(Addr_t addr) const;
 };

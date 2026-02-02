@@ -3,8 +3,8 @@
 #include "addresspredictor.hpp"
 
 #include <math.h>
-#include <stdlib.h>
 
+#include <cstdlib>
 #include <iostream>
 
 #include "config.hpp"
@@ -94,7 +94,7 @@ void BimodalStride::update_delta(Addr_t pc, int ndelta) {
 STRIDE Address Predictor
 **************************************/
 
-Stride_address_predictor::Stride_address_predictor(Hartid_t hartid, const std::string &section)
+Stride_address_predictor::Stride_address_predictor(Hartid_t hartid, const std::string& section)
     : bimodal(Config::get_power2(section, "bimodal_size", 4), Config::get_integer(section, "bimodal_width", 1, 8)) {
   (void)hartid;
 }
@@ -135,7 +135,7 @@ Addr_t Stride_address_predictor::predict(Addr_t ppc, int distance, bool inLines)
   return bimodal.get_addr(ppc) + offset;
 }
 
-bool Stride_address_predictor::try_chain_predict(MemObj *dl1, Addr_t pc, int distance) {
+bool Stride_address_predictor::try_chain_predict(MemObj* dl1, Addr_t pc, int distance) {
   (void)dl1, (void)pc;
   (void)distance;
   return false;
@@ -147,19 +147,19 @@ VTAGE
 
 **************************************/
 
-Tage_address_predictor::Tage_address_predictor(Hartid_t hartid, const std::string &section)
+Tage_address_predictor::Tage_address_predictor(Hartid_t hartid, const std::string& section)
     : bimodal(Config::get_power2(section, "bimodal_size", 1), Config::get_integer(section, "bimodal_width", 1, 8))
     , tagePrefetchBaseNum(fmt::format("P({})_vtage_base", hartid))
     , tagePrefetchHistNum(fmt::format("P({})_vtage_hist", hartid))
     , log2fetchwidth(log2(Config::get_power2("soc", "core", hartid, "fetch_width")))
     , nhist(Config::get_integer(section, "ntables", 2)) {
   // auto bwidth         = Config::get_integer(section, "bimodal_width", 1);
-  m      = new int[nhist + 1];
-  TB     = new int[nhist + 1];
-  logg   = new int[nhist + 1];
-  GI     = new Addr_t[nhist + 1];
-  GTAG   = new Addr_t[nhist + 1];
-  gtable = new vtage_gentry *[nhist + 1];
+  m.resize(nhist + 1);
+  TB.resize(nhist + 1);
+  logg.resize(nhist + 1);
+  GI.resize(nhist + 1);
+  GTAG.resize(nhist + 1);
+  gtable.resize(nhist + 1);
 
   // geometric history length calculation for tagged tables
   m[0]     = 0;
@@ -179,7 +179,7 @@ Tage_address_predictor::Tage_address_predictor(Hartid_t hartid, const std::strin
   }
 
   for (uint64_t i = 1; i <= nhist; i++) {
-    gtable[i] = new vtage_gentry[(1 << (logg[i])) + 1];
+    gtable[i].resize((1 << (logg[i])) + 1);
     for (int j = 0; j < (1 << logg[i]); j++) {
       gtable[i][j].allocate();
     }
@@ -360,7 +360,7 @@ Addr_t Tage_address_predictor::predict(Addr_t pc, int distance, bool inLines) {
   return addr;
 }
 
-bool Tage_address_predictor::try_chain_predict(MemObj *dl1, Addr_t pc, int distance) {
+bool Tage_address_predictor::try_chain_predict(MemObj* dl1, Addr_t pc, int distance) {
   (void)dl1;
   (void)pc;
   (void)distance;
@@ -379,13 +379,6 @@ Conf_level Tage_address_predictor::exe_update(Addr_t pc, Addr_t addr, Data_t dat
 
 #ifndef STRIDE_DELTA0
   if (ndelta == 0) {
-    return 0;
-  }
-#endif
-
-#if 0
-  if (ndelta>1024 || ndelta <1024) {
-    last[get_last_index(pc)].reset(addr,pc);
     return 0;
   }
 #endif
@@ -532,16 +525,9 @@ void Tage_address_predictor::updateVtage(Addr_t pc, int ndelta, uint16_t loff) {
       }
     }
   }
-
-#if 0
-  // Always update bimodal to use the conf
-  if (alt_bank==0) {
-    bimodal.update_delta(pc,ndelta);
-  }
-#endif
 }
 
-void Tage_address_predictor::rename(Dinst *dinst) { (void)dinst; }
+void Tage_address_predictor::rename(Dinst* dinst) { (void)dinst; }
 
 void vtage_gentry::allocate() {
   conf  = 0;
@@ -643,7 +629,7 @@ public:
 };
 std::map<Addr_t, PredictableEntry> adhist;  // Address/Data History
 
-Indirect_address_predictor::Indirect_address_predictor(Hartid_t hartid, const std::string &pref_sec)
+Indirect_address_predictor::Indirect_address_predictor(Hartid_t hartid, const std::string& pref_sec)
     : bimodal(Config::get_power2(pref_sec, "bimodal_size", 4), Config::get_integer(pref_sec, "bimidal_width", 1, 8)) {
   (void)hartid;
 
@@ -748,12 +734,8 @@ Conf_level Indirect_address_predictor::ret_update(Addr_t pc, Addr_t addr, Data_t
             Addr_t base = addr - factor * adhist[ppc].data;
             // PTRACE("pc:%llx matches addr:%llx pc:%llx with la:%llx + factor:%d * d:%d,
             // base:%llx",pc,addr,ppc,last_addr,factor,adhist[ppc].data_delta,base);
-            pa.source_pc = ppc;
-            pa.conf      = 1;
-#if 0
-            pa.base      = base;
-            pa.factor    = factor;
-#endif
+            pa.source_pc       = ppc;
+            pa.conf            = 1;
             adhist[ppc].factor = factor;
             adhist[ppc].base   = base;
             break;
@@ -801,7 +783,7 @@ Addr_t Indirect_address_predictor::predict(Addr_t ppc, int distance, bool inLine
   return bimodal.get_addr(ppc) + offset;
 }
 
-void Indirect_address_predictor::performed(MemObj *DL1, Addr_t pc, Addr_t ld1_addr) {
+void Indirect_address_predictor::performed(MemObj* DL1, Addr_t pc, Addr_t ld1_addr) {
   I(chainPredict);
 
   if (adhist.find(pc) == adhist.end()) {
@@ -828,7 +810,7 @@ void Indirect_address_predictor::performed(MemObj *DL1, Addr_t pc, Addr_t ld1_ad
 #endif
 }
 
-bool Indirect_address_predictor::try_chain_predict(MemObj *DL1, Addr_t pc, int distance) {
+bool Indirect_address_predictor::try_chain_predict(MemObj* DL1, Addr_t pc, int distance) {
   if (!chainPredict) {
     return false;
   }
@@ -855,7 +837,7 @@ bool Indirect_address_predictor::try_chain_predict(MemObj *DL1, Addr_t pc, int d
     chain = false;
   }
 
-  CallbackBase *cb = 0;
+  CallbackBase* cb = 0;
   if (distance >= 2 && chain) {
     cb = performedCB::create(this, DL1, pc, ld1_addr);
   }

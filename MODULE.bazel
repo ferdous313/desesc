@@ -5,15 +5,16 @@ module(
 )
 
 # Compiler rules
-bazel_dep(name = "rules_cc", version = "0.2.14")
+bazel_dep(name = "rules_cc", version = "0.2.16")
 bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
+bazel_dep(name = "rules_shell", version = "0.6.1")
 
 bazel_dep(name = "abseil-cpp", version = "20250814.1") # 20240722.0.bcr.2")
 
 bazel_dep(name = "fmt", version = "12.1.0")
 
-bazel_dep(name = "googletest", version = "1.17.0.bcr.1", dev_dependency = True, repo_name = "com_google_googletest")
-bazel_dep(name = "google_benchmark", version = "1.9.4", dev_dependency = True, repo_name = "com_google_benchmark")
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2", dev_dependency = True, repo_name = "com_google_googletest")
+bazel_dep(name = "google_benchmark", version = "1.9.5", dev_dependency = True, repo_name = "com_google_benchmark")
 
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -25,10 +26,10 @@ bazel_dep(name = "iassert", version = "0.1.1")
 
 archive_override(
     module_name = "iassert",
-    integrity = "sha256-Z9PIn1Fvbo8rE5RhStEvuRA0h39CcRK+536PzJKH/UU=",
-    strip_prefix = "iassert-db67db81bc7708fae78d1d667c9a085e5c0e123c",
+    integrity = "sha256-sMOp2bzYfLhVMYfFoliGIXKHAi3bZpTVTSD+2oXjMp8=",
+    strip_prefix = "iassert-0460fbd8405a96b3615be425df9066eba835fcf0",
     urls = [
-        "https://github.com/masc-ucsc/iassert/archive/db67db81bc7708fae78d1d667c9a085e5c0e123c.zip",
+        "https://github.com/masc-ucsc/iassert/archive/0460fbd8405a96b3615be425df9066eba835fcf0.zip",
     ],
 )
 
@@ -48,20 +49,20 @@ http_archive(
     name = "dromajo",
     build_file = "//packages:dromajo.BUILD",
     patches = ["//packages:dromajo.patch"],
-    sha256 = "25af8ca914f0ca3f41a6250fa6069621e3fcaa3230e1bc95ff813eaec9c7e3dd",
-    strip_prefix = "dromajo-2a9f5bbfbefa92bc0d81bb83e44e6bab963302cb",
+    sha256 = "552c5e200af09dd35112faf6ede602d97ab3017da4e8d2ef65b240d8aa1bbee6",
+    strip_prefix = "dromajo-5b55123c5f143891144d0a4e0bc2c39590fba84a",
     urls = [
-      "https://github.com/masc-ucsc/dromajo/archive/2a9f5bbfbefa92bc0d81bb83e44e6bab963302cb.zip",
+      "https://github.com/masc-ucsc/dromajo/archive/5b55123c5f143891144d0a4e0bc2c39590fba84a.zip",
     ],
 )
 
 # superbp
 http_archive(
     name = "superbp",
-    sha256 = "ae02a45d835c5a3ebb772cfeba4bb97a6c87996d4fbed9725bb12c6698a1f037",
-    strip_prefix = "superbp-6ca757ec5bd7b6560077eb2b898a8fa06cac8b41",
+    sha256 = "887f080d3f67a56a06064db09c1712ed8a6028a1ef74a15fae0b615c4a69bc45",
+    strip_prefix = "superbp-91c3b03a033925facc058fd67e2bfa0b15021c48",
     urls = [
-      "https://github.com/masc-ucsc/superbp/archive/6ca757ec5bd7b6560077eb2b898a8fa06cac8b41.zip",
+      "https://github.com/masc-ucsc/superbp/archive/91c3b03a033925facc058fd67e2bfa0b15021c48.zip",
     ],
 )
 

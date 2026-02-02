@@ -19,8 +19,8 @@ ESESC; see the file COPYING.  If not, write to the  Free Software Foundation, 59
 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
 #include <vector>
 
 #include "fmt/format.h"
@@ -108,14 +108,41 @@ private:
 
     uint32_t pos = ((uint32_t)(minPos + time - minTime)) & AccessMask;
 
-    if (access[pos] == 0) {
-      access[pos] = node;
+    if (access[pos] == nullptr) {
+      access[pos]     = node;
+      accessTail[pos] = node;
+      node->setTQNext(nullptr);
     } else {
+#ifdef STRICT_PRIORITY
+      if (accessTail[pos]->getPriority() <= node->getPriority()) {
+        accessTail[pos]->setTQNext(node);
+        accessTail[pos] = node;
+        node->setTQNext(nullptr);
+      } else {
+        Data prev = nullptr;
+        Data cur  = access[pos];
+        while (cur && cur->getPriority() <= node->getPriority()) {
+          prev = cur;
+          cur  = cur->getTQNext();
+        }
+        if (prev == nullptr) {
+          node->setTQNext(access[pos]);
+          access[pos] = node;
+        } else {
+          prev->setTQNext(node);
+          node->setTQNext(cur);
+        }
+        if (cur == nullptr) {
+          accessTail[pos] = node;
+        }
+      }
+#else
       accessTail[pos]->setTQNext(node);
+      accessTail[pos] = node;
+      node->setTQNext(nullptr);
+#endif
     }
-    accessTail[pos] = node;
     node->setInFastQueue();
-    node->setTQNext(0);
     nNodes++;
   };
 
@@ -165,19 +192,19 @@ public:
     if (nNodes == 0) {
       minTime = cTime;
       minPos  = 0;
-      return 0;
+      return nullptr;
     }
 
     Data node = access[minPos];
 
-    while (node == 0 && minTime < cTime) {
+    while (node == nullptr && minTime < cTime) {
       minPos = (minPos + 1) & AccessMask;
       minTime++;
       node = access[minPos];
     }
 
-    if (node == 0) {
-      return 0;
+    if (node == nullptr) {
+      return nullptr;
     }
 
     I(minTime <= cTime);
@@ -203,8 +230,7 @@ public:
         }
 
       } else {
-        typedef typename std::vector<Data>::iterator DataIter;
-        DataIter                                     it = std::find(tooFar.begin(), tooFar.end(), node);
+        auto it = std::find(tooFar.begin(), tooFar.end(), node);
 
         I(it != tooFar.end());
         tooFar.erase(it);
@@ -222,7 +248,7 @@ public:
       } else {
         uint32_t pos = ((uint32_t)(minPos + time - minTime)) & AccessMask;
 
-        Data prev = 0;
+        Data prev = nullptr;
         Data curr = access[pos];
 
         while (curr != node) {
@@ -231,7 +257,7 @@ public:
         }
         I(curr == node);
 
-        if (prev == 0) {
+        if (prev == nullptr) {
           access[pos] = access[pos]->getTQNext();
         } else {
           prev->setTQNext(curr->getTQNext());
@@ -260,18 +286,15 @@ public:
     insert(node, rTime);
   };
 
-  size_t size() const { return nNodes + tooFar.size(); };
-  bool   empty() const { return nNodes == 0 && tooFar.empty(); };
+  [[nodiscard]] size_t size() const noexcept { return nNodes + tooFar.size(); };
+  [[nodiscard]] bool   empty() const noexcept { return nNodes == 0 && tooFar.empty(); };
 
   void dump();
 };
 
 template <class Data, class Time>
 TQueue<Data, Time>::TQueue(uint32_t MaxTimeDiff)
-    : AccessSize(MaxTimeDiff)
-    , AccessMask(AccessSize - 1)
-    , access(AccessSize)
-    , accessTail(AccessSize) {
+    : AccessSize(MaxTimeDiff), AccessMask(AccessSize - 1), access(AccessSize), accessTail(AccessSize) {
   I(AccessSize > 7);
   I((AccessSize & (AccessSize - 1)) == 0);
 

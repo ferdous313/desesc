@@ -22,7 +22,7 @@ protected:
     uint32_t    Row;
     uint32_t    Column;
     Time_t      TimeEntered;
-    MemRequest *mreq;
+    MemRequest* mreq;
   };
   TimeDelta_t delay;
   TimeDelta_t PreChargeLatency;
@@ -63,53 +63,53 @@ protected:
     Time_t   bankTime;
   };
 
-  BankStatus *bankState;
+  std::vector<BankStatus> bankState;
 
-  typedef std::vector<FCFSField *> FCFSList;
-  FCFSList                         curMemRequests;
-  typedef std::queue<FCFSField *>  FCFSQueue;
-  FCFSQueue                        OverflowMemoryRequests;
+  using FCFSList = std::vector<FCFSField*>;
+  FCFSList curMemRequests;
+  using FCFSQueue = std::queue<FCFSField*>;
+  FCFSQueue OverflowMemoryRequests;
 
 public:
-  MemController(Memory_system *current, const std::string &device_descr_section, const std::string &device_name = "");
-  ~MemController() {}
+  MemController(Memory_system* current, const std::string& device_descr_section, const std::string& device_name = "");
+  ~MemController() = default;
 
   // Entry points to schedule that may schedule a do?? if needed
-  void req(MemRequest *req) { doReq(req); };
-  void reqAck(MemRequest *req) { doReqAck(req); };
-  void setState(MemRequest *req) { doSetState(req); };
-  void setStateAck(MemRequest *req) { doSetStateAck(req); };
-  void disp(MemRequest *req) { doDisp(req); }
+  void req(MemRequest* req) { doReq(req); };
+  void reqAck(MemRequest* req) { doReqAck(req); };
+  void setState(MemRequest* req) { doSetState(req); };
+  void setStateAck(MemRequest* req) { doSetStateAck(req); };
+  void disp(MemRequest* req) { doDisp(req); }
 
   // This do the real work
-  void doReq(MemRequest *req);
-  void doReqAck(MemRequest *req);
-  void doSetState(MemRequest *req);
-  void doSetStateAck(MemRequest *req);
-  void doDisp(MemRequest *req);
+  void doReq(MemRequest* req);
+  void doReqAck(MemRequest* req);
+  void doSetState(MemRequest* req);
+  void doSetStateAck(MemRequest* req);
+  void doDisp(MemRequest* req);
 
-  void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase *cb = 0);
+  void tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase* cb = nullptr);
 
-  TimeDelta_t ffread(Addr_t addr);
-  TimeDelta_t ffwrite(Addr_t addr);
+  [[nodiscard]] TimeDelta_t ffread(Addr_t addr);
+  [[nodiscard]] TimeDelta_t ffwrite(Addr_t addr);
 
-  bool isBusy(Addr_t addr) const;
+  [[nodiscard]] bool isBusy(Addr_t addr) const;
 
-  uint16_t getLineSize() const;
+  [[nodiscard]] uint16_t getLineSize() const;
 
   void manageRam(void);
 
-  typedef CallbackMember0<MemController, &MemController::manageRam> ManageRamCB;
+  using ManageRamCB = CallbackMember0<MemController, &MemController::manageRam>;
   // typedef CallbackMember0<MemController, &MemController::manageRam>   ManageRamCB;  // Added by LNB 5/27/2014
 
   // TimeDelta_t ffread(Addr_t addr, DataType data);
   // TimeDelta_t ffwrite(Addr_t addr, DataType data);
   // void        ffinvalidate(Addr_t addr, int32_t lineSize);
 private:
-  uint32_t getBank(MemRequest *mreq) const;
-  uint32_t getRow(MemRequest *mreq) const;
-  uint32_t getColumn(MemRequest *mreq) const;
-  void     addMemRequest(MemRequest *mreq);
+  uint32_t getBank(MemRequest* mreq) const;
+  uint32_t getRow(MemRequest* mreq) const;
+  uint32_t getColumn(MemRequest* mreq) const;
+  void     addMemRequest(MemRequest* mreq);
 
   void transferOverflowMemory(void);
   void scheduleNextAction(void);

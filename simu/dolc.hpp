@@ -1,6 +1,9 @@
+#pragma once
 
-#ifndef DOLC_H
-#define DOLC_H
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
 
 // #define DOLC_RLE
 
@@ -11,21 +14,21 @@ private:
   uint64_t lastBits;
   uint64_t currBits;
 
-  uint64_t  phase;
-  uint16_t  rl1;
-  uint16_t  rl2;
-  uint16_t  rl3;
-  uint64_t *hist;
-  uint64_t *histMask;
-  uint64_t *histBits;
+  uint64_t              phase;
+  uint16_t              rl1;
+  uint16_t              rl2;
+  uint16_t              rl3;
+  std::vector<uint64_t> hist;
+  std::vector<uint64_t> histMask;
+  std::vector<uint64_t> histBits;
 
   void allocate() {
     uint64_t lastMask = (((uint64_t)1) << lastBits) - 1;
     uint64_t currMask = (((uint64_t)1) << currBits) - 1;
 
-    hist     = new uint64_t[depth];
-    histBits = new uint64_t[depth];
-    histMask = new uint64_t[depth];
+    hist.resize(depth);
+    histBits.resize(depth);
+    histMask.resize(depth);
 
     phase = 0;
     rl1   = 0;
@@ -80,43 +83,6 @@ public:
     }
   }
 
-#if 0
-  DOLC(const DOLC &other) {
-    if(depth != other.depth || olderBits != other.olderBits || lastBits != other.lastBits || currBits != other.currBits) {
-      delete hist;
-      delete histBits;
-      delete histMask;
-
-      depth     = other.depth;
-      olderBits = other.olderBits;
-      lastBits  = other.lastBits;
-      currBits  = other.currBits;
-
-      allocate();
-    }
-
-    for(uint64_t i = 0; i < depth; i++) {
-      hist[i] = other.hist[i];
-    }
-  }
-
-  void mix(uint64_t addr) {
-    MSG("mix %lx",addr);
-
-    uint32_t drop  = hist[0] >> 10;
-    uint32_t sign1 = hist[0] ^ drop ^ (drop << (5));
-    uint32_t sign2 = (sign1 << (5)) + addr;
-
-    hist[0] = sign2;
-  }
-
-  void reset(uint64_t sign) {
-    for(uint64_t i = 0; i < depth; i++) {
-      hist[i] = sign & histMask[i];
-    }
-  }
-#endif
-
   void update(uint64_t addr) {
 #ifdef DOLC_RLE
     if (hist[0] == addr) {  // Same patter, RLE compress
@@ -160,7 +126,7 @@ public:
 
   void setPhase(uint64_t addr) { phase = addr; }
 
-  uint64_t getSign(uint16_t bits, uint16_t m) const {
+  [[nodiscard]] uint64_t getSign(uint16_t bits, uint16_t m) const {
     uint16_t nbits = 0;
     uint64_t sign  = 0;
 
@@ -196,21 +162,6 @@ public:
       }
     }
 
-#if 0
-    uint64_t key = sign;
-    key         += (key << 12);
-    key         ^= (key >> 22);
-    key         += (key << 4);
-    key         ^= (key >> 9);
-    key         += (key << 10);
-    key         ^= (key >> 2);
-    key         += (key << 7);
-    key         ^= (key >> 12);
-    sign         = key;
-#endif
-
     return sign & ((1 << (bits)) - 1);
   }
 };
-
-#endif

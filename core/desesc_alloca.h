@@ -19,26 +19,16 @@ ESESC; see the file COPYING.   If not, write to the  Free Software Foundation, 5
 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifndef _AC_ALLOCA_H
-#define _AC_ALLOCA_H
+#pragma once
 
-#ifdef SUNSTUDIO
-#include "/usr/include/alloca.h"
-#elif (defined __GNUC__)
-#include <stdlib.h>
+#if (defined __GNUC__)
+#include <cstdlib>
+#ifndef alloca
 #define alloca __builtin_alloca
-#elif (defined _AIX)
-#pragma alloca
-#elif (defined __ICC)
-/* Allocate a block.  */
-
-extern void *_alloca(size_t __size);
-
-#define alloca(size) _alloca(size)
-
+#endif
 #else
 extern void *alloca(uint32_t __size);
+#ifndef alloca
 #define alloca __builtin_alloca
+#endif
 #endif /* __GNUC__ */
-
-#endif /* _AC_ALLOCA_H */

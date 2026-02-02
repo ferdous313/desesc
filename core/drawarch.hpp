@@ -12,21 +12,17 @@
 #include "fmt/format.h"
 #include "iassert.hpp"
 
-using namespace std;
-
 class DrawArch {
 protected:
   std::vector<std::string> rows;
 
 public:
-  DrawArch() {
-    // Constructor
-  };
-  ~DrawArch() {}
+  DrawArch()  = default;
+  ~DrawArch() = default;
 
-  void addObj(const std::string &mystr) { rows.push_back(mystr); }
+  void addObj(const std::string& mystr) { rows.push_back(mystr); }
 
-  void drawArchDot(const std::string &filename) {
+  void drawArchDot(const std::string& filename) {
     std::fstream fs(filename, std::fstream::out);
     if (!fs.good()) {
       std::cerr << "WriteFile() : Opening " << filename << " file failed." << std::endl;

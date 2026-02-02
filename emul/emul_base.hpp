@@ -15,10 +15,10 @@ protected:
   std::string type;  // dromajo, trace,...
 
 public:
-  Emul_base();
-  virtual ~Emul_base();
+  Emul_base()          = default;
+  virtual ~Emul_base() = default;
 
-  virtual Dinst *peek(Hartid_t fid)    = 0;
+  virtual Dinst* peek(Hartid_t fid)    = 0;
   virtual void   execute(Hartid_t fid) = 0;
 
   virtual Hartid_t get_num() const                 = 0;
@@ -26,6 +26,6 @@ public:
 
   virtual void skip_rabbit(Hartid_t fid, size_t ninst) = 0;
 
-  const std::string &get_type() const { return type; }
-  const std::string &get_section() const { return section; }
+  const std::string& get_type() const { return type; }
+  const std::string& get_section() const { return section; }
 };

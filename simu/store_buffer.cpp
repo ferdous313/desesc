@@ -198,8 +198,12 @@ void Store_buffer::set_clean_scb(Dinst *dinst) {
  printf("Store_buffer::set_clean_scb:: After scb_clean is  %d \n",scb_clean);
 }
 
+<<<<<<< HEAD
 void Store_buffer::add_st(Dinst *dinst) {
 
+=======
+void Store_buffer::add_st(Dinst* dinst) {
+>>>>>>> upstream/main
   auto st_addr = dinst->getAddr();
   //I(can_accept_st(st_addr));
   printf("Store_buffer::add_st::Entering store add_st in scb for dinst  %ld\n", dinst->getID());
@@ -230,6 +234,7 @@ void Store_buffer::add_st(Dinst *dinst) {
     scb_lines_map.insert({st_addr_line, line});
     line.set_waiting_wb();
 
+<<<<<<< HEAD
     if(dinst->isTransient()){
       it->second.set_transient();
     }
@@ -238,6 +243,9 @@ void Store_buffer::add_st(Dinst *dinst) {
     //if (dl1 && !dinst->isTransient()) {
  /* isspec= transient+non_random_spec*/   
     //if (dl1 && !dinst->is_spec()) {
+=======
+    CallbackBase* cb = ownership_doneCB::create(this, st_addr);
+>>>>>>> upstream/main
     if (dl1) {
       printf("Store_buffer::add_st::SCB new entry for the store addr +Sending the store to cache for st_addr %ld and st_addr_line  %ld\n", 
           st_addr,st_addr_line);
@@ -273,8 +281,12 @@ void Store_buffer::add_st(Dinst *dinst) {
     CallbackBase *cb = ownership_doneCB::create(this, st_addr);
     //auto *cb = ownership_doneCB::create(this, st_addr);
   if (dl1) {
+<<<<<<< HEAD
     printf("Store_buffer::add_st::SCB already have this addr+Sending the store to cache for store st_addr %ld and st_addr_line %ld\n", 
         st_addr, calc_line(st_addr));
+=======
+    auto* cb = ownership_doneCB::create(this, st_addr);
+>>>>>>> upstream/main
     MemRequest::sendReqWrite(dl1, dinst->has_stats(), st_addr, dinst->getPC(), cb);
   } else {
     cb->schedule(1);

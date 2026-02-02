@@ -42,53 +42,18 @@ enum class Opcode {
   //-----------------
   iMAX
 };
-inline auto format_as(Opcode f) {
-  if (f == Opcode::iOpInvalid) {
-    return "iOpInvalid";
-  } else if (f == Opcode::iRALU) {
-    return "iRALU";
-  } else if (f == Opcode::iAALU) {
-    return "iAALU";
-  } else if (f == Opcode::iBALU_LBRANCH) {
-    return "iBALU_LBRANCH";
-  } else if (f == Opcode::iBALU_RBRANCH) {
-    return "iBALU_RBRANCH";
-  } else if (f == Opcode::iBALU_LJUMP) {
-    return "iBALU_LJUMP";
-  } else if (f == Opcode::iBALU_RJUMP) {
-    return "iBALU_RJUMP";
-  } else if (f == Opcode::iBALU_LCALL) {
-    return "iBALU_LCALL";
-  } else if (f == Opcode::iBALU_RCALL) {
-    return "iBALU_RCALL";
-  } else if (f == Opcode::iBALU_RET) {
-    return "iBALU_RET";
-  } else if (f == Opcode::iLALU_LD) {
-    return "iLALU_LD";
-  } else if (f == Opcode::iSALU_ST) {
-    return "iSALU_ST";
-  } else if (f == Opcode::iSALU_LL) {
-    return "iSALU_LL";
-  } else if (f == Opcode::iSALU_SC) {
-    return "iSALU_SC";
-  } else if (f == Opcode::iSALU_ADDR) {
-    return "iSALU_ADDR";
-  } else if (f == Opcode::iCALU_FPMULT) {
-    return "iCALU_FPMULT";
-  } else if (f == Opcode::iCALU_FPDIV) {
-    return "iCALU_FPDIV";
-  } else if (f == Opcode::iCALU_FPALU) {
-    return "iCALU_FPALU";
-  } else if (f == Opcode::iCALU_MULT) {
-    return "iCALU_MULT";
-  } else if (f == Opcode::iCALU_DIV) {
-    return "iCALU_DIV";
-  } else if (f == Opcode::iMAX) {
-    return "iMAX";
-  } else {
-    return "invalid_OPCODE";
+inline constexpr auto format_as(Opcode f) {
+  constexpr std::array opcode_names = {
+      "iOpInvalid",  "iRALU",        "iAALU",       "iBALU_LBRANCH", "iBALU_RBRANCH", "iBALU_LJUMP", "iBALU_RJUMP",
+      "iBALU_LCALL", "iBALU_RCALL",  "iBALU_RET",   "iLALU_LD",      "iSALU_ST",      "iSALU_LL",    "iSALU_SC",
+      "iSALU_ADDR",  "iCALU_FPMULT", "iCALU_FPDIV", "iCALU_FPALU",   "iCALU_MULT",    "iCALU_DIV",   "iMAX",
+  };
+
+  auto idx = static_cast<std::size_t>(f);
+  if (idx < opcode_names.size()) {
+    return opcode_names[idx];
   }
-  // return fmt::underlying(f);
+  return "invalid_OPCODE";
 }
 
 template <typename T>
@@ -268,28 +233,29 @@ public:
 };
 
 // Common alias
-#define LREG_ZERO         LREG_R0
-#define LREG_NoDependence LREG_R0
-#define NoDependence      LREG_R0
+inline constexpr RegType LREG_ZERO         = RegType::LREG_R0;
+inline constexpr RegType LREG_NoDependence = RegType::LREG_R0;
+inline constexpr RegType NoDependence      = RegType::LREG_R0;
 
 // SPARC Mappings
-#define LREG_PSR  LREG_ARCH0
-#define LREG_ICC  LREG_ARCH1
-#define LREG_CWP  LREG_ARCH2
-#define LREG_Y    LREG_ARCH3
-#define LREG_TBR  LREG_ARCH4
-#define LREG_WIM  LREG_ARCH5
-#define LREG_FSR  LREG_ARCH6
-#define LREG_FCC  LREG_ARCH7
-#define LREG_CEXC LREG_ARCH8
-#define LREG_FRS1 LREG_FRN
-#define LREG_FRS2 LREG_FRS
+inline constexpr RegType LREG_PSR  = RegType::LREG_ARCH0;
+inline constexpr RegType LREG_ICC  = RegType::LREG_ARCH1;
+inline constexpr RegType LREG_CWP  = RegType::LREG_ARCH2;
+inline constexpr RegType LREG_Y    = RegType::LREG_ARCH3;
+inline constexpr RegType LREG_TBR  = RegType::LREG_ARCH4;
+inline constexpr RegType LREG_WIM  = RegType::LREG_ARCH5;
+inline constexpr RegType LREG_FSR  = RegType::LREG_ARCH6;
+inline constexpr RegType LREG_FCC  = RegType::LREG_ARCH7;
+inline constexpr RegType LREG_CEXC = RegType::LREG_ARCH8;
+// NOTE: LREG_FRS1/FRS2 previously referenced undefined LREG_FRN/LREG_FRS - appears to be dead code
+// inline constexpr RegType LREG_FRS1 = RegType::LREG_FRN;
+// inline constexpr RegType LREG_FRS2 = RegType::LREG_FRS;
 
 // ARM Mappings
-#define LREG_CPSR    LREG_ARCH0
-#define LREG_GE_FLAG LREG_ARCH3
-#define LREG_Q_FLAG  LREG_ARCH4
-#define LREG_PC      LREG_R16
-#define LREG_LINK    LREG_R15
-#define LREG_SP      LREG_R14
-#define LREG_IP      LREG_R13
+inline constexpr RegType LREG_CPSR    = RegType::LREG_ARCH0;
+inline constexpr RegType LREG_GE_FLAG = RegType::LREG_ARCH3;
+inline constexpr RegType LREG_Q_FLAG  = RegType::LREG_ARCH4;
+inline constexpr RegType LREG_PC      = RegType::LREG_R16;
+inline constexpr RegType LREG_LINK    = RegType::LREG_R15;
+inline constexpr RegType LREG_SP      = RegType::LREG_R14;
+inline constexpr RegType LREG_IP      = RegType::LREG_R13;

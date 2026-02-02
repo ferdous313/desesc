@@ -6,18 +6,17 @@
 #include "config.hpp"
 #include "memory_system.hpp"
 
-MemXBar::MemXBar(const std::string &sec, const std::string &n) : GXBar(sec, n) { /*{{{*/ init(); } /*}}}*/
+MemXBar::MemXBar(const std::string& sec, const std::string& n) : GXBar(sec, n) { /*{{{*/ init(); } /*}}}*/
 
-MemXBar::MemXBar(Memory_system *current, const std::string &sec, const std::string n)
+MemXBar::MemXBar(Memory_system* current, const std::string& sec, const std::string n)
     /* {{{ constructor */
     : GXBar(sec, n) {
   I(current);
-  lower_level_banks = NULL;
 
   init();
 
-  lower_level_banks = new MemObj *[num_banks];
-  XBar_rw_req       = new Stats_cntr *[num_banks];
+  lower_level_banks.resize(num_banks);
+  XBar_rw_req.resize(num_banks);
 
   std::vector<std::string> vPars = absl::StrSplit(Config::get_string(section, "lower_level"), ' ');
   if (vPars.empty()) {
@@ -40,7 +39,7 @@ MemXBar::MemXBar(Memory_system *current, const std::string &sec, const std::stri
     lower_level_banks[i] = current->declareMemoryObj_uniqueName(tmp, std::string(vPars[0]));
     addLowerLevel(lower_level_banks[i]);
 
-    XBar_rw_req[i] = new Stats_cntr(fmt::format("{}_to_{}:rw_req", name, lower_level_banks[i]->getName()));
+    XBar_rw_req[i] = std::make_unique<Stats_cntr>(fmt::format("{}_to_{}:rw_req", name, lower_level_banks[i]->getName()));
   }
 }
 /* }}} */
@@ -55,10 +54,10 @@ uint32_t MemXBar::addrHash(Addr_t addr) const {
   return (addr % num_banks);
 }
 
-void MemXBar::doReq(MemRequest *mreq)
+void MemXBar::doReq(MemRequest* mreq)
 /* read if splitter above L1 (down) {{{1 */
 {
-  if (mreq->getAddr() == 0) {
+  if (mreq->getAddr() == 0) {  // Address 0 is used as a sentinel for invalid addresses
     mreq->ack();
     return;
   }
@@ -73,7 +72,7 @@ void MemXBar::doReq(MemRequest *mreq)
 }
 /* }}} */
 
-void MemXBar::doReqAck(MemRequest *mreq)
+void MemXBar::doReqAck(MemRequest* mreq)
 /* req ack (up) {{{1 */
 {
   I(0);
@@ -86,7 +85,7 @@ void MemXBar::doReqAck(MemRequest *mreq)
 }
 /* }}} */
 
-void MemXBar::doSetState(MemRequest *mreq)
+void MemXBar::doSetState(MemRequest* mreq)
 /* setState (up) {{{1 */
 {
   // FIXME
@@ -95,7 +94,7 @@ void MemXBar::doSetState(MemRequest *mreq)
 }
 /* }}} */
 
-void MemXBar::doSetStateAck(MemRequest *mreq)
+void MemXBar::doSetStateAck(MemRequest* mreq)
 /* setStateAck (down) {{{1 */
 {
   uint32_t pos = addrHash(mreq->getAddr());
@@ -105,7 +104,7 @@ void MemXBar::doSetStateAck(MemRequest *mreq)
 }
 /* }}} */
 
-void MemXBar::doDisp(MemRequest *mreq)
+void MemXBar::doDisp(MemRequest* mreq)
 /* disp (down) {{{1 */
 {
   uint32_t pos = addrHash(mreq->getAddr());
@@ -123,7 +122,7 @@ bool MemXBar::isBusy(Addr_t addr) const
 }
 /* }}} */
 
-void MemXBar::tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase *cb)
+void MemXBar::tryPrefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, CallbackBase* cb)
 /* fast forward reads {{{1 */
 {
   uint32_t pos = addrHash(addr);

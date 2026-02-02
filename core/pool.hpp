@@ -3,8 +3,8 @@
 #pragma once
 
 #include <pthread.h>
-#include <string.h>
-#include <strings.h>
+
+#include <cstring>
 
 #include "fmt/format.h"
 #include "iassert.hpp"
@@ -26,9 +26,9 @@ protected:
   class Holder : public Ttype {
   public:
     Holder(Parameter1 p1) : Ttype(p1) {}
-    Holder *holderNext;
+    Holder* holderNext;
 #ifndef NDEBUG
-    Holder *allNext;  // List of Holders when active
+    Holder* allNext;  // List of Holders when active
     bool    inPool;
 #endif
 #ifdef POOL_TIMEOUT
@@ -46,7 +46,7 @@ protected:
 #endif
 
 #ifndef NDEBUG
-  Holder   *allFirst;  // List of Holders when active
+  Holder*   allFirst;  // List of Holders when active
   pthread_t thid;
   bool      deleted;
 #endif
@@ -55,13 +55,13 @@ protected:
 
   Parameter1 p1;
 
-  Holder *first;  // List of free nodes
+  Holder* first;  // List of free nodes
 
   void reproduce() {
-    I(first == 0);
+    I(first == nullptr);
 
     for (int32_t i = 0; i < Size; i++) {
-      Holder *h     = ::new Holder(p1);
+      Holder* h     = ::new Holder(p1);
       h->holderNext = first;
 #ifndef NDEBUG
       h->inPool  = true;
@@ -84,17 +84,17 @@ public:
     warn_psize = s * 8;
 #endif
 
-    first = 0;
+    first = nullptr;
 
 #ifdef POOL_TIMEOUT
     need2cycle = globalClock + POOL_CHECK_CYCLE;
 #endif
 #ifndef NDEBUG
-    allFirst = 0;
+    allFirst = nullptr;
     thid     = 0;
 #endif
 
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
   }
@@ -102,11 +102,11 @@ public:
   ~pool1() {
     // The last pool whould delete all the crap
     while (first) {
-      Holder *h = first;
+      Holder* h = first;
       first     = first->holderNext;
       ::delete h;
     }
-    first = 0;
+    first = nullptr;
 #ifndef NDEBUG
     deleted = true;
 #endif
@@ -118,7 +118,7 @@ public:
       return;
     }
     if (need2cycle < globalClock) {
-      Holder *tmp = allFirst;
+      Holder* tmp = allFirst;
       while (tmp) {
         GI(!tmp->inPool, (tmp->outCycle + POOL_CHECK_CYCLE) > need2cycle);
         tmp = tmp->allNext;
@@ -128,7 +128,7 @@ public:
 #endif  // POOL_TIMEOUT
   }
 
-  void in(Ttype *data) {
+  void in(Ttype* data) {
 #ifndef NDEBUG
     if (thid == 0) {
       thid = pthread_self();
@@ -136,7 +136,7 @@ public:
     I(thid == pthread_self());
     I(!deleted);
 #endif
-    Holder *h = static_cast<Holder *>(data);
+    Holder* h = static_cast<Holder*>(data);
 
     I(!h->inPool);
 #ifndef NDEBUG
@@ -153,7 +153,7 @@ public:
     doChecks();
   }
 
-  Ttype *out() {
+  Ttype* out() {
 #ifndef NDEBUG
     if (thid == 0) {
       thid = pthread_self();
@@ -180,9 +180,9 @@ public:
     }
 #endif
 
-    Ttype *h = static_cast<Ttype *>(first);
+    Ttype* h = static_cast<Ttype*>(first);
     first    = first->holderNext;
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
 
@@ -197,21 +197,21 @@ class tspool {
 protected:
   class Holder : public Ttype {
   public:
-    volatile Holder *holderNext;
+    volatile Holder* holderNext;
 #ifndef NDEBUG
     bool inPool;
 #endif
   };
 
-  volatile Holder *first;  // List of free nodes
+  volatile Holder* first;  // List of free nodes
 
   const int32_t Size;  // Reproduction size
-  const char   *Name;
+  const char*   Name;
 #ifndef NDEBUG
   bool deleted;
 #endif
 
-  void insert(Holder *h) {
+  void insert(Holder* h) {
     // Equivalent to
     //  h->holderNext = first;
     //  first         = h;
@@ -219,8 +219,8 @@ protected:
 #ifndef NDEBUG
     h->inPool = true;
 #endif
-    volatile Holder *old_first;
-    volatile Holder *c_first;
+    volatile Holder* old_first;
+    volatile Holder* c_first;
     do {
       c_first       = first;
       h->holderNext = c_first;
@@ -229,22 +229,22 @@ protected:
   };
 
   void reproduce() {
-    I(first == 0);
+    I(first == nullptr);
 
     for (int32_t i = 0; i < Size; i++) {
-      Holder *h = ::new Holder;
+      Holder* h = ::new Holder;
       insert(h);
     }
   };
 
 public:
-  tspool(int32_t s = 32, const char *n = "pool name not declared") : Size(s), Name(n) {
+  tspool(int32_t s = 32, const char* n = "pool name not declared") : Size(s), Name(n) {
     I(Size > 0);
 #ifndef NDEBUG
     deleted = false;
 #endif
 
-    first = 0;
+    first = nullptr;
 
     reproduce();
   };
@@ -252,21 +252,21 @@ public:
   ~tspool() {
     // The last pool should delete all the crap
     while (first) {
-      volatile Holder *h = first;
+      volatile Holder* h = first;
       first              = first->holderNext;
       ::delete h;
     }
-    first = 0;
+    first = nullptr;
 #ifndef NDEBUG
     deleted = true;
 #endif
   }
 
-  void in(Ttype *data) {
+  void in(Ttype* data) {
 #ifndef NDEBUG
     I(!deleted);
 #endif
-    Holder *h = static_cast<Holder *>(data);
+    Holder* h = static_cast<Holder*>(data);
 
 #ifndef NDEBUG
     I(!h->inPool);
@@ -275,24 +275,24 @@ public:
     insert(h);
   }
 
-  Ttype *out() {
+  Ttype* out() {
 #ifndef NDEBUG
     I(!deleted);
     I(first);
 #endif
 
-    volatile Holder *old_first;
-    volatile Holder *c_first;
+    volatile Holder* old_first;
+    volatile Holder* c_first;
     do {
       c_first   = first;
       old_first = AtomicCompareSwap(&first, c_first, c_first->holderNext);
     } while (old_first != c_first);
 
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
 
-    Ttype *h = (Ttype *)(c_first);
+    Ttype* h = const_cast<Ttype*>(static_cast<const Ttype*>(c_first));
 #ifndef NDEBUG
     I(c_first->inPool);
     c_first->inPool = false;
@@ -306,9 +306,9 @@ class pool {
 protected:
   class Holder : public Ttype {
   public:
-    Holder *holderNext;
+    Holder* holderNext;
 #ifndef NDEBUG
-    Holder   *allNext;  // List of Holders when active
+    Holder*   allNext;  // List of Holders when active
     pthread_t thid;
     bool      inPool;
 #endif
@@ -326,23 +326,23 @@ protected:
   Time_t need2cycle;
 #endif
 #ifndef NDEBUG
-  Holder   *allFirst;  // List of Holders when active
+  Holder*   allFirst;  // List of Holders when active
   pthread_t thid;
   bool      deleted;
 #endif
 
   const int32_t Size;  // Reproduction size
-  const char   *Name;
+  const char*   Name;
 
-  Holder *first;  // List of free nodes
+  Holder* first;  // List of free nodes
 
   void reproduce() {
-    I(first == 0);
+    I(first == nullptr);
 
     for (int32_t i = 0; i < Size; i++) {
-      Holder *h = ::new Holder;
+      Holder* h = ::new Holder;
 #ifdef CLEAR_ON_INSERT
-      bzero(h, sizeof(Holder));
+      std::memset(h, 0, sizeof(Holder));
 #endif
       h->holderNext = first;
 #ifndef NDEBUG
@@ -355,7 +355,7 @@ protected:
   }
 
 public:
-  pool(int32_t s = 32, const char *n = "pool name not declared") : Size(s), Name(n) {
+  pool(int32_t s = 32, const char* n = "pool name not declared") : Size(s), Name(n) {
     I(Size > 0);
 #ifndef NDEBUG
     deleted = false;
@@ -366,34 +366,24 @@ public:
     warn_psize = s * 8;
 #endif
 
-    first = 0;
+    first = nullptr;
 
 #ifdef POOL_TIMEOUT
     need2cycle = globalClock + POOL_CHECK_CYCLE;
 #endif
 #ifndef NDEBUG
-    allFirst = 0;
+    allFirst = nullptr;
     thid     = 0;
 #endif
 
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
   }
 
   ~pool() {
-    // The last pool whould delete all the crap
-#if 0
-    while(first) {
-      Holder *h = first;
-      first = first->holderNext;
-      ::delete h;
-    }
-    first = 0;
-#ifndef NDEBUG
-    deleted=true;
-#endif
-#endif
+    // Note: Destructors are intentionally disabled to avoid double-free issues
+    // Objects remain in the pool for the lifetime of the program
   }
 
   void doChecks() {
@@ -402,7 +392,7 @@ public:
       return;
     }
     if (need2cycle < globalClock) {
-      Holder *tmp = allFirst;
+      Holder* tmp = allFirst;
       while (tmp) {
         GI(!tmp->inPool, (tmp->outCycle + POOL_CHECK_CYCLE) > need2cycle);
         tmp = tmp->allNext;
@@ -413,21 +403,21 @@ public:
   }
 
 #ifndef NDEBUG
-  Ttype *nextInUse(Ttype *current) {
-    Holder *tmp = static_cast<Holder *>(current);
+  [[nodiscard]] Ttype* nextInUse(Ttype* current) {
+    Holder* tmp = static_cast<Holder*>(current);
     tmp         = tmp->allNext;
     while (tmp) {
       if (!tmp->inPool) {
-        return static_cast<Ttype *>(tmp);
+        return static_cast<Ttype*>(tmp);
       }
       tmp = tmp->allNext;
     }
-    return 0;
+    return nullptr;
   }
-  Ttype *firstInUse() { return nextInUse(static_cast<Ttype *>(allFirst)); }
+  [[nodiscard]] Ttype* firstInUse() { return nextInUse(static_cast<Ttype*>(allFirst)); }
 #endif
 
-  void in(Ttype *data) {
+  void in(Ttype* data) {
 #ifndef NDEBUG
     if (thid == 0) {
       thid = pthread_self();
@@ -435,10 +425,10 @@ public:
     I(thid == pthread_self());
     I(!deleted);
 #endif
-    Holder *h = static_cast<Holder *>(data);
+    Holder* h = static_cast<Holder*>(data);
 
 #ifdef CLEAR_ON_INSERT
-    bzero(data, sizeof(Ttype));
+    std::memset(data, 0, sizeof(Ttype));
 #endif
 
 #ifndef NDEBUG
@@ -456,7 +446,7 @@ public:
     doChecks();
   }
 
-  Ttype *out() {
+  Ttype* out() {
 #ifndef NDEBUG
     if (thid == 0) {
       thid = pthread_self();
@@ -482,14 +472,14 @@ public:
     }
 #endif
 
-    Ttype *h = static_cast<Ttype *>(first);
+    Ttype* h = static_cast<Ttype*>(first);
     first    = first->holderNext;
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
 
 #if defined(CLEAR_ON_INSERT) && !defined(NDEBUG)
-    const char *ptr = (const char *)(h);
+    const char* ptr = (const char*)(h);
     for (size_t i = 0; i < sizeof(Ttype); i++) {
       I(ptr[i] == 0);
     }
@@ -505,9 +495,9 @@ class poolplus {
 protected:
   class Holder : public Ttype {
   public:
-    Holder *holderNext;
+    Holder* holderNext;
 #ifndef NDEBUG
-    Holder *allNext;  // List of Holders when active
+    Holder* allNext;  // List of Holders when active
     bool    inPool;
 #endif
 #ifdef POOL_TIMEOUT
@@ -525,20 +515,20 @@ protected:
 #endif
 
 #ifndef NDEBUG
-  Holder *allFirst;  // List of Holders when active
+  Holder* allFirst;  // List of Holders when active
   bool    deleted;
 #endif
 
   const int32_t Size;  // Reproduction size
-  const char   *Name;
+  const char*   Name;
 
-  Holder *first;  // List of free nodes
+  Holder* first;  // List of free nodes
 
   void reproduce() {
-    I(first == 0);
+    I(first == nullptr);
 
     for (int32_t i = 0; i < Size; i++) {
-      Holder *h     = ::new Holder;
+      Holder* h     = ::new Holder;
       h->holderNext = first;
 #ifndef NDEBUG
       h->inPool  = true;
@@ -550,7 +540,7 @@ protected:
   }
 
 public:
-  poolplus(int32_t s = 32, const char *n = "poolplus name not declared") : Size(s), Name(n) {
+  poolplus(int32_t s = 32, const char* n = "poolplus name not declared") : Size(s), Name(n) {
     I(Size > 0);
 #ifndef NDEBUG
     deleted = false;
@@ -561,16 +551,16 @@ public:
     warn_psize = s * 8;
 #endif
 
-    first = 0;
+    first = nullptr;
 
 #ifdef POOL_TIMEOUT
     need2cycle = globalClock + POOL_CHECK_CYCLE;
 #endif
 #ifndef NDEBUG
-    allFirst = 0;
+    allFirst = nullptr;
 #endif
 
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
   }
@@ -578,11 +568,11 @@ public:
   ~poolplus() {
     // The last pool whould delete all the crap
     while (first) {
-      Holder *h = first;
+      Holder* h = first;
       first     = first->holderNext;
       ::delete h;
     }
-    first = 0;
+    first = nullptr;
 #ifndef NDEBUG
     deleted = true;
 #endif
@@ -594,7 +584,7 @@ public:
       return;
     }
     if (need2cycle < globalClock) {
-      Holder *tmp = allFirst;
+      Holder* tmp = allFirst;
       while (tmp) {
         GI(!tmp->inPool, (tmp->outCycle + POOL_CHECK_CYCLE) > need2cycle);
         tmp = tmp->allNext;
@@ -604,8 +594,8 @@ public:
 #endif  // POOL_TIMEOUT
   }
 
-  void in(Ttype *data) {
-    Holder *h = static_cast<Holder *>(data);
+  void in(Ttype* data) {
+    Holder* h = static_cast<Holder*>(data);
 
 #ifndef NDEBUG
     I(!deleted);
@@ -623,7 +613,7 @@ public:
     doChecks();
   }
 
-  Ttype *out() {
+  Ttype* out() {
 #ifndef NDEBUG
     I(!deleted);
     I(first);
@@ -644,9 +634,9 @@ public:
     }
 #endif
 
-    Ttype *h = static_cast<Ttype *>(first);
+    Ttype* h = static_cast<Ttype*>(first);
     first    = first->holderNext;
-    if (first == 0) {
+    if (first == nullptr) {
       reproduce();
     }
 
