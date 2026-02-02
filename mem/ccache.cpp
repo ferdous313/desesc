@@ -1239,7 +1239,10 @@ void CCache::tryPrefetch(Addr_t paddr, bool doStats, int degree, Addr_t pref_sig
     return;
   }
 
-  if (!allocateMiss) {
+  //jose_original_prefetch_working
+  //if (!allocateMiss) {
+  //jose suggest 
+    if (false && !allocateMiss) {
     Addr_t page_addr = (paddr >> 10) << 10;
     if (pref_sign != PSIGN_MEGA || page_addr != paddr) {
       nPrefetchHitBusy.inc(doStats);

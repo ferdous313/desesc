@@ -19,7 +19,7 @@
 #include "tracer.hpp"
 
 // SCB SPEC buffer : directly L3->SCB //#define ENABLE_SCB_SPEC
-//#define ENABLE_SCB_SPEC
+#define ENABLE_SCB_SPEC
 //SCB: Basic on for all stores and all loads: normalSCB
 #define ENABLE_SCB_ALL
 

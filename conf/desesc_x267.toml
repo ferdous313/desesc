@@ -240,8 +240,8 @@ frequency_mhz = 1000
 #=======
 bpred         = ["bp0","bp1"]
 #bpred         = ["bp1"]
-do_random_transients = true
-#do_random_transients = false
+#do_random_transients = true
+do_random_transients = false
 
 # Fetch parameters
 fetch_align       = true
@@ -380,12 +380,12 @@ max_requests  = 32
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
 
-#allocate_miss = true   # allocate on cache miss 
-allocate_miss = false   # allocate_miss =false for free runing cache
+allocate_miss = true   # allocate on cache miss 
+#allocate_miss = false   # allocate_miss =false for free runing cache
 victim        = false   # victim cache allocation style
 coherent      = true
-#inclusive     = true   # inlcusive = true for inclusive cache
-inclusive     = false   # inlcusive = false for free running cache
+inclusive     = true   # inlcusive = true for inclusive cache
+#inclusive     = false   # inlcusive = false for free running cache
 directory     = false
 
 nlp_distance = 2
@@ -418,7 +418,7 @@ max_requests  = 32
 
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
-
+#icache
 allocate_miss = true   # allocate on cache miss
 victim        = false  # victim cache allocation style
 coherent      = true
@@ -456,12 +456,12 @@ max_requests  = 32
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
 
-#allocate_miss = true   # allocate on cache miss
-allocate_miss = false   # allocate on free running cache 
+allocate_miss = true   # allocate on cache miss
+#allocate_miss = false   # allocate on free running cache 
 victim        = false  # victim cache allocation style
 coherent      = true
-#inclusive     = true
-inclusive     = false
+inclusive     = true
+#inclusive     = false
 directory     = false
 
 nlp_distance = 2

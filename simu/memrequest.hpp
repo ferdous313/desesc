@@ -592,7 +592,7 @@ public:
     return globalClock - startClock;
   }
   [[nodiscard]] Time_t getTimeDelay(Time_t when) const {
-    I(startClock);
+    //limaI(startClock);
     I(startClock <= when);
     return when - startClock;
   }

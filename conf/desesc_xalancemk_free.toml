@@ -34,10 +34,10 @@ type      = "dromajo"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/omnetpp/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/x264/sp7"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/deepsjeng/sp1"
-#load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xalancebmk/sp5"
+load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xalancebmk/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xz_cpu2006docs/sp6"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/perlbench_diffmail/sp2"
-load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/perlbench_splitmail/sp2"
+#load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/perlbench_splitmail/sp2"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fselective-scheduling/sp7"
 
 
@@ -96,10 +96,14 @@ start_roi = false
 #detail    = 30000000
 #time      = 20000000
 #<<<<<<<<<<<<<
-rabbit    = 0
-detail    = 0
+#rabbit    = 0
+rabbit    = 800000
+#detail    = 0
+detail    = 800000
 #Number of Insts
 #time      = 10000
+#time      = 1000000
+#time       = 1500000
 time      = 50000000
 #time      = 100_000_000
 #>>>>>>> upstream/main
@@ -240,8 +244,8 @@ frequency_mhz = 1000
 #=======
 bpred         = ["bp0","bp1"]
 #bpred         = ["bp1"]
-#do_random_transients = true
-do_random_transients = false
+do_random_transients = true
+#do_random_transients = false
 
 # Fetch parameters
 fetch_align       = true
@@ -254,7 +258,7 @@ smt = 1 # Number of STM context
 
 # Memory Parameters
 caches        = true  # set true to enable caches...
-#na caches        = falsm
+#na caches        = false
 scb_size      = 32
 #scb_size      = 128
 memory_replay = false
@@ -380,16 +384,18 @@ max_requests  = 32
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
 
-allocate_miss = true   # allocate on cache miss 
-#allocate_miss = false   # allocate_miss =false for free runing cache
+#allocate_miss = true   # allocate on cache miss 
+allocate_miss = false   # allocate_miss =false for free runing cache
 victim        = false   # victim cache allocation style
 coherent      = true
-inclusive     = true   # inlcusive = false for free running cache
-#inclusive     = false   # inlcusive = false for free running cache
+#inclusive     = true   # inlcusive = false for free running cache
+inclusive     = false   # inlcusive = false for free running cache
 directory     = false
 
-nlp_distance = 2
-nlp_degree   = 1       # 0 disabled
+#nlp_distance = 2
+nlp_distance = 0
+#nlp_degree   = 1       # 0 disabled
+nlp_degree   = 0       # 0 disabled
 nlp_stride   = 1
 
 drop_prefetch = true
@@ -418,7 +424,7 @@ max_requests  = 32
 
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
-
+#icache
 allocate_miss = true   # allocate on cache miss
 victim        = false  # victim cache allocation style
 coherent      = true
@@ -456,16 +462,18 @@ max_requests  = 32
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
 
-allocate_miss = true   # allocate on cache miss
-#allocate_miss = false   # allocate on free running cache 
+#allocate_miss = true   # allocate on cache miss
+allocate_miss = false   # allocate on free running cache 
 victim        = false  # victim cache allocation style
 coherent      = true
-inclusive     = true
-#inclusive     = false
+#inclusive     = true
+inclusive     = false
 directory     = false
 
-nlp_distance = 2
-nlp_degree   = 1       # 0 disabled
+#nlp_distance = 2
+nlp_distance = 0
+#nlp_degree   = 1       # 0 disabled
+nlp_degree   = 0       # 0 disabled
 nlp_stride   = 1
 
 drop_prefetch = true
@@ -484,7 +492,8 @@ lower_level = ""
 
 
 [pref_opt]
-type       = "stride"
+#type       = "stride"
+type       = "void"
 degree     = 10
 distance   = 0
 

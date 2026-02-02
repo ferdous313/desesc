@@ -385,12 +385,12 @@ max_requests  = 32
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
 
-#allocate_miss = true   # allocate on cache miss 
-allocate_miss = false   # allocate_miss =false for free runing cache
+allocate_miss = true   # allocate on cache miss 
+#allocate_miss = false   # allocate_miss =false for free runing cache
 victim        = false   # victim cache allocation style
 coherent      = true
-#inclusive     = true   # inlcusive = false for free running cache
-inclusive     = false   # inlcusive = false for free running cache
+inclusive     = true   # inlcusive = false for free running cache
+#inclusive     = false   # inlcusive = false for free running cache
 directory     = false
 
 nlp_distance = 2
@@ -405,8 +405,8 @@ mega_lines1K    = 0    # 0 lines touched, disable megaration prefetcher for free
 lower_level = "privl2 L2 sharedby 2"
 
 [il1_cache]
-type       = "nice"   # or nice
-#type       = "cache"   # or nice
+#type       = "nice"   # or nice
+type       = "cache"   # or nice
 cold_misses = true
 size       = 32768
 line_size  = 64
@@ -425,7 +425,7 @@ max_requests  = 32
 
 #Free running cache(non inclusive)::allocate_miss ==false: for free runing cache
 #Free running cache::inlcusive ==false for free running cache
-
+#icache
 allocate_miss = true   # allocate on cache miss
 victim        = false  # victim cache allocation style
 coherent      = true
@@ -465,12 +465,12 @@ max_requests  = 32
 #Free running cache::inlcusive ==false for free running cache
 
 
-#allocate_miss = true   # allocate miss = true for inclusive cache
-allocate_miss = false   # allocate_miss =false for free runing cache
+allocate_miss = true   # allocate miss = true for inclusive cache
+#allocate_miss = false   # allocate_miss =false for free runing cache
 victim        = false   # victim cache allocation style
 coherent      = true
-#inclusive     = true   # inlcusive = false for free running cache
-inclusive     = false   # inlcusive = false for free running cache
+inclusive     = true   # inlcusive = false for free running cache
+#inclusive     = false   # inlcusive = false for free running cache
 directory     = false
 
 #allocate_miss = true   # allocate on cache miss
