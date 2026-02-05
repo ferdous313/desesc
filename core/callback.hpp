@@ -2,7 +2,9 @@
 
 #pragma once
 
-// #include <algorithm>  // std::find()..
+#define STRICT_PRIORITY      1
+#define PORT_STRICT_PRIORITY 1
+
 #include <cstdlib>
 #include <vector>  // std::vector<>
 
@@ -11,6 +13,9 @@
 #include "pool.hpp"
 #include "snippets.hpp"
 #include "tqueue.hpp"
+
+// Forward declaration for port registration
+class PortGeneric;
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -70,6 +75,12 @@ public:
 
   void dump() const;
 
+  // Port registration for deferred allocation with contention handling
+  // With PORT_STRICT_PRIORITY: priority order (lowest dinst ID first)
+  // Without PORT_STRICT_PRIORITY: FIFO order (first inserted, first popped)
+  static void registerPort(PortGeneric* port);
+  static void processPendingPortRequests();
+
   static void schedule(Time_t tim, EventScheduler* cb) {
     (void)tim;
     (void)cb;
@@ -114,6 +125,11 @@ public:
 #endif
     globalClock++;
 
+    // Process pending port requests BEFORE regular callbacks
+    // This allows priority-ordered allocation at cycle start
+    // (no-op without PORT_STRICT_PRIORITY)
+    processPendingPortRequests();
+
     uint32_t cb_per_clock = 0;
     while ((cb = cbQ.nextJob(globalClock))) {
       cb->call();
@@ -133,6 +149,15 @@ public:
     I(empty());
     cbQ.reset();
     globalClock = 0;
+    // Clear port registrations on reset
+    getRegisteredPorts().clear();
+  }
+
+private:
+  // Static storage for registered ports (accessor pattern for static initialization order)
+  static std::vector<PortGeneric*>& getRegisteredPorts() {
+    static std::vector<PortGeneric*> registered_ports;
+    return registered_ports;
   }
 };
 

@@ -172,6 +172,9 @@ private:
   Stats_cntr tso2Replay;
 #endif
 
+  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+  void do_load_execution(Time_t when, Dinst* dinst);
+
 protected:
   void cacheDispatched(Dinst* dinst);
   using cacheDispatchedCB = CallbackMember1<FULoad, Dinst*, &FULoad::cacheDispatched>;
@@ -211,6 +214,9 @@ private:
   int32_t freeEntries;
   bool    enableDcache;
 
+  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+  void do_store_execution(Time_t when, Dinst* dinst);
+
 public:
   FUStore(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGeneric> aGen, LSQ* lsq, std::shared_ptr<StoreSet> ss,
           std::shared_ptr<Prefetcher> pref, std::shared_ptr<Store_buffer> scb, TimeDelta_t l, std::shared_ptr<Gmemory_system> ms,
@@ -243,6 +249,9 @@ public:
 
 class FUGeneric : public Resource {
 private:
+  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+  void do_generic_execution(Time_t when, Dinst* dinst);
+
 protected:
 public:
   FUGeneric(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGeneric> aGen, TimeDelta_t l, uint32_t cpuid);
@@ -277,6 +286,9 @@ private:
   int32_t     freeBranches;
   bool        drainOnMiss;
   TimeDelta_t bpred_delay;
+
+  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+  void do_branch_execution(Time_t when, Dinst* dinst);
 
 protected:
 public:
@@ -313,6 +325,9 @@ private:
   Stats_cntr dmemoryBarrier;
   Stats_cntr imemoryBarrier;
   Time_t     blockUntil;
+
+  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+  void do_ralu_execution(Time_t when, Dinst* dinst);
 
 protected:
 public:

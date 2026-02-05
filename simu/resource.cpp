@@ -289,12 +289,28 @@ StallCause FULoad::canIssue(Dinst* dinst) {
 void FULoad::executing(Dinst* dinst) {
   /* executing {{{1 */
 
+  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
+
+  if (!needs_retry) {
+    do_load_execution(when, dinst);
+  } else {
+    // Resource busy - queue for priority-based retry
+    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
+      do_load_execution(allocated_time, dinst);
+    });
+  }
+}
+
+/* }}} */
+
+void FULoad::do_load_execution(Time_t when, Dinst* dinst) {
   if (LSQlateAlloc) {
     freeEntries--;
   }
 
   cluster->executing(dinst);
-  Time_t when = gen->nextSlot(dinst->has_stats()) + lat;
+
+  Time_t when_sched = when + lat;
 
   Dinst* qdinst = lsq->executing(dinst);
   I(qdinst == 0);
@@ -304,7 +320,6 @@ void FULoad::executing(Dinst* dinst) {
     if (!dinst->getGProc()->is_nuking()) {
       stldViolations.inc(dinst->has_stats());
     }
-
     storeset->stldViolation(qdinst, dinst);
   }
 
@@ -314,6 +329,7 @@ void FULoad::executing(Dinst* dinst) {
   if (dinst->isLoadForwarded() || !enableDcache || dinst->is_destroy_transient() || scb->is_ld_forward(dinst->getAddr()))
 #endif
   {
+//<<<<<<< HEAD
     printf("FULoad::Resource::Executing::isLoadForwared::cache::dinst  %ld\n", dinst->getID());
     if (dinst->is_spec()) {  // Future Spectre Related
 #ifdef ENABLE_SCB_SPEC
@@ -333,21 +349,30 @@ void FULoad::executing(Dinst* dinst) {
     pref->exe(dinst);
   } 
   }else {
-    cacheDispatchedCB::scheduleAbs(when, this, dinst);
-/*=======
+   /* cacheDispatchedCB::scheduleAbs(when, this, dinst);
+=======
     performedCB::scheduleAbs(when + LSDelay, this, dinst, dinst->getID());
+=======
+    performedCB::scheduleAbs(when_sched + LSDelay, this, dinst, dinst->getID());
+>>>>>>> upstream/main
     dinst->markDispatched();
-
     pref->exe(dinst);
   } else {
+<<<<<<< HEAD
     cacheDispatchedCB::scheduleAbs(when, this, dinst, dinst->getID());
->>>>>>> upstream/main*/
+>>>>>>> upstream/main
   }
-}
+}*/
 
 
 /* }}} */
 
+//=======*/
+    cacheDispatchedCB::scheduleAbs(when_sched, this, dinst, dinst->getID());
+  }
+}
+
+>>>>>>> upstream/main
 void FULoad::cacheDispatched(Dinst* dinst) {
   /* cacheDispatched {{{1 */
 
@@ -745,12 +770,27 @@ void FUStore::executing(Dinst* dinst) {
   }
 
   cluster->executing(dinst);
-  gen->nextSlot(dinst->has_stats());
+
+  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
+
+  if (!needs_retry) {
+    do_store_execution(when, dinst);
+  } else {
+    // Resource busy - queue for priority-based retry
+    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
+      do_store_execution(allocated_time, dinst);
+    });
+  }
+}
+/* }}} */
+
+void FUStore::do_store_execution(Time_t when, Dinst* dinst) {
+  (void)when;  // Time not used - just consuming port slot
 
   if (dinst->getInst()->isStoreAddress()) {
 #if 0
     if (enableDcache && !firstLevelMemObj->isBusy(dinst->getAddr()) ){
-      MemRequest::sendReqWritePrefetch(firstLevelMemObj, dinst->has_stats(), dinst->getAddr(), 0); // executedCB::create(this,dinst));
+      MemRequest::sendReqWritePrefetch(firstLevelMemObj, dinst->has_stats(), dinst->getAddr(), 0);
     }
     executed(dinst);
 #else
@@ -760,7 +800,6 @@ void FUStore::executing(Dinst* dinst) {
     executed(dinst);
   }
 }
-/* }}} */
 
 void FUStore::executed(Dinst* dinst) {
   /* executed */
@@ -938,7 +977,21 @@ StallCause FUGeneric::canIssue(Dinst* dinst) {
 
 void FUGeneric::executing(Dinst* dinst) {
   /* executing {{{1 */
-  Time_t nlat = gen->nextSlot(dinst->has_stats()) + lat;
+  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
+
+  if (!needs_retry) {
+    do_generic_execution(when, dinst);
+  } else {
+    // Resource busy - queue for priority-based retry
+    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
+      do_generic_execution(allocated_time, dinst);
+    });
+  }
+}
+/* }}} */
+
+void FUGeneric::do_generic_execution(Time_t when, Dinst* dinst) {
+  Time_t nlat = when + lat;
 #if 0
   if (dinst->getPC() == 1073741832) {
     MSG("@%lld Scheduling callback for FID[%d] PE[%d] Warp [%d] pc 1073741832 at @%lld"
@@ -952,7 +1005,6 @@ void FUGeneric::executing(Dinst* dinst) {
   cluster->executing(dinst);
   executedCB::scheduleAbs(nlat, this, dinst, dinst->getID());
 }
-/* }}} */
 
 void FUGeneric::executed(Dinst* dinst) {
   /* executed {{{1 */
@@ -1036,10 +1088,23 @@ StallCause FUBranch::canIssue(Dinst* dinst) {
 
 void FUBranch::executing(Dinst* dinst) {
   /* executing {{{1 */
-  cluster->executing(dinst);
-  executedCB::scheduleAbs(gen->nextSlot(dinst->has_stats()) + lat + bpred_delay, this, dinst, dinst->getID());
+  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
+
+  if (!needs_retry) {
+    do_branch_execution(when, dinst);
+  } else {
+    // Resource busy - queue for priority-based retry
+    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
+      do_branch_execution(allocated_time, dinst);
+    });
+  }
 }
 /* }}} */
+
+void FUBranch::do_branch_execution(Time_t when, Dinst* dinst) {
+  cluster->executing(dinst);
+  executedCB::scheduleAbs(when + lat + bpred_delay, this, dinst, dinst->getID());
+}
 
 void FUBranch::executed(Dinst* dinst) {
   /* executed {{{1 */
@@ -1158,12 +1223,25 @@ void FURALU::executing(Dinst* dinst)
   if (dinst->is_flush_transient()) {
   }
 
-  cluster->executing(dinst);
-  executedCB::scheduleAbs(gen->nextSlot(dinst->has_stats()) + lat, this, dinst, dinst->getID());
+  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
+
+  if (!needs_retry) {
+    do_ralu_execution(when, dinst);
+  } else {
+    // Resource busy - queue for priority-based retry
+    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
+      do_ralu_execution(allocated_time, dinst);
+    });
+  }
 
   // Recommended poweron the GPU threads and then poweroff the QEMU thread?
 }
 /* }}} */
+
+void FURALU::do_ralu_execution(Time_t when, Dinst* dinst) {
+  cluster->executing(dinst);
+  executedCB::scheduleAbs(when + lat, this, dinst, dinst->getID());
+}
 
 void FURALU::executed(Dinst* dinst)
 /* executed {{{1 */
