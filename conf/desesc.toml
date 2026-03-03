@@ -89,7 +89,7 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 
 # Load a Binary
 #bench      = "conf/dhrystone.riscv"
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #bench      = "k1"
 
 start_roi = false
@@ -116,14 +116,14 @@ time      = 50000000
 #time      = 100000000
 #time      = 100_000_000
 #>>>>>>> upstream/main
-=======
+#=======
 bench      = "k2"
 
 start_roi = false
 rabbit    = 100000
 detail    = 2500000
 time      = 2500000
->>>>>>> upstream/main
+#>>>>>>> upstream/main
 
 [rand_emu]
 type = "random"  # Generate random instructions (coverage testing?)
@@ -286,19 +286,19 @@ frequency_mhz = 200
 [c0]
 type  = "ooo"  # ooo or inorder or accel
 frequency_mhz = 1000
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #<<<<<<< HEAD
 #bpred         = ["bp0", "bp1"]
 #do_random_transients = true
 #=======
-bpred         = ["bp0","bp1"]
+#bpred         = ["bp0","bp1"]
 #bpred         = ["bp1"]
 #do_random_transients = true
-=======
+#=======
 bpred         = ["bp0", "bp1", "bp2"]
 #bpred         = ["bp2"]
 #do_random_transients = false
->>>>>>> upstream/main
+#>>>>>>> upstream/main
 do_random_transients = false
 
 # Fetch parameters
@@ -458,19 +458,19 @@ mega_lines1K    = 0    # 0 lines touched, disable megaration prefetcher for free
 lower_level = "privl2 L2 sharedby 2"
 
 [il1_cache]
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #type       = "nice"   # or nice
-=======
->>>>>>> upstream/main
+#=======
+#>>>>>>> upstream/main
 type       = "cache"   # or nice
 cold_misses = true
 size       = 32768
 line_size  = 64
 delay      = 2         # hit delay
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #miss_delay = 8
-=======
->>>>>>> upstream/main
+#=======
+#>>>>>>> upstream/main
 miss_delay = 2
 assoc      = 4
 repl_policy = "lru"
@@ -503,12 +503,12 @@ mega_lines1K    = 0    # 8 lines touched, triggers mega/carped prefetch
 lower_level = "privl2 L2 sharedby 2"
 
 [privl2]
-<<<<<<< HEAD
-type       = "cache"   # or nice(all hit)
+#<<<<<<< HEAD
+#type       = "cache"   # or nice(all hit)
 #type       = "nice"   # or nice
-=======
+#=======
 type       = "cache"   # or nice
->>>>>>> upstream/main
+#>>>>>>> upstream/main
 cold_misses = true
 size       = 2097152  # 2MB
 line_size  = 64
