@@ -30,11 +30,8 @@ MemRequest::MemRequest()
     , startSetStateAckCB(this)
     , startDispCB(this) {
     }*/
-/*=======/*
 /* constructor  */
 {}
-//>>>>>>> upstream/main
-/*  */
 
 MemRequest::~MemRequest()
 // destructor

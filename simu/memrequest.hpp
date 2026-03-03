@@ -467,14 +467,13 @@ public:
     mreq->topCoherentNode = creator;
     m->disp(mreq);
   }
-<<<<<<< HEAD
+/*<<<<<<< HEAD
 
   static void sendCleanDisp(MemObj *m, MemObj *creator, Addr_t addr, bool prefetch, bool keep_stats) {
     MemRequest *mreq = create(m, addr, keep_stats, nullptr);
-=======
+=======*/
   static void sendCleanDisp(MemObj* m, MemObj* creator, Addr_t addr, bool prefetch, bool keep_stats) {
     MemRequest* mreq = create(m, addr, keep_stats, nullptr);
->>>>>>> upstream/main
     mreq->mt         = mt_disp;
     mreq->ma         = ma_setValid;
     mreq->ma_orig    = mreq->ma;

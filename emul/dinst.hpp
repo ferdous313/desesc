@@ -579,12 +579,12 @@ public:
     cluster  = cls;
     resource = res;
   }
-/*<<<<<<< HEAD
-  void set_scb(std::shared_ptr<Store_buffer> storebuffer) {
+//<<<<<<< HEAD
+/*  void set_scb(std::shared_ptr<Store_buffer> storebuffer) {
     scb  = storebuffer;
   }
   
-  std::shared_ptr<Cluster>  getCluster() const { return cluster; }
+ std::shared_ptr<Cluster>  getCluster() const { return cluster; }
   std::shared_ptr<Resource> getClusterResource() const { return resource; }
   std::shared_ptr<Store_buffer> get_scb() const { return scb; }
 =======*/

@@ -249,7 +249,7 @@ StallCause FULoad::canIssue(Dinst* dinst) {
   /* canIssue {{{1 */
   printf("FULoad::Resource::canIssue():: Entering Canissue() dinst  %ld\n", dinst->getID());
 
-  dinst->set_scb(scb);
+  //dinst->set_scb(scb);
   if (freeEntries <= 0) {
     I(freeEntries == 0);  // Can't be negative
     return OutsLoadsStall;
@@ -372,7 +372,6 @@ void FULoad::do_load_execution(Time_t when, Dinst* dinst) {
   }
 }
 
->>>>>>> upstream/main
 void FULoad::cacheDispatched(Dinst* dinst) {
   /* cacheDispatched {{{1 */
 
@@ -721,7 +720,7 @@ FUStore::FUStore(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<Port
 StallCause FUStore::canIssue(Dinst* dinst) {
   /* canIssue {{{1 */
 
-  dinst->set_scb(scb);
+  //dinst->set_scb(scb);
   if (dinst->getInst()->isStoreAddress()) {
     return NoStall;
   }

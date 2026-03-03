@@ -3,7 +3,7 @@
 # and field names
 
 [trace]
-range = [0,5000]
+#range = [0,5000]
 #range = [0,313000]
 #<<<<<<< HEAD
 #range = [50000,60000]
@@ -84,7 +84,7 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_splitmail/perlbench_splitmail"
 
 # Load a Binary
-bench      = "conf/dhrystone.riscv"
+#bench      = "conf/dhrystone.riscv"
 #bench      = "k1"
 
 start_roi = false
@@ -249,8 +249,8 @@ frequency_mhz = 1000
 #=======
 bpred         = ["bp0","bp1"]
 #bpred         = ["bp1"]
-do_random_transients = true
-#do_random_transients = false
+#do_random_transients = true
+do_random_transients = false
 
 # Fetch parameters
 fetch_align       = true
