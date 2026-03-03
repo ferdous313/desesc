@@ -34,8 +34,37 @@ enum class Outcome { Correct, None, NoBTB, Miss };
 
 class MemObj;
 
+// Rotate/XOR cascade mixer (no multiplies). Produces 64-bit mixed value.
+[[nodiscard]] constexpr std::uint64_t bpred_hash(Addr_t x) noexcept {
+  // Rotate-heavy avalanche; all ops are shifts/xors/ors.
+  x ^= std::rotl(x, 5);
+  x ^= std::rotl(x, 13);
+  x ^= (x >> 32);
+  x ^= std::rotl(x, 7);
+  x ^= (x >> 23);
+  x ^= std::rotl(x, 17);
+  x ^= (x >> 29);
+  x ^= std::rotl(x, 41);
+  return x;
+}
+
+[[nodiscard]] constexpr std::uint64_t bpred_hash(Addr_t addr, Addr_t offset) noexcept {
+  // Pre-mix both inputs so the later combines aren't "linear-ish".
+  std::uint64_t a = bpred_hash(addr);
+  std::uint64_t c = bpred_hash(offset ^ std::rotl(offset, 19) ^ (offset << 1));
+
+  a ^= std::rotl(c, 9);
+  a ^= std::rotl(c, 27);
+  a ^= (c >> 17);
+
+  a ^= std::rotl(a ^ c, 33);
+
+  return bpred_hash(a);
+}
+
 class BPred {
 public:
+  Addr_t             boundaryPC;
   static std::string to_s(Outcome o) {
     if (o == Outcome::Correct) {
       return "Correct";
@@ -75,8 +104,15 @@ protected:
   Stats_cntr nHit;   // N.B. predictors should not update these counters directly
   Stats_cntr nMiss;  // in their predict() function.
 
-  int32_t addrShift;
-  int32_t maxCores;
+  uint8_t    last_taken_type;
+  Stats_cntr first_br;
+  Stats_cntr first_jump;
+  Stats_cntr first_ret;
+  Stats_cntr first_br_correct;
+  Stats_cntr first_jump_correct;
+  Stats_cntr first_ret_correct;
+  int32_t    addrShift;
+  int32_t    maxCores;
 
 public:
   BPred(int32_t i, const std::string& section, const std::string& sname, const std::string& name);
@@ -124,12 +160,18 @@ public:
 
 class BPBTB {
 private:
-  Stats_cntr nHit;
-  Stats_cntr nMiss;
-  Stats_cntr nHitLabel;  // hits to the icache label (ibtb)
-  DOLC*      dolc;
-  bool       btbicache;
-  uint64_t   btbHistorySize;
+  Stats_cntr  nHit;
+  Stats_cntr  nMiss;
+  Stats_cntr  nHitLabel;  // hits to the icache label (ibtb)
+  DOLC*       dolc;
+  bool        btbicache;
+  uint64_t    btbHistorySize;
+  const bool  btb_fetch_predict;
+  const bool  btb_tag_offset;
+  const bool  btb_tag_hybrid;
+  uint32_t btb_tag_size;
+  uint32_t btb_tag_mask;
+  std::string btb_name;
 
   class BTBState : public StateGeneric<Addr_t> {
   public:
@@ -146,14 +188,22 @@ private:
   typedef CacheGeneric<BTBState, Addr_t> BTBCache;
 
   BTBCache* data;
+  Addr_t    boundaryPC;
+  uint32_t  tag_offset;
+  uint32_t  ntaken;
+
+  std::tuple<Addr_t, Addr_t> compute_index_tag(Dinst* dinst, bool do_tag_offset, bool doUpdate);
 
 protected:
 public:
   BPBTB(int32_t i, const std::string& section, const std::string& sname, const std::string& name = "btb");
   ~BPBTB();
 
-  Outcome predict(Addr_t pc, Dinst* dinst, bool doUpdate, bool doStats);
-  void    updateOnly(Addr_t pc, Dinst* dinst);
+  void    add_control_offset();
+  void    fetchBoundaryBegin(Dinst* dinst);
+  void    fetchBoundaryEnd();
+  Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
+  void    updateOnly(Dinst* dinst);
 };
 
 class BPOracle : public BPred {
@@ -265,6 +315,7 @@ private:
   std::unique_ptr<IMLIBest> imli;
 
   const bool FetchPredict;
+  const bool use_tag_offset;
 
 protected:
 public:

@@ -87,6 +87,7 @@ std::string Config::get_string(const std::string& block, const std::string& name
         });
         if (same) {
           std::transform(e.begin(), e.end(), e.begin(), [](unsigned char c) { return std::tolower(c); });
+          add_used(block, name, 0, e);
           return e;
         }
       }
@@ -114,6 +115,7 @@ std::string Config::get_string(const std::string& block, const std::string& name
       });
       if (same) {
         std::transform(e.begin(), e.end(), e.begin(), [](unsigned char c) { return std::tolower(c); });
+        add_used(block, name, pos, e, true);
         return e;
       }
     }
@@ -124,7 +126,7 @@ std::string Config::get_string(const std::string& block, const std::string& name
 
   std::transform(val.begin(), val.end(), val.begin(), [](unsigned char c) { return std::tolower(c); });
 
-  add_used(block, name, pos, val);
+  add_used(block, name, pos, val, true);
 
   return val;
 }
@@ -159,6 +161,7 @@ std::string Config::get_string(const std::string& block, const std::string& name
       });
       if (same) {
         std::transform(e.begin(), e.end(), e.begin(), [](unsigned char c) { return std::tolower(c); });
+        add_used(block2, name2, pos, e);
         return e;
       }
     }
@@ -321,7 +324,7 @@ int Config::get_array_integer(const std::string& block, const std::string& name,
     val = arr[pos].as_floating();
   }
 
-  add_used(block, name, pos, fmt::format("{}", val));
+  add_used(block, name, pos, fmt::format("{}", val), true);
   return val;
 }
 
@@ -352,7 +355,7 @@ std::string Config::get_array_string(const std::string& block, const std::string
   std::string val = arr[pos].as_string();
   std::transform(val.begin(), val.end(), val.begin(), [](unsigned char c) { return std::tolower(c); });
 
-  add_used(block, name, pos, val);
+  add_used(block, name, pos, val, true);
 
   return val;
 }
@@ -527,17 +530,20 @@ std::string Config::get_block2(const std::string& block, const std::string& name
 
   auto val = t_block2.as_string();
 
-  add_used(block, name, pos, val);
+  add_used(block, name, pos, val, true);
 
   return val;
 }
 
-void Config::add_used(const std::string& block, const std::string& name, size_t pos, const std::string& val) {
-  if (used[block].second.size() <= pos) {
-    used[block].second.resize(pos + 1);
-    used[block].first = name;
+void Config::add_used(const std::string& block, const std::string& name, size_t pos, const std::string& val, bool is_array) {
+  auto& fields = used[block][name];
+  if (fields.size() <= pos) {
+    fields.resize(pos + 1);
   }
-  used[block].second[pos] = val;
+  fields[pos] = val;
+  if (is_array) {
+    used_is_array[block][name] = true;
+  }
 }
 
 void Config::dump(int fd) {
@@ -546,22 +552,36 @@ void Config::dump(int fd) {
     auto sz  = ::write(fd, str.c_str(), str.size());
     (void)sz;
 
-    if (u.second.second.size() == 1) {
-      str = fmt::format("{} = {}\n", u.second.first, u.second.second[0]);
-    } else {
-      str        = fmt::format("{} = {{ ", u.second.first);
-      bool first = true;
-      for (const auto& e : u.second.second) {
-        if (first) {
-          str += fmt::format("{}", e);
-        } else {
-          str += fmt::format(", {}", e);
+    for (const auto& field : u.second) {
+      auto fmt_val = [](const std::string& v) -> std::string {
+        if (!v.empty() && std::isdigit((unsigned char)v[0])) return v;
+        auto ci_eq = [&](const char* s) {
+          return std::equal(v.begin(), v.end(), s, s + v.size(),
+                            [](unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); })
+                 && v.size() == strlen(s);
+        };
+        if (ci_eq("true") || ci_eq("false")) return v;
+        return fmt::format("\"{}\"", v);
+      };
+      bool is_arr = used_is_array.count(u.first) && used_is_array.at(u.first).count(field.first);
+      if (field.second.size() == 1 && !is_arr) {
+        str = fmt::format("{} = {}\n", field.first, fmt_val(field.second[0]));
+      } else {
+        str        = fmt::format("{} = [ ", field.first);
+        bool first = true;
+        for (const auto& e : field.second) {
+          if (first) {
+            str += fmt_val(e);
+          } else {
+            str += fmt::format(", {}", fmt_val(e));
+          }
+          first = false;
         }
+        str += fmt::format(" ]\n");
       }
-      str += fmt::format(" }}\n");
+      sz = ::write(fd, str.c_str(), str.size());
+      (void)sz;
     }
-    sz = ::write(fd, str.c_str(), str.size());
-    (void)sz;
   }
 }
 

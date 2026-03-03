@@ -82,9 +82,11 @@ ras_prefetch  = false
 
 fetch_predict     = true   # Not a prediction per instruction
 
+btb_fetch_predict = false
+btb_tag_offset    = false
 btb_history_size  = 0
 btb_split_il1     = false  # do not cache entries that can be computed by IL1
-btb_size          = 32
+btb_size          = 0
 btb_line_size     = 1
 btb_assoc         = 4
 btb_repl_policy   = "LRU"
@@ -135,8 +137,14 @@ table_width = 3
 
 
 [bp1]
-type = "tahead"
+type = "imli"
 delay             = 3
+
+fetch_predict     = true
+use_tag_offset    = true
+
+btb_fetch_predict = true
+btb_tag_offset    = true
 #type = "superbp"
 #delay             = 2
 
@@ -144,8 +152,6 @@ bp_addr_shift = 0      # bits shifted by branch predictor PC
 ras_size      = 32
 ras_prefetch  = false
 
-# IMLI fetch ideal 2 taken branch, set fetch_predict false
-fetch_predict     = true   # Not a prediction per instruction
 
 btb_history_size  = 0
 btb_split_il1     = false  # do not cache entries that can be computed by IL1
@@ -197,7 +203,7 @@ do_random_transients = false
 fetch_align       = true
 trace_align       = false
 fetch_one_line    = false   # jumps within cacheline do not flush
-max_bb_cycle      = 4
+max_bb_cycle      = 2
 prefetcher        = "pref_opt"
 
 smt = 1 # Number of STM context
