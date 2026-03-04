@@ -30,7 +30,7 @@ emul = ["drom_emu"]
 type      = "dromajo"
 # Load big one: weight maximum:.45::sp4
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/mcf/sp3"
-load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
+#load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fipa-pta/sp1"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/leela/sp2"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/exchange2/sp1"
@@ -88,6 +88,7 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 #load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/perlbench_splitmail/perlbench_splitmail"
 
 # Load a Binary
+#<<<<<<< HEAD
 #bench      = "conf/dhrystone.riscv"
 #<<<<<<< HEAD
 #bench      = "k1"
@@ -117,12 +118,21 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/gcc_fgcse/sp5"
 #time      = 100_000_000
 #>>>>>>> upstream/main
 #=======
-bench      = "k2"
+#bench      = "k2"
+
+#start_roi = false
+#rabbit    = 100000
+#detail    = 2500000
+#time      = 2500000
+#>>>>>>> upstream/main
+#=======
+bench      = "conf/dhrystone.riscv"
+#bench      = "k2"
 
 start_roi = false
 rabbit    = 100000
-detail    = 2500000
-time      = 2500000
+detail    = 150000
+time      = 200000
 #>>>>>>> upstream/main
 
 [rand_emu]
@@ -141,7 +151,9 @@ ras_prefetch  = false
 fetch_predict     = true   # Not a prediction per instruction
 
 btb_fetch_predict = true
-btb_tag_offset    = true
+btb_tag_offset    = false
+btb_tag_hybrid    = false
+btb_tag_size      = 14
 btb_history_size  = 0
 btb_split_il1     = false  # do not cache entries that can be computed by IL1
 btb_size          = 4
@@ -175,7 +187,9 @@ ras_prefetch  = false
 fetch_predict     = true   # Not a prediction per instruction
 
 btb_fetch_predict = true
-btb_tag_offset    = true
+btb_tag_offset    = false
+btb_tag_hybrid    = false
+btb_tag_size      = 14
 btb_history_size  = 0
 btb_split_il1     = false  # do not cache entries that can be computed by IL1
 btb_size          = 8192
@@ -244,7 +258,9 @@ ras_prefetch  = false
 fetch_predict     = true   # Not a prediction per instruction
 
 btb_fetch_predict = true
-btb_tag_offset    = true
+btb_tag_offset    = false
+btb_tag_hybrid    = false
+btb_tag_size      = 14
 btb_history_size  = 0
 btb_split_il1     = false  # do not cache entries that can be computed by IL1
 btb_size          = 8192
