@@ -15,7 +15,8 @@
 #>>>>>>> upstream/main
 #=======
 #=======
-range = [100000,900000]
+#range = [100000,900000]
+range = [0,100000000]
 #>>>>>>> upstream/main
 
 
@@ -37,7 +38,8 @@ type      = "dromajo"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/perlbench_checkspam/sp3"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xz_cld/sp0"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/omnetpp/sp5"
-#load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/x264/sp7"
+
+load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/x264/sp7"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/deepsjeng/sp1"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xalancebmk/sp5"
 #load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/xz_cpu2006docs/sp6"
@@ -106,8 +108,10 @@ type      = "dromajo"
 #time      = 20000000
 #<<<<<<<<<<<<<
 #josemustrabbit    = 0
+rabbit    = 0
 #rabbit    = 800000
 #jose mustdetail    = 0
+detail    = 0
 #detail    = 800000
 #Number of Insts
 #time      = 10000
@@ -126,13 +130,37 @@ type      = "dromajo"
 #time      = 2500000
 #>>>>>>> upstream/main
 #=======
-bench      = "conf/dhrystone.riscv"
+#bench      = "conf/dhrystone.riscv"
 #bench      = "k2"
 
 start_roi = false
-rabbit    = 100000
-detail    = 150000
-time      = 200000
+#rabbit    = 100000
+#detail    = 150000
+#time      = 200000
+#time      = 50000000
+#time      = 2000
+#matchtime      = 2100
+#main
+#sametime      = 5000
+
+
+#sametime       = 500 
+#sametime       = 800 
+#sametime       = 1000 
+#sametime       = 1500 
+#sametime       = 2000
+#sametime         = 8000
+#sametime         =9000
+#sametime        = 10000
+#sametime        = 12000
+#sametime        = 14000
+#sametime         = 30000
+#sametime         = 30000
+#time         = 32000
+#time         = 32000
+#time         = 35000
+time         = 40000
+#time       = 1000000 
 #>>>>>>> upstream/main
 
 [rand_emu]
@@ -165,7 +193,7 @@ btb_repl_policy   = "LRU"
 [bp1]
 type = "imli"
 use_tag_offset    = false
-
+use_tag_hybrid    = false 
 delay             = 2
 
 # SuperBP parameters
@@ -244,7 +272,8 @@ table_width = 3
 
 [bp2]
 type = "imli"
-use_tag_offset = false
+use_tag_offset    = false
+use_tag_hybrid    = false 
 
 delay             = 3
 #type = "superbp"
@@ -314,8 +343,7 @@ frequency_mhz = 1000
 bpred         = ["bp0", "bp1", "bp2"]
 #bpred         = ["bp2"]
 #do_random_transients = false
-#>>>>>>> upstream/main
-do_random_transients = false
+do_random_transients = true
 
 # Fetch parameters
 fetch_align       = true

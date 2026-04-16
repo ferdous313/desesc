@@ -44,7 +44,7 @@ protected:
 public:
   Pipeline(size_t s, size_t fetch, int32_t maxReqs);
   virtual ~Pipeline();
-
+  
   void cleanMark();
 
   // FastQueue<Dinst *>   transient_buffer;
@@ -53,6 +53,8 @@ public:
   void                   readyItem(IBucket* b);
   void                   doneItem(IBucket* b);
   void                   flush_transient_inst_from_buffer();
+  void                   flush_transient_inst_from_received_bucket();
+  IBucket*               flush_transient_inst_from_bucket(IBucket* b);
   [[nodiscard]] bool     transient_buffer_empty();
   [[nodiscard]] IBucket* nextItem();
 
@@ -67,6 +69,7 @@ protected:
 
   Time_t pipeId;
   Time_t clock;
+  bool   transient;
 
   friend class Pipeline;
   friend class PipeIBucketLess;
@@ -76,8 +79,8 @@ protected:
   bool fetched;
 #endif
 
-  [[nodiscard]] Time_t getPipelineId() const noexcept { return pipeId; }
-  void                 setPipelineId(Time_t i) { pipeId = i; }
+ // [[nodiscard]] Time_t getPipelineId() const noexcept { return pipeId; }
+  //void                 setPipelineId(Time_t i) { pipeId = i; }
 
   void markFetched();
 
@@ -95,6 +98,17 @@ public:
     Dinst* dinst = top();
     return dinst ? dinst->getID() : 0;
   }
+  
+  
+  [[nodiscard]] Time_t getPipelineId() const noexcept { return pipeId; }
+  void                 setPipelineId(Time_t i) { pipeId = i; }
+  
+  
+  
+  
+  void set_transient() { transient =true;}
+  void reset_transient() { transient =false;}
+  bool is_transient()  { return transient;}
 
   using markFetchedCB = CallbackMember0<IBucket, &IBucket::markFetched>;
 };

@@ -63,38 +63,53 @@ void DepWindow::preSelect(Dinst* dinst) {
   // At the end of the wakeUp, we can start to read the register file
   I(!dinst->hasDeps());
 
-  // printf("DepWindow::::Preselect WS Inst %ld\n", dinst->getID());
+  printf("DepWindow::::Preselect Entering preSelect Inst %ldi at clock cycle %ld\n", dinst->getID(), globalClock);
   dinst->markIssued();
+  printf("DepWindow::::Preselect markIsssue Inst %ldi at clock cycle %ld\n", dinst->getID(), globalClock);
   Tracer::stage(dinst, "WS");
+  printf("DepWindow::::Preselect WS done Inst %ldi at clock cycle %ld\n", dinst->getID(), globalClock);
 
   I(dinst->getCluster());
+  printf("DepWindow::::Preselect Sending to Cluster Inst %ldi at clock cycle %ld\n", dinst->getID(), globalClock);
 
   dinst->getCluster()->select(dinst);
 }
 
 void DepWindow::select(Dinst* dinst) {
+  printf("DepWindow::::Select Entering Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   auto [when, needs_retry] = schedPort->tryNextSlot(dinst->has_stats(), dinst->getID());
+  printf("DepWindow::schedPort completed Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 
   if (!needs_retry) {
+    printf("DepWindow::::Select !need_retry : sending to do_schedule Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     do_schedule(when, dinst);
   } else {
     // Resource busy - queue for priority-based retry
+    printf("DepWindow::Select need_retry:Resource busy - queue for priority-based retry Inst %ld at clock cycle %ld\n", 
+        dinst->getID(), globalClock);
     schedPort->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
       do_schedule(allocated_time, dinst);
     });
   }
+  printf("DepWindow::::Select Leaving Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 }
 
 void DepWindow::do_schedule(Time_t when, Dinst* dinst) {
+  printf("DepWindow::::do_schedule Entering  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   Time_t schedTime = when;
   if (dinst->hasInterCluster()) {
+    printf("DepWindow::::do_schedule   inter_cluster_lat Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     schedTime += inter_cluster_lat;
+    printf("DepWindow::::do_schedule::inter_cluster::  Inst %ld  schedTime= %ld at clock cycle %ld\n", dinst->getID(), schedTime, globalClock);
   } else {
+    printf("DepWindow::::do_schedule sched_lat Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     schedTime += sched_lat;
+    printf("DepWindow::::do_schedule::scheduled::  Inst %ld  schedTime= %ld at clock cycle %ld\n", dinst->getID(), schedTime, globalClock);
   }
 
   I(src_cluster_id == dinst->getCluster()->get_id());
-
+  //only diff is the resource::receiving::schedTime same 
+  printf("DepWindow:::do_shedule:: Sendingto  execution Inst %ldi at clock cycle %ld\n", dinst->getID(), globalClock);
   Resource::executingCB::scheduleAbs(schedTime, dinst->getClusterResource().get(), dinst, dinst->getID());
 }
 
@@ -115,14 +130,7 @@ void DepWindow::executed_flushed(Dinst* dinst) {
 // Called when dinst finished execution. Look for dependent to wakeUp
 void DepWindow::executed(Dinst* dinst) {
   //  MSG("execute [0x%x] @%lld",dinst, globalClock);
-  //<<<<<<< HEAD
-
-  // if (dinst->isTransient()) {
-  // printf("DepWindow::::Executed Entering Transient Inst %ld\n", dinst->getID());
-  // }
-  // if(!dinst->isTransient()){
-  //=======
-  printf("DepWindow::Executed:: Entering  executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
+   printf("DepWindow::Executed:: Entering  executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
 
   if (!dinst->isTransient()) {
     //>>>>>>> upstream/main
@@ -148,21 +156,7 @@ void DepWindow::executed(Dinst* dinst) {
     return;
   }
 
-  /*//<<<<<<< HEAD
-   //if (!dinst->hasPending() || dinst->isTransient()) {
-    if (!dinst->hasPending()) { //(dinst->first !=0)
-      printf("DepWindow::::Executed Inst %ld has !dinst->hasPending\n", dinst->getID());
-  //=======
-    dinst->clearRATEntry();
-    Tracer::stage(dinst, "WB");
-
-    // if (!dinst->hasPending() || dinst->isTransient()) {
-    if (!dinst->hasPending()) {
-  >>>>>>> upstream/main
-      return;
-    }*/
-
-  // NEVER HERE FOR in-order cores
+   // NEVER HERE FOR in-order cores
 
   I(dinst->getCluster());
   I(src_cluster_id == dinst->getCluster()->get_id());
@@ -179,16 +173,7 @@ void DepWindow::executed(Dinst* dinst) {
   while (dinst->hasPending()) {
     Dinst* dstReady = dinst->getNextPending();
     I(dstReady);
-    // std::cout << "Depwindow_Jose:: Executed::hasPending():: executed_dinst dstReadyInst asm is " <<
-    // dstReady->getInst()->get_asm()
-    //           << std::endl;
-    // std::cout << "Depwindow_Jose:: executed::dstReady Inst asm is " << dstReady->getInst()->get_asm() << std::endl;
-    // printf("DepWindow_Jose::::Executed Inst is %ld and Pending dstdReady inst is %ld and Pending :isTransient is %b\n",
-    //        dinst->getID(),
-    //        dstReady->getID(),
-    //        dstReady->isTransient());
-
-    if (dstReady->is_to_be_destroyed() && !dstReady->hasDeps()) {
+       if (dstReady->is_to_be_destroyed() && !dstReady->hasDeps()) {
       // dstReady->clear_to_be_destroyed_transient();
       dstReady->destroyTransientInst();
       continue;
@@ -196,30 +181,30 @@ void DepWindow::executed(Dinst* dinst) {
 
     I(!dstReady->isExecuted());
 
-    //<<<<<<< HEAD
-    // printf("DepWindow::::Executed Inst is %ld and Pending Inst is %ld and Pending :isTransient is %b\n",
-    //        dinst->getID(),
-    //        dstReady->getID(),
-    //        dstReady->isTransient());
-    // std::cout << "Depwindow:: Executed::hasPending():: iexecuted_dinst Inst asm is " << dinst->getInst()->get_asm() << std::endl;
-    // std::cout << "Depwindow:: executed::dstReady Inst asm is " << dstReady->getInst()->get_asm() << std::endl;
-    // printf("Depwindow:: executed::dstReady has ndeps is: %d\n", (int)dstReady->getnDeps());
-
-    //=======
-    // printf("DepWindow::::Executed Inst is %ld and Pending Inst is %ld and Pending :isTransient is %b\n",
-    // dinst->getID(),dstReady->getID(),dstReady->isTransient());
-    //>>>>>>> upstream/main
+   
     if (!dstReady->hasDeps()) {
       // Check dstRes because dstReady may not be issued
       I(dstReady->getCluster());
       auto dst_cluster_id = dstReady->getCluster()->get_id();
       I(dst_cluster_id);
+      printf("DepWindow::::Executed  dstReady Inst is Inst %ld\n", dstReady->getID());
+      printf("DepWindow::::Executed DstReadyInst clusterID is  %d and src_cluster_id is %d\n",
+          dst_cluster_id, src_cluster_id);
 
       if (dst_cluster_id != src_cluster_id) {
+        printf("DepWindow::::Executed DstReadyInst clusterID!=src_cluster_id::dst_cluster_id is %d and src_cluster_id is %d\n",
+          dst_cluster_id,src_cluster_id);
         inter_cluster_fwd.inc(dstReady->has_stats());
         dstReady->markInterCluster();
+        printf("DepWindow::::Executed markInterCluster DstReadyInst markInterCluster for dstReady Inst %ld\n", 
+            dstReady->getID());
+      } else { 
+        printf("DepWindow::::Executed !markInterCluster DstReadyInst !markInterCluster for dstReady Inst %ld\n", 
+            dstReady->getID());
       }
 
+      //need todo resetInterCluster()
+      printf("DepWindow::::Executed dependency: DstReady sent to preselect :dstReadyInst %ld\n", dstReady->getID());
       preSelect(dstReady);
     }
   }

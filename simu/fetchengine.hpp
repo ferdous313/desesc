@@ -20,6 +20,7 @@ private:
   uint16_t fetch_width;
   uint16_t half_fetch_width;
 
+  friend class IBucket;
   bool fetch_one_line;
   bool fetch_align;
   bool trace_align;

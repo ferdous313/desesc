@@ -123,11 +123,14 @@ public:
       cb->call();
     }
 #endif
+    printf("Callback::advanceClock:::Entering at GlobalClock::clock cycle %ld\n",globalClock);
     globalClock++;
+    printf("Callback::advanceClock:::Entering at GlobalClock++::clock cycle %ld\n",globalClock);
 
     // Process pending port requests BEFORE regular callbacks
     // This allows priority-ordered allocation at cycle start
     // (no-op without PORT_STRICT_PRIORITY)
+    printf("Callback::advanceClock::ProcessPendingPortRequests ::Entering at clock cycle %ld\n",globalClock);
     processPendingPortRequests();
 
     uint32_t cb_per_clock = 0;

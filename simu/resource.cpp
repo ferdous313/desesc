@@ -1087,16 +1087,20 @@ StallCause FUBranch::canIssue(Dinst* dinst) {
 
 void FUBranch::executing(Dinst* dinst) {
   /* executing {{{1 */
+  printf("Resource::FUBranch::::Executing ::Entering Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
 
   if (!needs_retry) {
+    printf("Resource::FUBranch::::Executing::!needs_retry:::Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     do_branch_execution(when, dinst);
   } else {
+    printf("Resource::FUBranch::::Executing ::needs_retry:::Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     // Resource busy - queue for priority-based retry
     gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
       do_branch_execution(allocated_time, dinst);
     });
   }
+  printf("Resource::FUBranch::::Executing ::Leaving Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 }
 /* }}} */
 
@@ -1111,6 +1115,7 @@ void FUBranch::executed(Dinst* dinst) {
   dinst->markPerformed();
 
   if (!drainOnMiss && dinst->isBranchMiss()) {
+     printf("Resource::FUBranch::executed::unBlockFetch dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     (dinst->getFetchEngine())->unBlockFetch(dinst, dinst->getFetchTime());
   }
 
@@ -1125,6 +1130,7 @@ bool FUBranch::preretire(Dinst* dinst, bool flushing)
 {
   (void)flushing;
   if (drainOnMiss && dinst->isExecuted() && dinst->isBranchMiss()) {
+     printf("Resource::FUBranch::preretire::unBlockFetch dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     (dinst->getFetchEngine())->unBlockFetch(dinst, dinst->getFetchTime());
   }
   return dinst->isExecuted();
@@ -1216,21 +1222,25 @@ StallCause FURALU::canIssue(Dinst* dinst)
 }
 /* }}} */
 
-void FURALU::executing(Dinst* dinst)
-/* executing {{{1 */
-{
+void FURALU::executing(Dinst* dinst) {
+/*executing {{{1 */
+  printf("Resource::FURALU::::Executing : Entering  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   if (dinst->is_flush_transient()) {
   }
 
   auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
+  printf("Resource::FURALU::::Executing : after  gen->tryNextSlot Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 
   if (!needs_retry) {
+    printf("Resource::FURALU::::Executing : !needs_retry::Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     do_ralu_execution(when, dinst);
   } else {
     // Resource busy - queue for priority-based retry
+    printf("Resource::FURALU::::Executing : needs_retry=TRUE::Resource busy::Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
       do_ralu_execution(allocated_time, dinst);
     });
+  printf("Resource::FURALU::Executing:: Leaving  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   }
 
   // Recommended poweron the GPU threads and then poweroff the QEMU thread?
@@ -1238,16 +1248,21 @@ void FURALU::executing(Dinst* dinst)
 /* }}} */
 
 void FURALU::do_ralu_execution(Time_t when, Dinst* dinst) {
+  printf("Resource::FURALU::do_alu_execution:: Entering  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   cluster->executing(dinst);
+  printf("Resource::FURALU::do_alu_execution:: When is %ld and lat is %d for Inst %ld at clock cycle %ld\n", when, lat, dinst->getID(), globalClock);
   executedCB::scheduleAbs(when + lat, this, dinst, dinst->getID());
+  printf("Resource::FURALU::do_alu_execution:: Leaving  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 }
 
 void FURALU::executed(Dinst* dinst)
 /* executed {{{1 */
 {
+   printf("Resource::FURALU::Executed:: Entering  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   // bool pend = dinst->hasPending();
   cluster->executed(dinst);
   dinst->markPerformed();
+  printf("Resource::FURALU::do_alu_executed:: Leaving  Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 }
 /* }}} */
 

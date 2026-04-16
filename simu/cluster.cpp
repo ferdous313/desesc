@@ -206,8 +206,10 @@ std::pair<std::shared_ptr<Cluster>, Opcode_array<std::shared_ptr<Resource>>> Clu
 }
 
 void Cluster::select(Dinst* dinst) {
+  printf("CLuster::::Cluster Entering select Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   I(nready >= 0);
   nready++;
+  printf("Cluster::::Cluster Sending to cluster Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
   window.select(dinst);
 }
 
@@ -352,7 +354,7 @@ void ExecutedCluster::executing(Dinst* dinst) {
 }
 
 void ExecutedCluster::executed(Dinst* dinst) {
-  // printf("Cluster::ExecutedCluster::executed: for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
+  printf("Cluster::ExecutedCluster:: Entering executed: for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
   window.executed(dinst);
   dinst->getGProc()->executed(dinst);
   if (!dinst->isTransient()) {

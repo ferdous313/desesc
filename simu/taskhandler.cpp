@@ -122,9 +122,16 @@ void TaskHandler::boot() {
   if (Config::has_entry("trace", "range")) {
     auto t_start = Config::get_array_integer("trace", "range", 0);
     auto t_end   = Config::get_array_integer("trace", "range", 1);
+    auto do_random  = Config::get_bool("soc", "core", 0, "do_random_transients");
+
     if (t_start < t_end) {
       Tracer::open("kanata_log");
       Tracer::track_range(t_start, t_end);
+      if(do_random) {
+        Tracer::open_t("time_T");
+      } else {
+        Tracer::open_t("time_NT");
+      }
     }
   }
 

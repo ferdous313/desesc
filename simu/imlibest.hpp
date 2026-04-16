@@ -445,12 +445,14 @@ public:
   bool isTagHit() const { return thit; }
 
   void select(Addr_t t, int b) {
+    //changes by transient now
     b = b >> 1;  // Drop lower bit
 
     last_boff = b;
     if (t != tag) {
       hit  = false;
       thit = false;
+      printf("IMLIBEST::select:return at t!=tag + hit=false at clock cycle %ld\n",globalClock);
       return;
     }
 
@@ -458,16 +460,19 @@ public:
     hit  = false;
 
     pos = nsub;
+    printf("IMLIBEST::nsub is %d at clock cycle %ld\n",nsub ,globalClock);
     for (int i = 0; i < nsub; i++) {
       if (boff[i] == b) {
         pos = i;
         hit = true;
+        printf("IMLIBEST::select:return at boff[%d]==b +hit=true at clock cycle %ld\n",i ,globalClock);
         break;
       }
     }
 
     if (pos == nsub) {
       hit = false;
+      printf("IMLIBEST::select:return at pos==nsub+ hit=false at clock cycle %ld\n",globalClock);
       pos = nsub - 1;
     }
   }
@@ -629,7 +634,14 @@ public:
 
   bool ctr_weak() const {
     if (!hit) {
+      printf("IMLIBEST::ctr_weak():return 1 as !hit at clock cycle %ld\n", globalClock);
       return true;
+    }
+    
+    if(ctr[pos] == 0|| ctr[pos] == -1){
+      printf("IMLIBEST::ctr_weak():return 1 as ctr[pos]==0 at clock cycle %ld\n", globalClock);
+    } else {
+      printf("IMLIBEST::ctr_weak():return 0 as !ctr[pos]==0 at clock cycle %ld\n", globalClock);
     }
 
     return ctr[pos] == 0 || ctr[pos] == -1;
@@ -645,9 +657,10 @@ public:
 
   int ctr_get() const {
     if (!hit) {
+      printf("IMLIBEST::ctr_get():return 0 as hit==0 at clock cycle %ld\n", globalClock);
       return 0;  // bias to taken if nothing is known
     }
-
+    printf("IMLIBEST::ctr_get():return ctr[%d] = %d as hit==1 at clock cycle %ld\n", pos, ctr[pos], globalClock);
     return ctr[pos];
   }
 
@@ -667,7 +680,7 @@ public:
     }
   }
   void u_clear() { u[0] = 0; }
-};
+};//class_gentry_end
 
 class IMLIBest {
 public:
@@ -999,6 +1012,7 @@ public:
           s = galloc[i];
         }
         gtable[i][j].allocate(s);
+        printf("IMLIBEST::reinit()::gtable[%d][%d].allocate() at clock cycle %ld\n", i, j, globalClock);
       }
     }
 
@@ -1288,18 +1302,25 @@ public:
   }
 
   void setTAGEPred() {
+    printf("IMLIBEST::setTAGEPRED():: Entering at clock cycle %ld\n", globalClock);
     HitBank = 0;
     AltBank = 0;
+    printf("IMLIBEST::setTAGEPRED():: nhist is %d at clock cycle %ld\n", nhist, globalClock);
     for (int i = 1; i <= nhist; i++) {
       if (gtable[i][GI[i]].isHit()) {
+        //TODO::main diif is here limaJOSE: LongestMatchPred 
         LongestMatchPred = (gtable[i][GI[i]].ctr_isTaken());
+        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]].isHit==>LongestMAtchPred is %b  at clock cycle %ld\n", i, i, LongestMatchPred, globalClock);
         HitBank          = i;
+        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: HitBank is %d  at clock cycle %ld\n", i, i, HitBank, globalClock);
       }
     }
 
+    printf("IMLIBEST::setTAGEPred::LongestMAtchPred is %b  at clock cycle %ld\n",  LongestMatchPred, globalClock);
     for (int i = HitBank - 1; i > 0; i--) {
       if (gtable[i][GI[i]].isHit()) {
         AltBank = i;
+        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: AltBank is %d  at clock cycle %ld\n", i, i, AltBank, globalClock);
         break;
       }
     }
@@ -1316,20 +1337,26 @@ public:
     if (HitBank > 0) {
       if (AltBank > 0) {
         alttaken = (gtable[AltBank][GI[AltBank]].ctr_isTaken());
+        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk>0::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
       } else {
         alttaken = bimodal.predict();
+        printf("IMLIBEST::setTAGEPred::HITBANK>0::ALTBANK<= 0:: alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
       }
     } else {
       alttaken         = bimodal.predict();
       LongestMatchPred = alttaken;
+      printf("IMLIBEST::setTAGEPred::HITBank<=0::longestmatchtaken ::altaken  is %b  at clock cycle %ld\n", LongestMatchPred, globalClock);
     }
 #else
     // computes the prediction and the alternate prediction
     if (HitBank > 0) {
       if (AltBank > 0) {
         alttaken = (gtable[AltBank][GI[AltBank]].ctr_isTaken());
+        //TODO:limajose
+        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk>0::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
       } else {
         alttaken = bimodal.predict();
+        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk<=0::BIMODAL_PREDICT::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
       }
 
       // if the entry is recognized as a newly allocated entry and
@@ -1339,10 +1366,13 @@ public:
 
       if (!Huse_alt_on_na || !gtable[HitBank][GI[HitBank]].ctr_weak()) {
         tage_pred = LongestMatchPred;
+        //TODO::here is the main diff_limajose tage_pred 
+        printf("IMLIBEST::setTAGEPred::!gtable[%d][GI[%d]].ctr_weak()) ::tage_pred  is %b  at clock cycle %ld\n", HitBank, HitBank, tage_pred, globalClock);
         HighConf  = gtable[HitBank][GI[HitBank]].ctr_highconf();
         WeakConf  = gtable[HitBank][GI[HitBank]].ctr_weak();
       } else {
         tage_pred = alttaken;
+        printf("IMLIBEST::setTAGEPred:: gtable[HitBank][GI[HitBank]].ctr_weak())::tage_pred  is %b  at clock cycle %ld\n", tage_pred, globalClock);
         if (AltBank) {
           HighConf = gtable[AltBank][GI[AltBank]].ctr_highconf();
           WeakConf = gtable[AltBank][GI[AltBank]].ctr_weak();
@@ -1356,6 +1386,7 @@ public:
       WeakConf         = !HighConf;
       alttaken         = bimodal.predict();
       tage_pred        = alttaken;
+      printf("IMLIBEST::setTAGEPred::HitBank<=0::tage_pred  is %b  at clock cycle %ld\n", tage_pred, globalClock);
       LongestMatchPred = alttaken;
     }
 #if 0
@@ -1421,21 +1452,27 @@ public:
     return boff;
   }
 
-  void fetchBoundaryOffsetBranch(Addr_t PC) {
+  void fetchBoundaryOffsetBranch(Addr_t PC, bool transient) {
     int boff = fetchBoundaryOffsetOthers(PC);
 
     // bimodal.select(GI[0],boff);
     bimodal.select(PC);
 
+    if(!transient){
     for (int i = 1; i <= nhist; i++) {
       gtable[i][GI[i]].select(GTAG[i], boff);
     }
+   }
   }
 
-  bool getPrediction(Addr_t PC, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid, uint32_t taken_counter) {
-    fetchBoundaryOffsetBranch(PC);
+
+  
+  bool getPrediction(Addr_t PC, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid, uint32_t taken_counter, bool transient) {
+    printf("IMLIbEST::GETprediction::Entering PC %ld at clock cycle %ld\n", PC, globalClock);
+    fetchBoundaryOffsetBranch(PC, transient);
 
     bool force_offset = (taken_counter>1 && use_tag_hybrid);
+    printf("IMLIbEST::GETprediction: force_offset is %b at clock cycle %ld\n", force_offset, globalClock);
 
     if (use_tag_offset || force_offset) {
       PC = imli_bpred_hash(lastBoundaryPC, imli_tag_offset);
@@ -1463,6 +1500,7 @@ public:
     pred_inter = pred_taken;
 
     if (!sc) {
+      printf("IMLIBEST::getpredict:: !SC return  pred_taken is %b  at clock cycle %ld\n", pred_taken, globalClock);
       return (pred_taken);
     }
 
@@ -1556,11 +1594,14 @@ public:
       bias = true;
     }
 
+    printf("IMLIBEST::getpredict::RETURN at LAST pred_taken is %b  at clock cycle %ld\n", pred_taken, globalClock);
     return pred_taken;
-  }
+  }//get_prediction_end
 
+/*Update History*/
   void HistoryUpdate(Addr_t PC, Opcode brtype, bool taken, Addr_t target, long long& X, int& Y, std::vector<folded_history>& H,
                      std::vector<folded_history>& G, std::vector<folded_history>& J, long long& LH, long long& GBRHIST) {
+
     imli_tag_offset++;
 
     // special treatment for unconditional branchs;
@@ -1641,8 +1682,7 @@ public:
 #endif
     }
 
-    // END UPDATE  HISTORIES
-  }
+  }// HISTORY_UPDATE_END
 
   // PREDICTOR UPDATE
 
@@ -1920,7 +1960,7 @@ public:
                   L_shist[INDLOCAL],
                   GHIST);
     // END PREDICTOR UPDATE
-  }
+  }//update_predictor_end
 
 #define GINDEX                                                                                                                \
   (((long long)PC) ^ bhist ^ (bhist >> (8 - i)) ^ (bhist >> (16 - 2 * i)) ^ (bhist >> (24 - 3 * i)) ^ (bhist >> (32 - 3 * i)) \

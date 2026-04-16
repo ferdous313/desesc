@@ -221,9 +221,15 @@ private:
 
   char nDeps;
 
-  static inline Time_t currentID       = 0;
-  static inline Time_t currentID_trans = 1000000;
-  Time_t               ID;  // static ID, increased every create (currentID). pointer to the
+  static inline Time_t currentID                = 0;
+  static inline Time_t current_original_id       = 0;
+  static inline Time_t currentID_trans          = 1000000;
+  
+  // static ID, increased every create (currentID). pointer  
+  // static ID, increased every Non_Transient create (currentID). pointer
+  Time_t               ID;  
+  Time_t               original_id;  
+
 #ifndef NDEBUG
   uint64_t mreq_id;
 #endif
@@ -329,9 +335,14 @@ public:
   void set_spec() { speculative = true; }
 
  // bool isTransient() const { return transient; }
+  void set_original_id() {
+    I(!transient);
+    original_id = current_original_id++;
+  }
+  
   void setTransient() {
     transient = true;
-    // ID = currentID_trans++;
+    //ID = currentID_trans++;
   }
   void mark_to_be_destroyed() {
     to_be_destroyed = true;
@@ -927,6 +938,7 @@ public:
   Time_t getExecutedTime() const { return executed; }
 
   Time_t getID() const { return ID; }
+  Time_t get_original_id() const { return original_id; }
 
 #ifndef NDEBUG
   uint64_t getmreq_id() { return mreq_id; }

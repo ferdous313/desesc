@@ -132,24 +132,44 @@ public:
   virtual void    fetchBoundaryEnd();                // If the branch predictor support fetch boundary model, do it
 
   Outcome doPredict(Dinst* dinst, bool doStats = true) {
-    I(taken_counter>=0);
+    //joseI(taken_counter>=0);
+    printf("\n**********BPred.hpp::dopredict::Entering ********************\n");
+    printf("BPred.hpp::dopredict:: Entering dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 
-    if (dinst->isTaken()) {
+    if (dinst->isTaken() && !dinst->isTransient()) {
       taken_counter++;
     }
+    Outcome pred =Outcome::None; 
+    if(dinst->isTransient()){
+      doStats = false;
+      printf("BPred.hpp::dopredict::sending to predict:: PT_dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      pred = predict(dinst, false, doStats);
+    } else {
+      doStats = true;
+      printf("BPred.hpp::dopredict::sending to predict:: PNT_dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      pred = predict(dinst, true, doStats);
+    }
 
-    Outcome pred = predict(dinst, true, doStats);
     if (pred == Outcome::None) {
+      printf("***************BPred.hpp::dopredict:: Leaving********************\n");
       return pred;
     }
 
     if (dinst->getInst()->isJump()) {
+      printf("***************BPred.hpp::dopredict:: Leaving********************\n");
       return pred;
+    }
+
+    if(dinst->isTransient()){
+      doStats = false;
+    } else{
+      doStats = true;
     }
 
     nHit.inc(pred == Outcome::Correct && dinst->has_stats() && doStats);
     nMiss.inc(pred == Outcome::Miss && dinst->has_stats() && doStats);
 
+    printf("***************BPred.hpp::dopredict:: Leaving********************\n\n\n");
     return pred;
   }
 

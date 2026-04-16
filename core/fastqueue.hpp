@@ -84,7 +84,7 @@ public:
   }
 
   void pop_from_back() {
-    I(nElems);
+    //I(nElems);
     nElems--;
     end = (end - 1) & pipeMask;
   }

@@ -86,6 +86,7 @@ bool OoOProcessor::advance_clock_drain() {
   // printf("OOOProc::advance_clock_drain ::decode_stage()::dump_rat is called\n");
 
   // dump_rat();
+  printf("OOOProc::advance_clock_drain ::decode_stage()::Entering\n");
   bool abort = decode_stage();
 
   if (abort || !busy) {
@@ -129,6 +130,7 @@ bool OoOProcessor::advance_clock_drain() {
     spaceInInstQueue += n;
     // printf("OOOprocessor:: spaceInInstQueue after issue is %d !!!\n", spaceInInstQueue);
   } else if (ROB.empty() && rROB.empty() && !pipeQ.pipeLine.hasOutstandingItems()) {
+    printf("OOOProc::advance_clock_drain :: !issue_stage()::return false\n");
     return false;
   }
 
@@ -138,12 +140,16 @@ bool OoOProcessor::advance_clock_drain() {
 }
 
 bool OoOProcessor::advance_clock() {
+  printf("OOOProc::Fetch::advance_clock :: Entering\n");
   if (!TaskHandler::is_active(hid)) {
+    printf("OOOProc::Fetch::advance_clock :: !TaskHandler::is_active()::return false\n");
     return false;
   }
 
   Tracer::advance_clock();
-
+  printf("OOOProc::Fetch::advance_clock::Tracer :: Entering\n");
+  
+  //GProcessor::fetch()
   fetch();
 
   return advance_clock_drain();
@@ -377,31 +383,31 @@ StallCause OoOProcessor::add_inst(Dinst* dinst) {
     // It already has a src2 dep. It means that it is solved at
     // retirement (Memory consistency. coherence issues)
 
-    // printf("OOOProc::add_inst !dinst->isSrc2Ready(): :: src2 RAW dep for Inst %ld \n", dinst->getID());
+    printf("OOOProc::add_inst !dinst->isSrc2Ready(): :: src2 RAW dep for Inst %ld \n", dinst->getID());
 
-    if (TRAT[inst->getSrc1()]) {
+    if (TRAT[inst->getSrc1()] && dinst->isTransient()) {
       TRAT[inst->getSrc1()]->addSrc1(dinst);
       printf("OOOProc::add_inst TRAT[] addSrc1 %ld\n", dinst->getID());
       n++;
       // MSG("addDep0 %8ld->%8lld %lld",RAT[inst->getSrc1()]->getID(), dinst->getID(), globalClock);
     } else {
-      if (RAT[inst->getSrc1()]) {
+      if (RAT[inst->getSrc1()] && !dinst->isTransient()) {
         RAT[inst->getSrc1()]->addSrc1(dinst);
         printf("OOOProc::add_inst RAT[] addSrc1 %ld\n", dinst->getID());
         n++;
         // MSG("addDep0 %8ld->%8lld %lld",RAT[inst->getSrc1()]->getID(), dinst->getID(), globalClock);
       }
     }
-  } else {
-    // printf("OOOProc::add_inst dinst->isSrc2Ready():: no src2 dep:: for Inst  %ld \n", dinst->getID());
+  } else {//(dinst->isSrc2Ready())
+     printf("OOOProc::add_inst has dinst->isSrc2Ready():: no src2 dep:: for Inst  %ld \n", dinst->getID());
 
-    if (TRAT[inst->getSrc1()]) {
+    if (TRAT[inst->getSrc1()] && dinst->isTransient()) {
       TRAT[inst->getSrc1()]->addSrc1(dinst);
       printf("OOOProc::add_inst addSrc1 TART[] %ld\n", dinst->getID());
       n++;
       // MSG("addDep0 %8ld->%8lld %lld",RAT[inst->getSrc1()]->getID(), dinst->getID(), globalClock);
     } else {
-      if (RAT[inst->getSrc1()]) {
+      if (RAT[inst->getSrc1()] && !dinst->isTransient()) {
         printf("OOOProc::add_inst addSrc1 RAT[] %ld\n", dinst->getID());
         RAT[inst->getSrc1()]->addSrc1(dinst);
         n++;
@@ -411,22 +417,22 @@ StallCause OoOProcessor::add_inst(Dinst* dinst) {
       }
     }
 
-    if (TRAT[inst->getSrc2()]) {
+    if (TRAT[inst->getSrc2()] && dinst->isTransient()) {
       TRAT[inst->getSrc2()]->addSrc2(dinst);
       printf("OOOProc::add_inst TRAT[] addSrc2 %ld\n", dinst->getID());
       n++;
       // MSG("addDep0 %8ld->%8lld %lld",RAT[inst->getSrc1()]->getID(), dinst->getID(), globalClock);
     } else {
-      if (RAT[inst->getSrc2()]) {
-        // printf("OOOProc::add_inst addSrc2 RAT[] %ld\n", dinst->getID());
+      if (RAT[inst->getSrc2()] && !dinst->isTransient()) {
+         printf("OOOProc::add_inst addSrc2 RAT[] %ld\n", dinst->getID());
         RAT[inst->getSrc2()]->addSrc2(dinst);
         n++;
         // MSG("addDep2 %8ld->%8lld %lld",RAT[inst->getSrc2()]->getID(), dinst->getID(), globalClock);
       } else {
-        // printf("OOOProc::add_inst dinst->isSrc2Ready():: no RAT Src2 entry for %ld \n", dinst->getID());
+        printf("OOOProc::add_inst dinst->isSrc2Ready():: no RAT Src2 entry for %ld \n", dinst->getID());
       }
     }
-  }
+  }//end (!dinst->isSrc2Ready())
 #ifdef TRACK_FORWARDING
   avgNumSrc.sample(inst->getnsrc(), dinst->has_stats());
   avgNumDep.sample(n, dinst->has_stats());
