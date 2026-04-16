@@ -18,6 +18,8 @@
 #include "tracer.hpp"
 extern bool MIMDmode;
 
+// #define SINGLE_RAS_PREDICT 1
+
 // Enable IDEAL_FETCHBOUNDARY if you want to "ideally fast" update history between taken branches
 // #define IDEAL_FETCHBOUNDARY 1
 
@@ -56,10 +58,9 @@ FetchEngine::FetchEngine(Hartid_t id, std::shared_ptr<Gmemory_system> gms_, std:
     , nFirstRet(fmt::format("P({})_FetchEngine:nFirstRet", id))
     , nFirstJump(fmt::format("P({})_FetchEngine:nFirstJump", id))
 
-    , nBothBranch(fmt::format("P({})_FetchEngine:nBothBranch", id)) 
-    , nBothRet(fmt::format("P({})_FetchEngine:nBothRet", id)) 
-    , nBothJump(fmt::format("P({})_FetchEngine:nBothJump", id)) 
-{
+    , nBothBranch(fmt::format("P({})_FetchEngine:nBothBranch", id))
+    , nBothRet(fmt::format("P({})_FetchEngine:nBothRet", id))
+    , nBothJump(fmt::format("P({})_FetchEngine:nBothJump", id)) {
   fetch_width = Config::get_power2("soc", "core", id, "fetch_width", 1, 1024);
 
   half_fetch_width = fetch_width / 2;
@@ -98,8 +99,8 @@ FetchEngine::FetchEngine(Hartid_t id, std::shared_ptr<Gmemory_system> gms_, std:
   // Get some icache L1 parameters
   il1_hit_delay = Config::get_integer(isection, "delay");
 
-  lastFetchBubbleTime = 0;
-  maxDelayPending = 0;
+  lastFetchBubbleTime  = 0;
+  maxDelayPending      = 0;
   maxDelayPendingDinst = nullptr;
 }
 
@@ -113,13 +114,13 @@ bool FetchEngine::processBranch(Dinst* dinst) {
   TimeDelta_t delay = bpred->predict(dinst, &fastfix);
   printf("FetchEngine::Processbranch delay is %d:: dinstID %ld at clock cycle %ld\n", delay, dinst->getID(), globalClock);
   if (delay == 0) {
-    if (dinst->has_stats() && maxBB==0 && max_bb_cycle>1 && dinst->isTaken()) { // Last CTRL is taken
-      const Instruction *inst = dinst->getInst();
+    if (dinst->has_stats() && maxBB == 0 && max_bb_cycle > 1 && dinst->isTaken()) {  // Last CTRL is taken
+      const Instruction* inst = dinst->getInst();
       if (inst->isBranch()) {
         nLastBranch1.inc(true);
-      } else if (inst->isFuncRet())  {
+      } else if (inst->isFuncRet()) {
         nLastRet1.inc(true);
-      } else{
+      } else {
         nLastJump1.inc(true);
       }
     }
@@ -129,33 +130,42 @@ bool FetchEngine::processBranch(Dinst* dinst) {
   printf("FetchEngine::Processbranch delay!=0:: dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 
   if (fastfix) {
+/*<<<<<<< HEAD
     printf("FetchEngine::Processbranch fastfix==true:: dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
     if (dinst->has_stats() && maxBB==0 && max_bb_cycle>1 && dinst->isTaken()) { // Last CTRL is taken
       printf("FetchEngine::Processbranch :: dinst->isTaken()::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
       const Instruction *inst = dinst->getInst();
+=======*/
+    if (dinst->has_stats() && maxBB == 0 && max_bb_cycle > 1 && dinst->isTaken()) {  // Last CTRL is taken
+      const Instruction* inst = dinst->getInst();
+//>>>>>>> upstream/main
       if (inst->isBranch()) {
         nLastBranch2.inc(true);
-      } else if (inst->isFuncRet())  {
+      } else if (inst->isFuncRet()) {
         nLastRet2.inc(true);
-      } else{
+      } else {
         nLastJump2.inc(true);
       }
       if (maxDelayPendingDinst) {
+/*<<<<<<< HEAD
         printf("FetchEngine::Processbranch :: maxDelayPendingDinst:: dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
         const Instruction *inst2 = maxDelayPendingDinst->getInst();
+=======*/
+        const Instruction* inst2 = maxDelayPendingDinst->getInst();
+//>>>>>>> upstream/main
         if (inst2->isBranch()) {
           nFirstBranch.inc(true);
-          if (inst->isBranch())  {
+          if (inst->isBranch()) {
             nBothBranch.inc(true);
           }
-        } else if (inst2->isFuncRet())  {
+        } else if (inst2->isFuncRet()) {
           nFirstRet.inc(true);
-          if (inst->isFuncRet())  {
+          if (inst->isFuncRet()) {
             nBothRet.inc(true);
           }
-        } else{
+        } else {
           nFirstJump.inc(true);
-          if (!inst->isFuncRet() && !inst->isBranch())  {
+          if (!inst->isFuncRet() && !inst->isBranch()) {
             nBothJump.inc(true);
           }
         }
@@ -363,6 +373,11 @@ void FetchEngine::realfetch(IBucket* bucket, std::shared_ptr<Emul_base> eint, Ha
         avgBeyondFBInst.sample(n2Fetch, dinst->has_stats());
         break;
       }
+#ifdef SINGLE_RAS_PREDICT
+      if (dinst->getInst()->isFuncRet()) {
+        break;
+      }
+#endif
 #ifdef FETCH_TRACE
       if (bias_ninst > 256) {
         bias_firstPC = dinst->getAddr();

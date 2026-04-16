@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include <math.h>
 
+#include <print>
 #include <vector>
 // Rotate/XOR cascade mixer (no multiplies). Produces 64-bit mixed value.
 [[nodiscard]] constexpr std::uint64_t imli_bpred_hash(Addr_t x) noexcept {
@@ -66,9 +67,9 @@
 #include "dinst.hpp"  // Addr_t and Opcode
 #include "dolc.hpp"
 
-// #define MEDIUM_TAGE 1
+#define MEDIUM_TAGE 1
 // #define IMLI_150K 1
-#define IMLI_256K 1
+// #define IMLI_256K 1
 // #define MEGA_IMLI 1
 
 #if defined(MEGA_IMLI) && defined(MEDIUM_TAGE)
@@ -83,67 +84,70 @@
 // #define IMLI			// using IMLI component
 // #define IMLISIC            //use IMLI-SIC
 // #define IMLIOH		//use IMLI-OH
-#define LOGG  10 /* logsize of the  tagged TAGE tables*/
-#define TBITS 13 /* minimum tag width*/
+#define IMLI                         // using IMLI component
+#define DEFAULT_LOG2_TAGE_ENTRIES 7  /* logsize of the tagged TAGE tables*/
+#define TBITS                     13 /* minimum tag width*/
+#define MAXHIST                   300
+#define MINHIST                   5
 // #define USE_DOLC 1
 
-#elif MEGA_IMLI        // 1M IMLI
+#elif MEGA_IMLI                       // 1M IMLI
 // nhist = 9
-#define LOOPPREDICTOR  //  use loop  predictor
-#define LOCALH         // use local histories
-#define IMLI           // using IMLI component
-#define IMLISIC        // use IMLI-SIC
-#define IMLIOH         // use IMLI-OH
-#define LOGG    12     // logsize of the  tagged TAGE tables
-#define TBITS   22     // minimum tag width
-#define MAXHIST 400
-#define MINHIST 5
+#define LOOPPREDICTOR                 //  use loop  predictor
+#define LOCALH                        // use local histories
+#define IMLI                          // using IMLI component
+#define IMLISIC                       // use IMLI-SIC
+#define IMLIOH                        // use IMLI-OH
+#define DEFAULT_LOG2_TAGE_ENTRIES 12  // logsize of the tagged TAGE tables
+#define TBITS                     22  // minimum tag width
+#define MAXHIST                   400
+#define MINHIST                   5
 
 #elif IMLI_256K
 // nhist = 6
-#define LOOPPREDICTOR  //  use loop  predictor
-#define LOCALH         // use local histories
-#define IMLI           // using IMLI component
-#define IMLISIC        // use IMLI-SIC
-#define IMLIOH         // use IMLI-OH
-#define LOGG    11     // logsize of the  tagged TAGE tables
-#define TBITS   16     // minimum tag width
-#define MAXHIST 200
-#define MINHIST 5
+#define LOOPPREDICTOR                 //  use loop  predictor
+#define LOCALH                        // use local histories
+#define IMLI                          // using IMLI component
+#define IMLISIC                       // use IMLI-SIC
+#define IMLIOH                        // use IMLI-OH
+#define DEFAULT_LOG2_TAGE_ENTRIES 11  // logsize of the tagged TAGE tables
+#define TBITS                     16  // minimum tag width
+#define MAXHIST                   200
+#define MINHIST                   5
 
 #elif IMLI_256K_SBP
 // nhist = 6
-#define LOOPPREDICTOR  //  use loop  predictor
-#define LOCALH         // use local histories
-#define IMLI           // using IMLI component
-#define IMLISIC        // use IMLI-SIC
-#define IMLIOH         // use IMLI-OH
-#define LOGG    10     // logsize of the  tagged TAGE tables
-#define TBITS   12     // minimum tag width
-#define MAXHIST 700
-#define MINHIST 4
+#define LOOPPREDICTOR                 //  use loop  predictor
+#define LOCALH                        // use local histories
+#define IMLI                          // using IMLI component
+#define IMLISIC                       // use IMLI-SIC
+#define IMLIOH                        // use IMLI-OH
+#define DEFAULT_LOG2_TAGE_ENTRIES 10  // logsize of the tagged TAGE tables
+#define TBITS                     12  // minimum tag width
+#define MAXHIST                   700
+#define MINHIST                   4
 #elif IMLI_150K
 // nhist = 4
-#define LOOPPREDICTOR  //  use loop  predictor
-#define LOCALH         // use local histories
-#define IMLI           // using IMLI component
-#define IMLISIC        // use IMLI-SIC
-#define IMLIOH         // use IMLI-OH
-#define LOGG    11     // 11       // logsize of the  tagged TAGE tables
-#define TBITS   13     // 16      // minimum tag width
-#define MAXHIST 160
-#define MINHIST 5
+#define LOOPPREDICTOR                 //  use loop  predictor
+#define LOCALH                        // use local histories
+#define IMLI                          // using IMLI component
+#define IMLISIC                       // use IMLI-SIC
+#define IMLIOH                        // use IMLI-OH
+#define DEFAULT_LOG2_TAGE_ENTRIES 11  // 11       // logsize of the tagged TAGE tables
+#define TBITS                     13  // 16      // minimum tag width
+#define MAXHIST                   160
+#define MINHIST                   5
 #else
 // nhist = 7, glength
-#define LOOPPREDICTOR  //  use loop  predictor
-#define LOCALH         // use local histories
-#define IMLI           // using IMLI component
-#define IMLISIC        // use IMLI-SIC
-#define IMLIOH         // use IMLI-OH
-#define LOGG    12     /* logsize of the  tagged TAGE tables*/
-#define TBITS   13     /* minimum tag width*/
-#define MAXHIST 200    // 200
-#define MINHIST 5
+#define LOOPPREDICTOR                  //  use loop  predictor
+#define LOCALH                         // use local histories
+#define IMLI                           // using IMLI component
+#define IMLISIC                        // use IMLI-SIC
+#define IMLIOH                         // use IMLI-OH
+#define DEFAULT_LOG2_TAGE_ENTRIES 12   /* logsize of the tagged TAGE tables*/
+#define TBITS                     13   /* minimum tag width*/
+#define MAXHIST                   200  // 200
+#define MINHIST                   5
 #endif
 
 /*
@@ -154,15 +158,13 @@
 #define IMLI          // using IMLI component
 #define IMLISIC       // use IMLI-SIC
 #define IMLIOH        // use IMLI-OH
-#define LOGG 13       // logsize of the  tagged TAGE tables
+#define DEFAULT_LOG2_TAGE_ENTRIES 13       // logsize of the tagged TAGE tables
 #define TBITS 14      // minimum tag width
 #define MAXHIST 400
 #define MINHIST 5
 #endif
 */
 // To get the predictor storage budget on stderr  uncomment the next line
-
-#define SUBENTRIES 1
 
 #define UWIDTH 1
 #define CWIDTH 3
@@ -223,7 +225,7 @@ const int Gm[GNB] = {17, 14};
 // large local history
 #define LOGLOCAL 8
 #define NLOCAL   (1 << LOGLOCAL)
-#define INDLOCAL (PC & (NLOCAL - 1))
+#define INDLOCAL (orig_PC & (NLOCAL - 1))
 #ifdef LARGE_SC
 // three different local histories (just completely crazy :-)
 
@@ -289,7 +291,7 @@ const int Pm[PNB] = {16, 11};
 // #define LOGSIZEUSEALT 0
 #define LOGSIZEUSEALT 2
 #define SIZEUSEALT    (1 << (LOGSIZEUSEALT))
-#define INDUSEALT     ((pcSign(lastBoundaryPC)) & (SIZEUSEALT - 1))
+#define INDUSEALT     ((lastBoundaryPC) & (SIZEUSEALT - 1))
 
 // utility class for index computation
 // this is the cyclic shift register for folding
@@ -301,7 +303,12 @@ public:
   int      OLENGTH;
   int      OUTPOINT;
 
-  folded_history() {}
+  folded_history() {
+    comp     = 0;
+    CLENGTH  = 0;
+    OLENGTH  = 0;
+    OUTPOINT = 0;
+  }
 
   void init(int original_length, int compressed_length) {
     comp     = 0;
@@ -347,8 +354,8 @@ public:
 class Bimodal {
 private:
   const uint32_t bwidth;
-  const uint32_t Log2Size;
-  const uint32_t Log2FetchWidth;
+  const uint32_t log2_size;
+  const uint32_t log2_bimodal_nsub;
   const uint32_t indexMask;
 
   int pos_p;
@@ -358,13 +365,13 @@ private:
   uint32_t getIndex(uint32_t pc) const { return (pc & indexMask); }
 
 public:
-  Bimodal(int ls, int lfw, int bw) : bwidth(bw), Log2Size(ls), Log2FetchWidth(lfw), indexMask((1 << (Log2Size + lfw)) - 1) {
-    pred.resize(1 << (Log2Size + Log2FetchWidth), 0);
+  Bimodal(int ls, int lbn, int bw) : bwidth(bw), log2_size(ls), log2_bimodal_nsub(lbn), indexMask((1 << (log2_size + lbn)) - 1) {
+    pred.resize(1 << (log2_size + log2_bimodal_nsub), 0);
 
     pos_p = 0;
   }
 
-  int getsize() const { return (1 << (Log2Size + Log2FetchWidth)) * bwidth; }
+  int getsize() const { return (1 << (log2_size + log2_bimodal_nsub)) * bwidth; }
 
   void dump() { printf(" loff=%d ctr=%d", pos_p, pred[pos_p]); }
 
@@ -374,7 +381,7 @@ public:
   void select(uint32_t fetchPC_) { pos_p = getIndex(fetchPC_); }
 
   void select(uint32_t fetchPC_, uint8_t boff_) {
-    pos_p = getIndex((fetchPC_ << Log2FetchWidth) + (boff_ & ((1 << Log2FetchWidth) - 1)));
+    pos_p = getIndex(getIndex((fetchPC_ << log2_bimodal_nsub)) + (boff_ & ((1 << log2_bimodal_nsub) - 1)));
   }
 
   void update(bool taken) {
@@ -409,41 +416,28 @@ public:
 // TODO: Convert this class to GTable class that includes subtables inside
 class gentry {
 private:
-  int                   nsub;
-  std::vector<int8_t>   ctr;
-  std::vector<int8_t>   u;
-  std::vector<uint16_t> boff;  // Signature per branch in the entry
+  int8_t ctr_;
+  int8_t u_;
 
 public:
   uint32_t tag;
-  int      pos;  // for branch offset select
-  int      last_boff;
-  bool     thit;
   bool     hit;
 
-  gentry() {}
+  gentry() : ctr_(0), u_(0), tag(0), hit(false) {}
 
-  void allocate(int n) {
-#ifndef SUBENTRIES
-    n = 1;
-#endif
-    nsub = n;
-    ctr.resize(n + 1, 0);  // +1, last means unused
-    u.resize(n + 1, 0);
-    boff.resize(n + 1, 0xFFFF);
-    tag = 0;
+  void allocate(int) {
+    ctr_ = 0;
+    u_   = 0;
+    tag  = 0;
+    hit  = false;
   }
 
-  void dump() {
-    fprintf(stderr, "nsub=%d tag=%x hit=%d thit=%d u=%d loff=%d", nsub, tag, hit, thit, u[0], last_boff);
-    for (int i = 0; i < nsub; i++) {
-      fprintf(stderr, ": off=%d ctr=%d", boff[i], ctr[i]);
-    }
-  }
+  void dump() { printf("tag=%x hit=%d u=%d ctr=%d", tag, hit, u_, ctr_); }
 
   bool isHit() const { return hit; }
-  bool isTagHit() const { return thit; }
+  bool isTagHit() const { return hit; }
 
+/*<<<<<<< HEAD
   void select(Addr_t t, int b) {
     //changes by transient now
     b = b >> 1;  // Drop lower bit
@@ -476,162 +470,59 @@ public:
       pos = nsub - 1;
     }
   }
+=======*/
+  void select(Addr_t t) { hit = (t == tag); }
+//>>>>>>> upstream/main
 
   void reset(uint32_t t, bool taken) {
-    tag = t;
-
-    for (int i = 1; i < nsub; i++) {
-      boff[i] = 0xFFFF;
-      ctr[i]  = taken ? 0 : -1;
-      u[i]    = 0;
-    }
-    pos     = last_boff;
-    boff[0] = pos;
-    ctr[0]  = taken ? 0 : -1;
-
+    tag  = t;
+    ctr_ = taken ? 0 : -1;
     hit  = true;
-    thit = true;
   }
 
   void ctr_force_steal(bool taken) {
-    if (!thit) {
+    if (!hit) {
       return;
     }
-
-    int p = nsub - 1;
-
-    for (int i = p; i >= 0; i--) {
-      if (boff[i] == 0xFFFF) {
-        p = i;
-        break;
-      }
-      if (boff[i] == last_boff) {
-        p = i;
-        break;
-      }
-      int ioff = 0;
-      if (ctr[i] < 0) {
-        ioff = 1;
-      }
-      int poff = 0;
-      if (ctr[p] < 0) {
-        poff = 1;
-      }
-
-      if (abs(ctr[i] + ioff) < abs(ctr[p] + poff)) {
-        p = i;
-      } else if (abs(ctr[i] + ioff) == abs(ctr[p] + poff)) {
-        p = i;
-      }
-    }
-
-    boff[p] = last_boff;
-    ctr[p]  = taken ? 0 : -1;
-
-    hit = thit;
-
+    ctr_ = taken ? 0 : -1;
     u_dec();
   }
 
-  bool ctr_steal(bool taken) {
-    // Look for the ctr not highconf longest boff
-
-    int p = nsub - 1;
-
-    if (hit) {
-      return true;
-    }
-
-    if (!thit) {
-      return false;
-    }
-
-#if 1
-    // Better to steal even if u is not zero if we have a tag hit
-    if (p == 0) {
-      return false;
-    }
-#endif
-
-    bool weak = false;
-    for (int i = p; i >= 0; i--) {
-      // Allocates in increasing i possition. Re-use in decreasing i possition (older entries still weak are candidates for being
-      // removed)
-      if (boff[i] == 0xFFFF) {
-        p    = i;
-        weak = true;
-        break;
-      }
-#if 1
-      if (ctr[i] == -1 || ctr[i] == 0) {
-        p    = i;
-        weak = true;
-      }
-#endif
-    }
-    if (!weak) {
-      return false;
-    }
-
-    boff[p] = last_boff;
-    ctr[p]  = taken ? 0 : -1;
-    hit     = thit;
-
-    return true;
-  }
+  bool ctr_steal([[maybe_unused]] bool taken) { return hit; }
 
   void ctr_update(bool taken) {
-    if (!thit) {
-      return;
-    }
     if (!hit) {
-      int freepos = nsub;
-
-      for (int i = 0; i < nsub; i++) {
-        if (boff[i] == 0xFFFF) {
-          freepos = i;
-          break;
-        }
-      }
-      if (freepos != nsub) {
-        boff[freepos] = last_boff;
-        pos           = freepos;
-      } else {
-        bool s = ctr_steal(taken);
-        if (!s) {
-          return;
-        }
-      }
-      hit = true;
+      return;
     }
 
 #if CWIDTH > 4
-    if (taken && ctr[pos] < -1) {
-      ctr[pos] = ctr[pos] / 2;
-    } else if (!taken && ctr[pos] > 0) {
-      ctr[pos] = ctr[pos] / 2;
+    if (taken && ctr_ < -1) {
+      ctr_ = ctr_ / 2;
+    } else if (!taken && ctr_ > 0) {
+      ctr_ = ctr_ / 2;
     } else if (taken) {
-      if (ctr[pos] < ((1 << (CWIDTH - 1)) - 1)) {
-        ctr[pos]++;
+      if (ctr_ < ((1 << (CWIDTH - 1)) - 1)) {
+        ctr_++;
       }
     } else {
-      if (ctr[pos] > -(1 << (CWIDTH - 1))) {
-        ctr[pos]--;
+      if (ctr_ > -(1 << (CWIDTH - 1))) {
+        ctr_--;
       }
     }
 #else
     if (taken) {
-      if (ctr[pos] < ((1 << (CWIDTH - 1)) - 1)) {
-        ctr[pos]++;
+      if (ctr_ < ((1 << (CWIDTH - 1)) - 1)) {
+        ctr_++;
       }
     } else {
-      if (ctr[pos] > -(1 << (CWIDTH - 1))) {
-        ctr[pos]--;
+      if (ctr_ > -(1 << (CWIDTH - 1))) {
+        ctr_--;
       }
     }
 #endif
   }
 
+/*<<<<<<< HEAD
   bool ctr_weak() const {
     if (!hit) {
       printf("IMLIBEST::ctr_weak():return 1 as !hit at clock cycle %ld\n", globalClock);
@@ -643,10 +534,13 @@ public:
     } else {
       printf("IMLIBEST::ctr_weak():return 0 as !ctr[pos]==0 at clock cycle %ld\n", globalClock);
     }
+=======*/
+  bool ctr_weak() const { return !hit || ctr_ == 0 || ctr_ == -1; }
+//>>>>>>> upstream/main
 
-    return ctr[pos] == 0 || ctr[pos] == -1;
-  }
+  bool ctr_highconf() const { return hit && (abs(2 * ctr_ + 1) >= (1 << CWIDTH) - 1); }
 
+/*<<<<<<< HEAD
   bool ctr_highconf() const {
     if (!hit) {
       return false;
@@ -663,33 +557,63 @@ public:
     printf("IMLIBEST::ctr_get():return ctr[%d] = %d as hit==1 at clock cycle %ld\n", pos, ctr[pos], globalClock);
     return ctr[pos];
   }
+=======*/
+  int ctr_get() const { return hit ? ctr_ : 0; }
+//>>>>>>> upstream/main
 
   bool ctr_isTaken() const { return ctr_get() >= 0; }
 
-  int u_get() const { return u[0]; }
+  int u_get() const { return u_; }
 
   void u_inc() {
-    if (u[0] < (1 << UWIDTH) - 1) {
-      u[0]++;
+    if (u_ < (1 << UWIDTH) - 1) {
+      u_++;
     }
   }
 
   void u_dec() {
-    if (u[0]) {
-      u[0]--;
+    if (u_) {
+      u_--;
     }
   }
+/*<<<<<<< HEAD
   void u_clear() { u[0] = 0; }
 };//class_gentry_end
+=======*/
+  void u_clear() { u_ = 0; }
+};
+//>>>>>>> upstream/main
 
 class IMLIBest {
 public:
-  Bimodal    bimodal;  // (BLOGB,LOG2FETCHWIDTH,BWIDTH);
-  const int  blogb;
-  const int  log2fetchwidth;
+  Bimodal    bimodal;  // (log2_bimodal_entries,log2_bimodal_nsub,BWIDTH);
+  const int  log2_bimodal_entries;
+  const int  log2_bimodal_nsub;
   const int  bwidth;
   const int  nhist;
   const bool sc;
+  const int  log2_tage_entries;
+  const int  log2_tage_nsub;
+  const int  tage_nsub_mask;  // (1 << log2_tage_nsub) - 1
+
+  int get_tage_subentry(uint32_t tag) const {
+    if (log2_tage_nsub == 0) {
+      return 0;
+    }
+
+    return tag & tage_nsub_mask;
+  }
+
+  int get_tage_pos(int bank) const {
+    int pos = GI[bank];
+    if (log2_tage_nsub > 0) {
+      pos = (pos << log2_tage_nsub) + get_tage_subentry(GTAG[bank]);
+    }
+    return pos;
+  }
+
+  gentry&       get_gentry(int bank) { return gtable[bank][get_tage_pos(bank)]; }
+  const gentry& get_gentry(int bank) const { return gtable[bank][get_tage_pos(bank)]; }
 
 #ifdef POSTPREDICT
 #define POSTPEXTRA 2
@@ -703,17 +627,17 @@ public:
   uint32_t postp_index(uint32_t a, uint32_t b, uint32_t c) {
     int ctr[POSTPEXTRA + 1];
     if (a) {
-      ctr[0] = gtable[a][GI[a]].ctr_get();
+      ctr[0] = get_gentry(a).ctr_get();
     } else {
       ctr[0] = bimodal.predict();
     }
     if (b) {
-      ctr[1] = gtable[b][GI[b]].ctr_get();
+      ctr[1] = get_gentry(b).ctr_get();
     } else {
       ctr[1] = bimodal.predict();
     }
     if (c) {
-      ctr[2] = gtable[c][GI[c]].ctr_get();
+      ctr[2] = get_gentry(c).ctr_get();
     } else {
       ctr[2] = bimodal.predict();
     }
@@ -730,7 +654,7 @@ public:
     for (int i = POSTPEXTRA; i >= 0; i--) {
       v = (v << CTRBITS) | (ctr[i] & (((1 << CTRBITS) - 1)));
     }
-    int u0 = (a > 0) ? gtable[a][GI[a]].u_get() : 1;
+    int u0 = (a > 0) ? get_gentry(a).u_get() : 1;
     v      = (v << 1) | u0;
     v &= postpsize - 1;
     return v;
@@ -791,15 +715,19 @@ public:
 
   std::vector<std::vector<gentry>> gtable;  // [NHIST + 1];	// tagged TAGE tables
 
+#ifdef IMLISIC
   int Im[INB];
+#endif
 
   const int Lm[LNB] = {11, 6, 3};
 
-  std::array<std::array<int8_t, FNB>, (1 << LOGFNB)> FGEHL;
-  std::array<std::array<int8_t, GNB>, (1 << LOGGNB)> GGEHL;
-  std::array<std::array<int8_t, LNB>, (1 << LOGLNB)> LGEHL;
-  std::array<std::array<int8_t, INB>, (1 << LOGINB)> IGEHL;
-  std::array<std::array<int8_t, PNB>, (1 << LOGPNB)> PGEHL;
+#ifdef IMLIOH
+  std::array<std::array<int8_t, (1 << LOGFNB)>, FNB> FGEHL;
+  std::array<std::array<int8_t, (1 << LOGINB)>, INB> IGEHL;
+#endif
+  std::array<std::array<int8_t, (1 << LOGPNB)>, PNB> PGEHL;
+  std::array<std::array<int8_t, (1 << LOGLNB)>, LNB> LGEHL;
+  std::array<std::array<int8_t, (1 << LOGGNB)>, GNB> GGEHL;
   // int8_t  GGEHL[GNB][(1 << LOGGNB)];
   // int8_t  LGEHL[LNB][(1 << LOGLNB)];
   // int8_t  IGEHL[INB][(1 << LOGINB)];
@@ -829,9 +757,49 @@ public:
   int               AltBank;         // alternate matching bank
   uint64_t          lastBoundaryPC;  // last PC that fetchBoundary was called
   uint64_t          imli_tag_offset;
+  uint64_t          bim_tag_offset;
+  uint64_t          lastBoundaryID;    // dinst ID for boundary to compute offset for all instruction types
   uint64_t          lastBoundarySign;  // lastBoundaryPC ^ PCs in not-taken in the branch bundle
   bool              lastBoundaryCtrl;
   int               Seed;  // for the pseudo-random number generator
+
+  struct DeferredPredictionState {
+    Addr_t            pc;
+    std::vector<int>  gi;
+    std::vector<uint> gtag;
+    bool              advance_imli_tag_offset;
+    bool              pred_taken;
+    bool              alttaken;
+    bool              tage_pred;
+    bool              LongestMatchPred;
+    int               HitBank;
+    int               AltBank;
+    bool              HighConf;
+    int               LSUM;
+    bool              pred_inter;
+#ifdef LOOPPREDICTOR
+    bool predloop;
+    int  LIB;
+    int  LI;
+    int  LHIT;
+    int  LTAG;
+    bool LVALID;
+#endif
+#ifdef POSTPREDICT
+    uint32_t ppi;
+#endif
+  };
+
+  struct DeferredBoundaryOp {
+    bool                    has_predictor_update;
+    Addr_t                  orig_pc;
+    Opcode                  brtype;
+    bool                    taken;
+    Addr_t                  target;
+    bool                    no_alloc;
+    DeferredPredictionState state;
+  };
+  std::vector<DeferredBoundaryOp> deferred_ops;
 
   bool pred_inter;
 
@@ -847,13 +815,17 @@ public:
   int8_t WITHLOOP;  // counter to monitor whether or not loop prediction is beneficial
 #endif
 
-  IMLIBest(int _blogb, int _log2fetchwidth, int _bwidth, int _nhist, bool _sc)
-      : bimodal(_blogb, _log2fetchwidth, _bwidth)
-      , blogb(_blogb)
-      , log2fetchwidth(_log2fetchwidth)
+  IMLIBest(int _log2_bimodal_nsub, int _log2_bimodal_entries, int _bwidth, int _nhist, bool _sc, int _log2_tage_entries,
+           int _log2_tage_nsub = 0)
+      : bimodal(_log2_bimodal_entries, _log2_bimodal_nsub, _bwidth)
+      , log2_bimodal_entries(_log2_bimodal_entries)
+      , log2_bimodal_nsub(_log2_bimodal_nsub)
       , bwidth(_bwidth)
       , nhist(_nhist >= MAXHIST ? MAXHIST : _nhist)
-      , sc(_sc) {
+      , sc(_sc)
+      , log2_tage_entries(_log2_tage_entries)
+      , log2_tage_nsub(_log2_tage_nsub)
+      , tage_nsub_mask((1 << _log2_tage_nsub) - 1) {
     ch_i.resize(nhist + 1);
     ch_t[0].resize(nhist + 1);
     ch_t[1].resize(nhist + 1);
@@ -875,8 +847,15 @@ public:
 
     for (int i = 1; i <= nhist; i += 1) {
       int s = logg[i];
-      int x = (1 << s) * (CWIDTH + UWIDTH + TB[i]);
-      fprintf(stderr, "table[%d] size=%d log2entries=%d histlength=%d taglength=%d\n", i, x, s, m[i], TB[i]);
+      int x = (1 << (s + log2_tage_nsub)) * (CWIDTH + UWIDTH + TB[i]);
+      fprintf(stderr,
+              "table[%d] size=%d log2entries=%d log2nsub=%d histlength=%d taglength=%d\n",
+              i,
+              x,
+              s,
+              log2_tage_nsub,
+              m[i],
+              TB[i]);
 
       STORAGESIZE += x;
     }
@@ -884,8 +863,8 @@ public:
     STORAGESIZE += 2 * (SIZEUSEALT)*4;
     fprintf(stderr, " altna size=%d log2entries=%d\n", 2 * (SIZEUSEALT)*4, LOGSIZEUSEALT);
 
-    inter = bwidth * (1 << (log2fetchwidth + blogb));
-    fprintf(stderr, " bimodal table size=%d log2entries=%d\n", inter, blogb);
+    inter = bwidth * (1 << (log2_bimodal_nsub + log2_bimodal_entries));
+    fprintf(stderr, " bimodal table bit_size=%d log2entries=%d log2nsub=%d\n", inter, log2_bimodal_entries, log2_bimodal_nsub);
 
     STORAGESIZE += inter;
     STORAGESIZE += m[nhist];
@@ -973,6 +952,13 @@ public:
 #endif
 
 #ifdef IMLIOH
+    localoh = 0;
+    for (int i = 0; i < PASTSIZE; i++) {
+      PIPE[i] = 0;
+    }
+    for (int i = 0; i < OHHISTTABLESIZE; i++) {
+      ohhisttable[i] = 0;
+    }
     for (int i = 0; i < FNB; i++) {
       Fm[i] = 2;
     }
@@ -990,7 +976,7 @@ public:
 
     for (int i = 1; i <= nhist; i++) {
       TB[i]   = TBITS + (i / 2);
-      logg[i] = LOGG;
+      logg[i] = log2_tage_entries;
     }
 
 #ifdef LOOPPREDICTOR
@@ -1003,8 +989,8 @@ public:
     int ngalloc  = 3;
 
     for (int i = 1; i <= nhist; i++) {
-      gtable[i].resize(1 << (logg[i]));
-      for (int j = 0; j < (1 << logg[i]); j++) {
+      gtable[i].resize(1 << (logg[i] + log2_tage_nsub));
+      for (int j = 0; j < (1 << (logg[i] + log2_tage_nsub)); j++) {
         int s;
         if (i >= ngalloc) {
           s = galloc[ngalloc];
@@ -1032,7 +1018,7 @@ public:
     Seed  = 0;
 
     for (int i = 0; i < HISTBUFFERLENGTH; i++) {
-      ghist[0] = 0;
+      ghist[i] = 0;
     }
     ptghist = 0;
 
@@ -1043,21 +1029,21 @@ public:
     for (int i = 0; i < GNB; i++) {
       for (int j = 0; j < ((1 << LOGGNB) - 1); j++) {
         if (!(j & 1)) {
-          GGEHL[j][i] = -1;
+          GGEHL[i][j] = -1;
         }
       }
     }
     for (int i = 0; i < LNB; i++) {
       for (int j = 0; j < ((1 << LOGLNB) - 1); j++) {
         if (!(j & 1)) {
-          LGEHL[j][i] = -1;
+          LGEHL[i][j] = -1;
         }
       }
     }
     for (int i = 0; i < PNB; i++) {
       for (int j = 0; j < ((1 << LOGPNB) - 1); j++) {
         if (!(j & 1)) {
-          PGEHL[j][i] = -1;
+          PGEHL[i][j] = -1;
         }
       }
     }
@@ -1067,7 +1053,7 @@ public:
     for (int i = 0; i < FNB; i++) {
       for (int j = 0; j < ((1 << LOGFNB) - 1); j++) {
         if (!(j & 1)) {
-          FGEHL[j][i] = -1;
+          FGEHL[i][j] = -1;
         }
       }
     }
@@ -1076,7 +1062,7 @@ public:
     for (int i = 0; i < INB; i++) {
       for (int j = 0; j < ((1 << LOGINB) - 1); j++) {
         if (!(j & 1)) {
-          IGEHL[j][i] = -1;
+          IGEHL[i][j] = -1;
         }
       }
     }
@@ -1096,8 +1082,14 @@ public:
 
     for (int i = 0; i < NSECLOCAL; i++) {
       S_slhist[i] = 0;
+      T_slhist[i] = 0;
     }
-    GHIST = 0;
+    GHIST     = 0;
+    IMLIcount = 0;
+    pthstack  = 0;
+    FirstH    = 0;
+    SecondH   = 0;
+    ThirdH    = 0;
 
 #ifndef POSTPREDICT
     for (int i = 0; i < SIZEUSEALT; i++) {
@@ -1111,8 +1103,6 @@ public:
     phist   = 0;
   }
   // index function for the bimodal table
-
-  int bindex(Addr_t PC) { return ((PC) & ((1 << (blogb)) - 1)); }
 
   // the index functions for the tagged tables uses path history as in the OGEHL predictor
   // F serves to mix path history: not very important impact
@@ -1288,17 +1278,20 @@ public:
     HitBank = 0;
     AltBank = 0;
 
-    GI[0] = lastBoundaryPC >> 2;  // Remove 2 lower useless bits
+    GI[0] = lastBoundaryPC;  // already a hash >> 2;  // Remove 2 lower useless bits
     for (int i = 1; i <= nhist; i++) {
-      GI[i]   = gindex(pcSign(lastBoundaryPC, i), i, phist);
-      GTAG[i] = ((GI[i - 1] << (logg[i] / 2)) ^ GI[i - 1]) & ((1 << TB[i]) - 1);
+      GI[i] = gindex(lastBoundaryPC, i, phist);
     }
   }
 
-  uint64_t pcSign(uint64_t pc, int deg = 0) const {
-    uint64_t cid = pc >> 1;
-    cid          = (cid >> (7 + deg)) ^ (cid);
-    return cid;
+  void setTAGETag(Addr_t PC) {
+    HitBank = 0;
+    AltBank = 0;
+
+    for (int i = 1; i <= nhist; i++) {
+      auto tag = imli_bpred_hash(gindex(PC, i - 1, phist), PC);
+      GTAG[i]  = tag & ((1 << TB[i]) - 1);
+    }
   }
 
   void setTAGEPred() {
@@ -1307,10 +1300,15 @@ public:
     AltBank = 0;
     printf("IMLIBEST::setTAGEPRED():: nhist is %d at clock cycle %ld\n", nhist, globalClock);
     for (int i = 1; i <= nhist; i++) {
+/*<<<<<<< HEAD
       if (gtable[i][GI[i]].isHit()) {
         //TODO::main diif is here limaJOSE: LongestMatchPred 
         LongestMatchPred = (gtable[i][GI[i]].ctr_isTaken());
         printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]].isHit==>LongestMAtchPred is %b  at clock cycle %ld\n", i, i, LongestMatchPred, globalClock);
+=======*/
+      if (get_gentry(i).isHit()) {
+        LongestMatchPred = get_gentry(i).ctr_isTaken();
+//>>>>>>> upstream/main
         HitBank          = i;
         printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: HitBank is %d  at clock cycle %ld\n", i, i, HitBank, globalClock);
       }
@@ -1318,7 +1316,7 @@ public:
 
     printf("IMLIBEST::setTAGEPred::LongestMAtchPred is %b  at clock cycle %ld\n",  LongestMatchPred, globalClock);
     for (int i = HitBank - 1; i > 0; i--) {
-      if (gtable[i][GI[i]].isHit()) {
+      if (get_gentry(i).isHit()) {
         AltBank = i;
         printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: AltBank is %d  at clock cycle %ld\n", i, i, AltBank, globalClock);
         break;
@@ -1328,7 +1326,7 @@ public:
 #ifdef POSTPREDICT
     int WeakBank = 0;
     for (int i = AltBank - 1; i > 0; i--) {
-      if (gtable[i][GI[i]].isHit()) {
+      if (get_gentry(i).isHit()) {
         WeakBank = i;
         break;
       }
@@ -1336,8 +1334,12 @@ public:
 
     if (HitBank > 0) {
       if (AltBank > 0) {
+/*<<<<<<< HEAD
         alttaken = (gtable[AltBank][GI[AltBank]].ctr_isTaken());
         printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk>0::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
+=======*/
+        alttaken = get_gentry(AltBank).ctr_isTaken();
+//>>>>>>> upstream/main
       } else {
         alttaken = bimodal.predict();
         printf("IMLIBEST::setTAGEPred::HITBANK>0::ALTBANK<= 0:: alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
@@ -1351,9 +1353,13 @@ public:
     // computes the prediction and the alternate prediction
     if (HitBank > 0) {
       if (AltBank > 0) {
+/*<<<<<<< HEAD
         alttaken = (gtable[AltBank][GI[AltBank]].ctr_isTaken());
         //TODO:limajose
         printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk>0::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
+=======*/
+        alttaken = get_gentry(AltBank).ctr_isTaken();
+//>>>>>>> upstream/main
       } else {
         alttaken = bimodal.predict();
         printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk<=0::BIMODAL_PREDICT::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
@@ -1364,18 +1370,23 @@ public:
       int  index          = INDUSEALT ^ LongestMatchPred;
       bool Huse_alt_on_na = (use_alt_on_na[index][HitBank > (nhist / 3)] >= 0);
 
-      if (!Huse_alt_on_na || !gtable[HitBank][GI[HitBank]].ctr_weak()) {
+      if (!Huse_alt_on_na || !get_gentry(HitBank).ctr_weak()) {
         tage_pred = LongestMatchPred;
+/*<<<<<<< HEAD
         //TODO::here is the main diff_limajose tage_pred 
         printf("IMLIBEST::setTAGEPred::!gtable[%d][GI[%d]].ctr_weak()) ::tage_pred  is %b  at clock cycle %ld\n", HitBank, HitBank, tage_pred, globalClock);
         HighConf  = gtable[HitBank][GI[HitBank]].ctr_highconf();
         WeakConf  = gtable[HitBank][GI[HitBank]].ctr_weak();
+=======*/
+        HighConf  = get_gentry(HitBank).ctr_highconf();
+        WeakConf  = get_gentry(HitBank).ctr_weak();
+//>>>>>>> upstream/main
       } else {
         tage_pred = alttaken;
         printf("IMLIBEST::setTAGEPred:: gtable[HitBank][GI[HitBank]].ctr_weak())::tage_pred  is %b  at clock cycle %ld\n", tage_pred, globalClock);
         if (AltBank) {
-          HighConf = gtable[AltBank][GI[AltBank]].ctr_highconf();
-          WeakConf = gtable[AltBank][GI[AltBank]].ctr_weak();
+          HighConf = get_gentry(AltBank).ctr_highconf();
+          WeakConf = get_gentry(AltBank).ctr_weak();
         } else {
           HighConf = bimodal.highconf();
           WeakConf = !HighConf;
@@ -1412,16 +1423,20 @@ public:
   }
   // compute the prediction
 
-  void fetchBoundaryBegin(Addr_t PC) {
-    lastBoundaryPC  = PC;
+  void fetchBoundaryBegin(Addr_t PC, uint64_t ID) {
+    lastBoundaryPC  = imli_bpred_hash(PC);
     imli_tag_offset = 0;
+    bim_tag_offset  = 0;
 #ifdef SIMPLER_DOLC_PATH
-    lastBoundarySign = pcSign(PC);
+    lastBoundarySign = PC;
 #else
     lastBoundarySign = 0;
 #endif
     lastBoundaryCtrl = false;
 
+    lastBoundaryID = ID;
+
+    I(deferred_ops.empty());
     setTAGEIndex();
   }
 
@@ -1431,6 +1446,16 @@ public:
       idolc.update(lastBoundarySign);
     }
 #endif
+    for (auto& e : deferred_ops) {
+      if (e.has_predictor_update) {
+        applyDeferredPredictorUpdate(e);
+      }
+
+      Addr_t orig_PC = e.orig_pc;  // needed by INDLOCAL macro
+      HistoryUpdate(orig_PC, e.brtype, e.taken, e.target, phist, ptghist, ch_i, ch_t[0], ch_t[1], L_shist[INDLOCAL], GHIST);
+      setTAGEIndex();
+    }
+    deferred_ops.clear();
   }
 
   uint32_t dohash(uint32_t addr, uint16_t offset) {
@@ -1438,15 +1463,21 @@ public:
 
     return sign;
   }
+  // #define IDEAL_REHASH_BIM_BOUNDARY 1
 
-  // TODO: WHy fetch predict is not zero?
-  //         TODO: update 2 entries with different data abd same boff
-  int fetchBoundaryOffsetOthers(Addr_t PC) {
-    int boff = (PC >> 1) & ((1 << (log2fetchwidth - 1)) - 1);
-#ifndef SIMPLER_DOLC_PATH
-    lastBoundarySign = dohash(lastBoundarySign, pcSign(PC));
+  void select_tage_entries(Addr_t orig_PC, uint64_t orig_ID) {
+    (void)orig_ID;
+    (void)orig_PC;
+
+#ifdef IDEAL_BOUNDARY_ONLY_FOR_CTRL
+    bimodal.select(GI[0], bim_tag_offset);
+#elifdef IDEAL_REHASH_BIM_BOUNDARY
+    bimodal.select(imli_bpred_hash(orig_PC));
+#else
+    bimodal.select(GI[0], imli_bpred_hash(lastBoundaryPC, 100 + orig_ID - lastBoundaryID));
 #endif
 
+/*<<<<<<< HEAD
     lastBoundaryCtrl = true;
 
     return boff;
@@ -1459,12 +1490,14 @@ public:
     bimodal.select(PC);
 
     if(!transient){
+=======*/
+//>>>>>>> upstream/main
     for (int i = 1; i <= nhist; i++) {
-      gtable[i][GI[i]].select(GTAG[i], boff);
+      get_gentry(i).select(GTAG[i]);
     }
-   }
   }
 
+/*<<<<<<< HEAD
 
   
   bool getPrediction(Addr_t PC, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid, uint32_t taken_counter, bool transient) {
@@ -1473,14 +1506,45 @@ public:
 
     bool force_offset = (taken_counter>1 && use_tag_hybrid);
     printf("IMLIbEST::GETprediction: force_offset is %b at clock cycle %ld\n", force_offset, globalClock);
+=======*/
+  bool getPrediction(Addr_t orig_PC, uint64_t orig_ID, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid,
+                     uint32_t taken_counter) {
+    bool force_offset = (taken_counter >= 1 && use_tag_hybrid);
+//>>>>>>> upstream/main
 
+    Addr_t PC;
     if (use_tag_offset || force_offset) {
-      PC = imli_bpred_hash(lastBoundaryPC, imli_tag_offset);
+#ifdef IDEAL_BOUNDARY_ONLY_FOR_CTRL
+      PC = imli_bpred_hash(lastBoundaryPC, 100 + imli_tag_offset);
+#else
+      PC = imli_bpred_hash(lastBoundaryPC, 100 + orig_ID - lastBoundaryID);
+#endif
+    } else {
+      PC = imli_bpred_hash(orig_PC);
     }
+
+    // fetchBoundaryBegin(orig_PC, orig_ID);
+    setTAGETag(PC);
+
+    select_tage_entries(orig_PC, orig_ID);
 
     setTAGEPred();
 
     pred_taken = tage_pred;
+
+#if 0
+    if (orig_PC == 0x13fbb8) {
+      std::print("HERE: ");
+      for(auto e:GTAG) {
+        std::print(" {}", e);
+      }
+      if (HitBank) {
+        std::print(" bank:{} GI:{}", HitBank, GI[HitBank]);
+        get_gentry(HitBank).dump();
+      }
+      std::print(" pred:{}\n", pred_taken);
+    }
+#endif
 
 #if 0
     bias = !WeakConf;
@@ -1540,12 +1604,12 @@ public:
     }
 
     if (IMLIcount >= 2) {
-      LSUM += 2 * Gpredict<FNB, LOGFNB>((PC << 2), localoh, Fm, FGEHL);
+      LSUM += 2 * Gpredict<LOGFNB, FNB>(FGEHL);
     }
 #endif
 
 #ifdef IMLISIC
-    LSUM += 2 * Gpredict<INB, LOGINB>(PC, IMLIcount, Im, IGEHL);
+    LSUM += 2 * Gpredict<LOGINB, INB>(IGEHL);
 #else
     long long interIMLIcount = IMLIcount;
     /* just a trick to disable IMLIcount*/
@@ -1557,10 +1621,10 @@ public:
     IMLIcount = 0;
 #endif
 
-    LSUM += Gpredict<GNB, LOGGNB>((PC << 1) + pred_inter /*PC*/, (GHIST << 11) + IMLIcount, Gm, GGEHL);
+    LSUM += Gpredict<LOGGNB, GNB>(GGEHL);
 
 #ifdef LOCALH
-    LSUM += Gpredict<LNB, LOGLNB>(PC, L_shist[INDLOCAL], Lm, LGEHL);
+    LSUM += Gpredict<LOGLNB, LNB>(LGEHL);
 #endif
 #ifdef IMLI
 #ifndef IMLISIC
@@ -1568,7 +1632,7 @@ public:
 #endif
 #endif
 
-    LSUM += Gpredict<PNB, LOGPNB>(PC, GHIST, Pm, PGEHL);
+    LSUM += Gpredict<LOGPNB, PNB>(PGEHL);
 
     bool SCPRED = (LSUM >= 0);
 
@@ -1601,9 +1665,12 @@ public:
 /*Update History*/
   void HistoryUpdate(Addr_t PC, Opcode brtype, bool taken, Addr_t target, long long& X, int& Y, std::vector<folded_history>& H,
                      std::vector<folded_history>& G, std::vector<folded_history>& J, long long& LH, long long& GBRHIST) {
+/*<<<<<<< HEAD
 
     imli_tag_offset++;
 
+=======*/
+//>>>>>>> upstream/main
     // special treatment for unconditional branchs;
     int maxt;
     if (brtype == Opcode::iBALU_LBRANCH) {
@@ -1656,8 +1723,8 @@ public:
       J[i].set(sign2);  // Not used in DOLC
     }
 #else
-    int T            = ((PC) << 1) + taken;
-    int PATH         = PC;
+    int T    = ((PC) << 1) + taken;
+    int PATH = PC;
 #endif
 
     for (int t = 0; t < maxt; t++) {
@@ -1686,23 +1753,119 @@ public:
 
   // PREDICTOR UPDATE
 
-  void updatePredictor(Addr_t PC, bool resolveDir, bool predDir, Addr_t branchTarget, bool no_alloc, bool use_tag_offset, bool use_tag_hybrid, uint32_t taken_counter) {
+  DeferredPredictionState captureDeferredPredictionState(Addr_t PC) const {
+    DeferredPredictionState state{
+        .pc                      = PC,
+        .gi                      = GI,
+        .gtag                    = GTAG,
+        .advance_imli_tag_offset = false,
+        .pred_taken              = pred_taken,
+        .alttaken                = alttaken,
+        .tage_pred               = tage_pred,
+        .LongestMatchPred        = LongestMatchPred,
+        .HitBank                 = HitBank,
+        .AltBank                 = AltBank,
+        .HighConf                = HighConf,
+        .LSUM                    = LSUM,
+        .pred_inter              = pred_inter,
+#ifdef LOOPPREDICTOR
+        .predloop = predloop,
+        .LIB      = LIB,
+        .LI       = LI,
+        .LHIT     = LHIT,
+        .LTAG     = LTAG,
+        .LVALID   = LVALID,
+#endif
+#ifdef POSTPREDICT
+        .ppi = ppi,
+#endif
+    };
+
+    return state;
+  }
+
+  void deferPredictorUpdate(Addr_t PC, uint64_t ID, bool resolveDir, bool predDir, Addr_t branchTarget, bool no_alloc,
+                            bool use_tag_offset, bool use_tag_hybrid, uint32_t taken_counter) {
     (void)predDir;
-    // Addr_t orig_PC = PC;
-    bool force_offset = (taken_counter>1 && use_tag_hybrid);
+    Addr_t orig_PC      = PC;
+    bool   force_offset = (taken_counter >= 1 && use_tag_hybrid);
     if (use_tag_offset || force_offset) {
+#ifdef IDEAL_BOUNDARY_ONLY_FOR_CTRL
       PC = imli_bpred_hash(lastBoundaryPC, imli_tag_offset);
+#else
+      PC = imli_bpred_hash(lastBoundaryPC, ID - lastBoundaryID);
+#endif
+    } else {
+      PC = imli_bpred_hash(PC);
     }
-    // fmt::print("updatePredict orig_PC:{:x} offset:{} PC:{:x} use_tag_offset:{}\n", orig_PC, imli_tag_offset, PC, use_tag_offset);
+
+    auto state                    = captureDeferredPredictionState(PC);
+    state.advance_imli_tag_offset = use_tag_offset || force_offset;
+
+    deferred_ops.push_back({
+        .has_predictor_update = true,
+        .orig_pc              = orig_PC,
+        .brtype               = Opcode::iBALU_LBRANCH,
+        .taken                = resolveDir,
+        .target               = branchTarget,
+        .no_alloc             = no_alloc,
+        .state                = std::move(state),
+    });
+  }
+
+  void applyDeferredPredictorUpdate(const DeferredBoundaryOp& e) {
+    const auto& state = e.state;
+    Addr_t      PC    = state.pc;
+
+    GI               = state.gi;
+    GTAG             = state.gtag;
+    pred_taken       = state.pred_taken;
+    alttaken         = state.alttaken;
+    tage_pred        = state.tage_pred;
+    LongestMatchPred = state.LongestMatchPred;
+    HitBank          = state.HitBank;
+    AltBank          = state.AltBank;
+    HighConf         = state.HighConf;
+    LSUM             = state.LSUM;
+    pred_inter       = state.pred_inter;
+#ifdef LOOPPREDICTOR
+    predloop = state.predloop;
+    LIB      = state.LIB;
+    LI       = state.LI;
+    LHIT     = state.LHIT;
+    LTAG     = state.LTAG;
+    LVALID   = state.LVALID;
+#endif
+#ifdef POSTPREDICT
+    ppi = state.ppi;
+#endif
+
+#if 0
+    if (GTAG[1] == 17442) {
+      std::print("upd orig_PC:{:x} resolveDir:{} bank:{}\n", e.orig_pc, e.taken, HitBank);
+      std::print(" bank:{} ", HitBank);
+      get_gentry(1).dump();
+      std::print("\n");
+    }
+
+    if (e.orig_pc == 0x13fbb8 && HitBank && pred_taken != e.taken) {
+      std::print("miss orig_PC:{:x} offset:{} PC:{:x} use_tag_offset:{} pred:{} reslv:{} "
+                , e.orig_pc, imli_tag_offset, PC, false, pred_taken, e.taken);
+
+      std::print(" bank:{} ", HitBank);
+      get_gentry(HitBank).dump();
+      std::print("\n");
+    }
+#endif
 
 #ifdef LOOPPREDICTOR
     if (LVALID) {
       if (pred_taken != predloop) {
-        ctrupdate(WITHLOOP, (predloop == resolveDir), 7);
+        ctrupdate(WITHLOOP, (predloop == e.taken), 7);
       }
     }
 
-    loopupdate(resolveDir, (pred_taken != resolveDir));
+    loopupdate(e.taken, (pred_taken != e.taken));
 #endif
 
     if (sc) {
@@ -1711,18 +1874,18 @@ public:
         if (pred_inter != SCPRED) {
           if ((abs(LSUM) < Pupdatethreshold[INDUPD])) {
             if ((abs(LSUM) < Pupdatethreshold[INDUPD] / 3)) {
-              ctrupdate(FirstH, (pred_inter == resolveDir), CONFWIDTH);
+              ctrupdate(FirstH, (pred_inter == e.taken), CONFWIDTH);
             } else if ((abs(LSUM) < 2 * Pupdatethreshold[INDUPD] / 3)) {
-              ctrupdate(SecondH, (pred_inter == resolveDir), CONFWIDTH);
+              ctrupdate(SecondH, (pred_inter == e.taken), CONFWIDTH);
             } else if ((abs(LSUM) < Pupdatethreshold[INDUPD])) {
-              ctrupdate(ThirdH, (pred_inter == resolveDir), CONFWIDTH);
+              ctrupdate(ThirdH, (pred_inter == e.taken), CONFWIDTH);
             }
           }
         }
       }
 
-      if ((SCPRED != resolveDir) || ((abs(LSUM) < Pupdatethreshold[INDUPD]))) {
-        if (SCPRED != resolveDir) {
+      if ((SCPRED != e.taken) || ((abs(LSUM) < Pupdatethreshold[INDUPD]))) {
+        if (SCPRED != e.taken) {
           Pupdatethreshold[INDUPD] += 1;
         } else {
           Pupdatethreshold[INDUPD] -= 1;
@@ -1736,8 +1899,8 @@ public:
           Pupdatethreshold[INDUPD] = 0;
         }
 
-        ctrupdate(Bias[INDBIAS], resolveDir, PERCWIDTH);
-        ctrupdate(BiasSK[INDBIASSK], resolveDir, PERCWIDTH);
+        ctrupdate(Bias[INDBIAS], e.taken, PERCWIDTH);
+        ctrupdate(BiasSK[INDBIASSK], e.taken, PERCWIDTH);
 #ifdef IMLI
 #ifndef IMLISIC
         long long interIMLIcount = IMLIcount;
@@ -1745,21 +1908,21 @@ public:
         IMLIcount = 0;
 #endif
 #endif
-        Gupdate<GNB, LOGGNB>((PC << 1) + pred_inter /*PC*/, resolveDir, (GHIST << 11) + IMLIcount, Gm, GGEHL);
-        Gupdate<LNB, LOGLNB>(PC, resolveDir, L_shist[INDLOCAL], Lm, LGEHL);
+        Gupdate<LOGGNB, GNB>(e.taken, GGEHL);
+        Gupdate<LOGLNB, LNB>(e.taken, LGEHL);
 
-        Gupdate<PNB, LOGPNB>(PC, resolveDir, GHIST, Pm, PGEHL);
+        Gupdate<LOGPNB, PNB>(e.taken, PGEHL);
 
 #ifdef IMLI
 #ifdef IMLISIC
-        Gupdate<INB, LOGINB>(PC, resolveDir, IMLIcount, Im, IGEHL);
+        Gupdate<LOGINB, INB>(e.taken, IGEHL);
 #else
         IMLIcount = interIMLIcount;
 #endif
 
 #ifdef IMLIOH
         if (IMLIcount >= 2) {
-          Gupdate<FNB, LOGFNB>((PC << 2), resolveDir, localoh, Fm, FGEHL);
+          Gupdate<LOGFNB, FNB>(e.taken, FGEHL);
         }
 #endif
 
@@ -1770,8 +1933,8 @@ public:
 
     // TAGE UPDATE
     if (true) {
-      bool ALLOC = ((tage_pred != resolveDir) & (HitBank < nhist));
-      if (pred_taken == resolveDir) {
+      bool ALLOC = ((tage_pred != e.taken) & (HitBank < nhist));
+      if (pred_taken == e.taken) {
         if ((MYRANDOM() & 31) != 0) {
           ALLOC = false;
         }
@@ -1780,10 +1943,10 @@ public:
       if (HitBank > 0) {
         // Manage the selection between longest matching and alternate matching
         // for "pseudo"-newly allocated longest matching entry
-        bool PseudoNewAlloc = gtable[HitBank][GI[HitBank]].ctr_weak();
+        bool PseudoNewAlloc = get_gentry(HitBank).ctr_weak();
         // an entry is considered as newly allocated if its prediction counter is weak
         if (PseudoNewAlloc) {
-          if (LongestMatchPred == resolveDir) {
+          if (LongestMatchPred == e.taken) {
             ALLOC = false;
           }
 
@@ -1793,13 +1956,13 @@ public:
           // FIXME: Have a PC (or T1 history) based use_alt table
           if (LongestMatchPred != alttaken) {
             int index = (INDUSEALT) ^ LongestMatchPred;
-            ctrupdate(use_alt_on_na[index][HitBank > (nhist / 3)], (alttaken == resolveDir), 4);
+            ctrupdate(use_alt_on_na[index][HitBank > (nhist / 3)], (alttaken == e.taken), 4);
           }
 #endif
         }
       }
 
-      bool noAlloc = no_alloc;
+      bool noAlloc = e.no_alloc;
       ALLOC        = ALLOC & noAlloc;  // flag to alloc and noAlloc
 
       if (ALLOC) {
@@ -1814,53 +1977,15 @@ public:
         int NA      = 0;
 
         int weakBank = HitBank + A;
-#ifdef SUBENTRIES
-        std::vector<bool> skip(nhist + 1, false);
 
-        // First try tag (but not offset hit)
-        for (int i = weakBank; i <= nhist; i += 1) {
-          if (gtable[i][GI[i]].isTagHit()) {
-            weakBank = i;
-
-            if (!gtable[i][GI[i]].ctr_steal(resolveDir)) {
-              continue;
-            }
-
-            skip[i] = true;
-            // gtable[i][GI[i]].dump(); printf(" alloc pc=%x\n",PC);
-
-            NA++;
-            T--;
-            if (T <= 0) {
-              break;
-            }
-          }
-        }
-#endif
-
-        // Then allocate a new tag if still not good enough
+        // Allocate a new entry in a longer-history bank
         if (T > 0) {
           weakBank = HitBank + A;
           for (int i = weakBank; i <= nhist; i += 1) {
-            if (skip[i]) {
-              continue;
-            }
-
-            if (gtable[i][GI[i]].u_get() == 0) {
+            if (get_gentry(i).u_get() == 0) {
               weakBank = i;
 
-#ifdef SUBENTRIES
-              // FIXME: If tag hit, no need to nuke. Just remove any of them (weaker counter better). force_steal
-              if (gtable[i][GI[i]].isTagHit()) {
-                gtable[i][GI[i]].ctr_force_steal(resolveDir);
-                // gtable[i][GI[i]].dump(); printf(" alloc2 pc=%x\n",PC);
-              } else {
-                gtable[i][GI[i]].reset(GTAG[i], resolveDir);
-                // gtable[i][GI[i]].dump(); printf(" alloc3 pc=%x\n",PC);
-              }
-#else
-              gtable[i][GI[i]].reset(GTAG[i], resolveDir);
-#endif
+              get_gentry(i).reset(GTAG[i], e.taken);
 
               NA++;
 
@@ -1887,7 +2012,7 @@ public:
         if (T) {
           if (TICK > 0) {
             for (int i = HitBank + 1; i <= nhist; i += 1) {
-              int idx1 = GI[i];
+              int idx1 = get_tage_pos(i);
 
               gtable[i][idx1].u_dec();
               TICK--;
@@ -1916,38 +2041,39 @@ public:
 #if 1
       // TODO: recheck that this is better
       if (HitBank) {
-        if (gtable[HitBank][GI[HitBank]].isHit()) {
-          if (LongestMatchPred != resolveDir) {
-            gtable[HitBank][GI[HitBank]].u_dec();
+        if (get_gentry(HitBank).isHit()) {
+          if (LongestMatchPred != e.taken) {
+            get_gentry(HitBank).u_dec();
           }
         }
       }
 #endif
 
       if (HitBank > 0) {
-        gtable[HitBank][GI[HitBank]].ctr_update(resolveDir);
-        if (gtable[HitBank][GI[HitBank]].u_get() == 0 && AltBank > 0) {
-          gtable[AltBank][GI[AltBank]].ctr_update(resolveDir);
+        get_gentry(HitBank).ctr_update(e.taken);
+        if (get_gentry(HitBank).u_get() == 0 && AltBank > 0) {
+          get_gentry(AltBank).ctr_update(e.taken);
         } else {
-          bimodal.update(resolveDir);
+          bimodal.update(e.taken);
         }
-        if (LongestMatchPred != alttaken) {      // HitBank and AltBank dissagree
-          if (LongestMatchPred == resolveDir) {  // LongestMatchPred == resolveDir && !noAlloc
-            gtable[HitBank][GI[HitBank]].u_inc();
+        if (LongestMatchPred != alttaken) {   // HitBank and AltBank dissagree
+          if (LongestMatchPred == e.taken) {  // LongestMatchPred == resolveDir && !noAlloc
+            get_gentry(HitBank).u_inc();
           } else {
-            gtable[HitBank][GI[HitBank]].u_dec();
+            get_gentry(HitBank).u_dec();
           }
         }
       } else {
-        bimodal.update(resolveDir);
+        bimodal.update(e.taken);
       }
     }
 #ifdef POSTPREDICT
     I(ppi < postpsize);
-    ctrupdate(postp[ppi], resolveDir, POSTPBITS);
+    ctrupdate(postp[ppi], e.taken, POSTPBITS);
 #endif
     // END TAGE UPDATE
 
+/*<<<<<<< HEAD
     HistoryUpdate(PC,
                   Opcode::iBALU_LBRANCH,
                   resolveDir,
@@ -1961,20 +2087,22 @@ public:
                   GHIST);
     // END PREDICTOR UPDATE
   }//update_predictor_end
-
-#define GINDEX                                                                                                                \
-  (((long long)PC) ^ bhist ^ (bhist >> (8 - i)) ^ (bhist >> (16 - 2 * i)) ^ (bhist >> (24 - 3 * i)) ^ (bhist >> (32 - 3 * i)) \
-   ^ (bhist >> (40 - 4 * i)))                                                                                                 \
-      & ((1 << (logs - (i >= (NBR - 2)))) - 1)
+=======*/
+    bim_tag_offset++;
+    if (state.advance_imli_tag_offset) {
+      imli_tag_offset++;
+    }
+  }
+//>>>>>>> upstream/main
 
   template <std::size_t S1, std::size_t S2>
-  int Gpredict(Addr_t PC, long long BHIST, const int* length, const std::array<std::array<int8_t, S1>, (1 << S2)>& tab) {
+  int Gpredict(const std::array<std::array<int8_t, 1 << S1>, S2>& tab) {
     int       PERCSUM = 0;
     const int NBR     = tab.size();
-    const int logs    = tab[0].size();
+    // const int logs    = tab[0].size();
     for (int i = 0; i < NBR; i++) {
-      long long bhist = BHIST & ((long long)((1 << length[i]) - 1));
-      int16_t   ctr   = tab[i][GINDEX];
+      // long long bhist = BHIST & ((long long)((1 << length[i]) - 1));
+      int16_t ctr = tab[i][GI[i]];
       PERCSUM += (2 * ctr + 1);
     }
 
@@ -1982,20 +2110,28 @@ public:
   }
 
   template <std::size_t S1, std::size_t S2>
-  void Gupdate(Addr_t PC, bool taken, long long BHIST, const int* length, std::array<std::array<int8_t, S1>, (1 << S2)>& tab) {
-    const int NBR  = tab.size();
-    const int logs = tab[0].size();
+  void Gupdate(bool taken, std::array<std::array<int8_t, (1 << S1)>, S2>& tab) {
+    const int NBR = tab.size();
+    // const int logs = tab[0].size();
     for (int i = 0; i < NBR; i++) {
-      long long bhist = BHIST & ((long long)((1 << length[i]) - 1));
-      ctrupdate(tab[i][GINDEX], taken, PERCWIDTH - (i < (NBR - 1)));
+      // long long bhist = BHIST & ((long long)((1 << length[i]) - 1));
+      ctrupdate(tab[i][GI[i]], taken, PERCWIDTH - (i < (NBR - 1)));
     }
   }
 
-  void TrackOtherInst(Addr_t PC, Opcode opType, Addr_t branchTarget) {
-    fetchBoundaryOffsetOthers(PC);
-
+  void TrackOtherInst(Addr_t orig_PC, Opcode opType, Addr_t branchTarget) {
     bool taken = true;
 
-    HistoryUpdate(PC, opType, taken, branchTarget, phist, ptghist, ch_i, ch_t[0], ch_t[1], L_shist[INDLOCAL], GHIST);
+    // bim_tag_offset++;
+    // imli_tag_offset++;
+    deferred_ops.push_back({
+        .has_predictor_update = false,
+        .orig_pc              = orig_PC,
+        .brtype               = opType,
+        .taken                = taken,
+        .target               = branchTarget,
+        .no_alloc             = false,
+        .state                = {},
+    });
   }
 };

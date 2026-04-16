@@ -8,16 +8,11 @@
 #<<<<<<< HEAD
 #range = [50000,60000]
 #range = [0,1000000]
-#=======
 #range = [3100000,3200000]
-#<<<<<<< HEAD
 #range = [0,0]
-#>>>>>>> upstream/main
-#=======
-#=======
 #range = [100000,900000]
 range = [0,100000000]
-#>>>>>>> upstream/main
+#range = [1000000,2000000]
 
 
 [soc]
@@ -192,15 +187,16 @@ btb_repl_policy   = "LRU"
 
 [bp1]
 type = "imli"
+use_tag_hybrid    = false
 use_tag_offset    = false
-use_tag_hybrid    = false 
 delay             = 2
 
 # SuperBP parameters
 SBP_NUMG = 6
 LOG2FETCHWIDTH = 3
 NUM_TAKEN_BRANCHES = 1
-ORIG_ENTRIES_PER_TABLE = [512, 512, 512, 512, 512, 512]
+#SUPERBP
+ORIG_ENTRIES_PER_TABLE = [832, 448, 448, 832, 832, 832]
 INFO_PER_ENTRY = [1, 1, 1, 1, 1, 1]
 
 # TODO - Check
@@ -223,12 +219,16 @@ btb_split_il1     = false  # do not cache entries that can be computed by IL1
 btb_size          = 8192
 btb_line_size     = 1
 btb_assoc         = 4
+btb_nsub          = 1
 btb_repl_policy   = "LRU"
 
 history_size      = 12
 path_based        = false
 bimodal_size      = 8192
+bimodal_nsub      = 8
 bimodal_width     = 2
+tage_size         = 128
+tage_nsub         = 1
 meta_size  = 1024
 meta_width = 2
 
@@ -272,8 +272,13 @@ table_width = 3
 
 [bp2]
 type = "imli"
-use_tag_offset    = false
-use_tag_hybrid    = false 
+#<<<<<<< HEAD
+#use_tag_offset    = false
+#use_tag_hybrid    = false 
+#=======
+use_tag_hybrid = false
+use_tag_offset = false
+#>>>>>>> upstream/main
 
 delay             = 3
 #type = "superbp"
@@ -295,12 +300,16 @@ btb_split_il1     = false  # do not cache entries that can be computed by IL1
 btb_size          = 8192
 btb_line_size     = 1
 btb_assoc         = 4
+btb_nsub          = 1
 btb_repl_policy   = "LRU"
 
 nhist             = 6
 statcorrector     = false
 bimodal_size = 1024
+bimodal_nsub = 8
 bimodal_width = 8
+tage_size = 128
+tage_nsub = 1
 
 # SuperBP parameters
 SBP_NUMG = 12
@@ -312,6 +321,9 @@ NUM_PAGES_PER_GROUP = 8
 PAGE_OFFSET_SIZE = 6
 PAGE_TABLE_INDEX_SIZE = 6
 
+#SUPERBP
+ORIG_ENTRIES_PER_TABLE = [1884, 3040, 1116, 924, 1884, 1308, 3808, 924, 2656, 4192, 732, 732]
+INFO_PER_ENTRY = [2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 1, 1]
 #BOOM
 #ORIG_ENTRIES_PER_TABLE = [1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168]
 #TODO - How to get this from FETCHWIDTH
@@ -319,9 +331,6 @@ PAGE_TABLE_INDEX_SIZE = 6
 #XIANGSHAN
 #ORIG_ENTRIES_PER_TABLE = [1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168, 1168]
 #INFO_PER_ENTRY = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-#SUPERBP
-ORIG_ENTRIES_PER_TABLE = [784, 208, 400, 1168, 976, 592, 784, 1744, 2895, 1936, 1360, 976]
-INFO_PER_ENTRY = [2, 1, 1, 4, 1, 1, 2, 2, 2, 1, 1, 1]
 
 [accel_entry]
 caches        = true  # set true to enable caches...
@@ -342,8 +351,8 @@ frequency_mhz = 1000
 #=======
 bpred         = ["bp0", "bp1", "bp2"]
 #bpred         = ["bp2"]
-#do_random_transients = false
-do_random_transients = true
+do_random_transients = false
+#do_random_transients = true
 
 # Fetch parameters
 fetch_align       = true

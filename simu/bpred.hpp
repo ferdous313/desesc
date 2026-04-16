@@ -14,9 +14,11 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <deque>
 #include <iostream>
 #include <map>
+#include <tuple>
 #include <vector>
 
 #include "cachecore.hpp"
@@ -64,8 +66,8 @@ class MemObj;
 
 class BPred {
 public:
-  Addr_t   boundaryPC;
-  int32_t  taken_counter;
+  Addr_t             boundaryPC;
+  int32_t            taken_counter;
   static std::string to_s(Outcome o) {
     if (o == Outcome::Correct) {
       return "Correct";
@@ -128,17 +130,16 @@ public:
     return Outcome::None;
   }
 
-  virtual void    fetchBoundaryBegin(Dinst* dinst);  // If the branch predictor support fetch boundary model, do it
-  virtual void    fetchBoundaryEnd();                // If the branch predictor support fetch boundary model, do it
+  virtual void fetchBoundaryBegin(Dinst* dinst);  // If the branch predictor support fetch boundary model, do it
+  virtual void fetchBoundaryEnd();                // If the branch predictor support fetch boundary model, do it
 
   Outcome doPredict(Dinst* dinst, bool doStats = true) {
+/*<<<<<<< HEAD
     //joseI(taken_counter>=0);
     printf("\n**********BPred.hpp::dopredict::Entering ********************\n");
     printf("BPred.hpp::dopredict:: Entering dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 
-    if (dinst->isTaken() && !dinst->isTransient()) {
-      taken_counter++;
-    }
+    I(taken_counter >= 0);
     Outcome pred =Outcome::None; 
     if(dinst->isTransient()){
       doStats = false;
@@ -149,7 +150,21 @@ public:
       printf("BPred.hpp::dopredict::sending to predict:: PNT_dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
       pred = predict(dinst, true, doStats);
     }
+    
+    if (dinst->isTaken() && !dinst->isTransient()) {
+      taken_counter++;// increase after predict
 
+    }
+
+=======*/
+    I(taken_counter >= 0);
+
+    Outcome pred = predict(dinst, true, doStats);
+
+    if (dinst->isTaken()) {
+      taken_counter++;  // increase after predict
+    }
+//>>>>>>> upstream/main*/
     if (pred == Outcome::None) {
       printf("***************BPred.hpp::dopredict:: Leaving********************\n");
       return pred;
@@ -204,30 +219,34 @@ private:
   const bool  btb_fetch_predict;
   const bool  btb_tag_offset;
   const bool  btb_tag_hybrid;
-  uint32_t btb_tag_size;
-  uint32_t btb_tag_mask;
+  uint32_t    btb_tag_size;
+  uint32_t    btb_tag_mask;
+  uint32_t    log2_btb_nsub;
+  uint32_t    btb_nsub_mask;
   std::string btb_name;
 
-  int32_t     btb_taken_counter;
+  int32_t btb_taken_counter;
+  int32_t btb_tag_counter;
 
   class BTBState : public StateGeneric<Addr_t> {
   public:
     BTBState(int32_t lineSize) {
       (void)lineSize;
-      inst = 0;
+      targetPC = 0;
     }
 
-    Addr_t inst;
+    Addr_t targetPC;
 
-    bool operator==(BTBState s) const { return inst == s.inst; }
+    // bool operator==(BTBState s) const { return targetPC == s.targetPC; }
   };
 
   typedef CacheGeneric<BTBState, Addr_t> BTBCache;
 
-  BTBCache* data;
+  std::vector<BTBCache*> data;
   Addr_t    boundaryPC;
-  uint32_t  tag_offset;
+  uint64_t  boundaryID;
 
+  std::tuple<Addr_t, Addr_t, size_t> split_tag_bank(Addr_t tag_key) const;
   std::tuple<Addr_t, Addr_t> compute_index_tag(Dinst* dinst, bool do_tag_offset, bool doUpdate);
 
 protected:
@@ -251,6 +270,14 @@ public:
   BPOracle(int32_t i, const std::string& section, const std::string& sname)
       : BPred(i, section, sname, "Oracle"), btb(i, section, sname) {}
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -265,6 +292,14 @@ public:
     // Done
   }
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -290,6 +325,14 @@ public:
     // Done
   }
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -304,6 +347,14 @@ public:
     // Done
   }
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -351,6 +402,7 @@ private:
   std::unique_ptr<IMLIBest> imli;
 
   const bool FetchPredict;
+  const bool btb_fetch_predict;
   const bool use_tag_offset;
   const bool use_tag_hybrid;
 
@@ -381,6 +433,7 @@ private:
   std::unique_ptr<Tahead> tahead;
 
   const bool FetchPredict;
+  const bool btb_fetch_predict;
 
 protected:
 public:
@@ -409,6 +462,7 @@ private:
   std::unique_ptr<Tahead1> tahead1;
 
   const bool FetchPredict;
+  const bool btb_fetch_predict;
 
 protected:
 public:
@@ -427,6 +481,7 @@ private:
 
   std::unique_ptr<PREDICTOR> superbp_p;
   const bool                 FetchPredict;
+  const bool                 btb_fetch_predict;
   Stats_cntr                 gshare_missed;
   Stats_cntr                 gshare_correct;
   Stats_cntr                 gshare_incorrect;
@@ -461,6 +516,14 @@ public:
   BP2level(int32_t i, const std::string& section, const std::string& sname);
   ~BP2level();
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -483,6 +546,14 @@ public:
   BPHybrid(int32_t i, const std::string& section, const std::string& sname);
   ~BPHybrid();
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -511,6 +582,14 @@ public:
   BP2BcgSkew(int32_t i, const std::string& section, const std::string& sname);
   ~BP2BcgSkew();
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -540,6 +619,14 @@ public:
   BPyags(int32_t i, const std::string& section, const std::string& sname);
   ~BPyags();
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -582,6 +669,14 @@ public:
   BPOgehl(int32_t i, const std::string& section, const std::string& sname);
   ~BPOgehl();
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -637,6 +732,14 @@ public:
   BPTData(int32_t i, const std::string& section, const std::string& sname);
   ~BPTData() {}
 
+  void    fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void    fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome predict(Dinst* dinst, bool doUpdate, bool doStats);
 };
 
@@ -666,6 +769,14 @@ public:
   BPLdbp(int32_t i, const std::string& section, const std::string& sname, MemObj* dl1 = 0);
   ~BPLdbp() {}
 
+  void     fetchBoundaryBegin(Dinst* dinst) {
+    BPred::fetchBoundaryBegin(dinst);
+    btb.fetchBoundaryBegin(dinst);
+  }
+  void     fetchBoundaryEnd() {
+    btb.fetchBoundaryEnd();
+    BPred::fetchBoundaryEnd();
+  }
   Outcome  predict(Dinst* dinst, bool doUpdate, bool doStats);
   bool     outcome_calculator(BrOpType br_op, Data_t br_data1, Data_t br_data2);
   BrOpType branch_type(Addr_t brpc);
