@@ -31,11 +31,11 @@ bool PipeIBucketLess::operator()(const IBucket* x, const IBucket* y) const { ret
 
 Pipeline::Pipeline(size_t s, size_t fetch, int32_t maxReqs)
     : PipeLength(s)
-    , bucketPoolMaxSize(s + 1 + maxReqs)
+    , bucketPoolMaxSize(s + 2 + maxReqs)
     , MaxIRequests(maxReqs)
     , nIRequests(maxReqs)
     , buffer(s + 1 + maxReqs)
-    , transient_buffer(s + 1 + maxReqs)
+    , transient_buffer(s + 2 + maxReqs)
 
 {
   maxItemCntr = 0;
