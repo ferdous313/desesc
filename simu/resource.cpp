@@ -531,11 +531,6 @@ bool FULoad::retire(Dinst* dinst, [[maybe_unused]] bool flushing)
 
     // VTAGE->updateVtageTables() here ???? vtage validation
 
-#if 0
-  // Merging for tradcore
-  if(dinst->isReplay() && !flushing)
-    replayManage(dinst);
-#endif
   }
   setStats(dinst);
 
@@ -772,14 +767,7 @@ void FUStore::do_store_execution(Time_t when, Dinst* dinst) {
   (void)when;  // Time not used - just consuming port slot
 
   if (dinst->getInst()->isStoreAddress()) {
-#if 0
-    if (enableDcache && !firstLevelMemObj->isBusy(dinst->getAddr()) ){
-      MemRequest::sendReqWritePrefetch(firstLevelMemObj, dinst->has_stats(), dinst->getAddr(), 0);
-    }
     executed(dinst);
-#else
-    executed(dinst);
-#endif
   } else {
     executed(dinst);
   }
@@ -967,16 +955,6 @@ void FUGeneric::executing(Dinst* dinst) {
 
 void FUGeneric::do_generic_execution(Time_t when, Dinst* dinst) {
   Time_t nlat = when + lat;
-#if 0
-  if (dinst->getPC() == 1073741832) {
-    MSG("@%lld Scheduling callback for FID[%d] PE[%d] Warp [%d] pc 1073741832 at @%lld"
-        , (long long int)globalClock
-        , dinst->getFlowId()
-        , dinst->getPE()
-        , dinst->getWarpID()
-        , (long long int) nlat);
-  }
-#endif
   cluster->executing(dinst);
   executedCB::scheduleAbs(nlat, this, dinst, dinst->getID());
 }

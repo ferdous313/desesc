@@ -723,20 +723,6 @@ public:
 class BPLdbp : public BPred {
 private:
   BPBTB btb;
-#if 0
-    SCTable ldbp_table;
-    std::map<uint64_t, bool> ldbp_map;
-
-    struct ldbp_table{
-      ldbp_table(){
-        tag = 0;
-        ctr = 0;
-      }
-
-      Addr_t tag;
-      int8_t ctr;
-    };
-#endif
 
 public:
   const int DOC_SIZE;
@@ -800,15 +786,6 @@ public:
       int med = (taken == (2 * ntaken + 1)) || (ntaken == (2 * taken + 1));
       int low = (taken < (2 * ntaken + 1)) && (ntaken < (2 * taken + 1));
       int m   = 2 * low + med;
-#if 0
-        if(taken == 7) {
-          return 1;
-        }else if(ntaken == 7) {
-          return 2;
-        }else {
-          return 0;
-        }
-#endif
       if (m < 1) {
         if (taken > ntaken) {
           return 1;

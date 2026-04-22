@@ -636,11 +636,9 @@ BPLdbp::BPLdbp(int32_t i, const std::string& section, const std::string& sname, 
 }
 
 Outcome BPLdbp::predict(Dinst* dinst, bool doUpdate, bool doStats) {
-#if 1
   if (dinst->getInst()->getOpcode() != Opcode::iBALU_LBRANCH) {  // don't bother about jumps and calls
     return Outcome::None;
   }
-#endif
   // Not even faster branch
   // if(dinst->getInst()->isJump())
   //   return btb.predict(dinst, doUpdate, doStats);
@@ -664,31 +662,6 @@ Outcome BPLdbp::predict(Dinst* dinst, bool doUpdate, bool doStats) {
   return ptaken ? btb.predict(dinst, doUpdate, doStats) : Outcome::Correct;
 }
 
-#if 0
-BrOpType BPLdbp::branch_type(Addr_t br_pc) {
-  uint64_t raw_op      = 0xdeadcafe; // esesc_mem_read(br_pc);
-  uint8_t  br_opcode   = raw_op & 3;
-  uint8_t  get_br_bits = (raw_op >> 12) & 7;  // extract bits 12 to 14 to get Br Type
-  if (br_opcode == 3) {
-    switch (get_br_bits) {
-      case BEQ: return BEQ;
-      case BNE: return BNE;
-      case BLT: return BLT;
-      case BGE: return BGE;
-      case BLTU: return BLTU;
-      case BGEU: return BGEU;
-      default: I(false);  // "ILLEGAL_BR=%llx OP_TYPE:%u", br_pc, get_br_bits
-    }
-  } else if (br_opcode == 1) {
-    if (get_br_bits == 4 || get_br_bits == 5) {
-      return BEQ;
-    } else if (get_br_bits == 6 || get_br_bits == 7) {
-      return BNE;
-    }
-  }
-  return ILLEGAL_BR;
-}
-#endif
 
 bool BPLdbp::outcome_calculator(BrOpType br_op, Data_t br_data1, Data_t br_data2) {
   if (br_op == BEQ) {
@@ -1854,28 +1827,6 @@ Outcome BPOgehl::predict(Dinst* dinst, bool doUpdate, bool doStats) {
     if (taken) {
       ghist[0] = 1;
     }
-#if 0
-    static int conta = 0;
-    conta++;
-    if (conta > max_history_size) {
-      conta = 0;
-      printf("@%lld O:",globalClock);
-      uint64_t start_mask = max_history_size&63;
-      start_mask          = 1<<start_mask;
-      for (int32_t i = (max_history_size >> 6)+1; i > 0; i--) {
-        for (uint64_t j=start_mask;j!=0;j=j>>1) {
-          if (ghist[i] & j) {
-            printf("1");
-          }else{
-            printf("0");
-          }
-        }
-        start_mask=((uint64_t) 1)<<63;
-        //printf(":");
-      }
-      printf("\n");
-    }
-#endif
   }
 
   if (taken != ptaken) {
@@ -2381,10 +2332,6 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
       last_bias = dinst->isBiasBranch();
     }
   }
-#if 0
-  // enable to disable bias
-  first_bias = false;
-#endif
 
   if (dinst->getInst()->isFuncRet() || dinst->getInst()->isFuncCall()) {
     dinst->setBiasBranch(true);

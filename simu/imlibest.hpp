@@ -1311,18 +1311,6 @@ public:
       printf("IMLIBEST::setTAGEPred::HitBank<=0::tage_pred  is %b  at clock cycle %llu\n", tage_pred, globalClock);
       LongestMatchPred = alttaken;
     }
-#if 0
-    static int conta_h=0;
-    static int conta_l=0;
-    if (HighConf)
-      conta_h++;
-    else
-      conta_l++;
-
-    if ((conta_h&0xFFFF)==0) {
-      printf("High conf %d, low conf %d\n", conta_h, conta_l);
-    }
-#endif
 #endif
 
 #ifdef POSTPREDICT
@@ -1417,25 +1405,7 @@ public:
 
     pred_taken = tage_pred;
 
-#if 0
-    if (orig_PC == 0x13fbb8) {
-      std::print("HERE: ");
-      for(auto e:GTAG) {
-        std::print(" {}", e);
-      }
-      if (HitBank) {
-        std::print(" bank:{} GI:{}", HitBank, GI[HitBank]);
-        get_gentry(HitBank).dump();
-      }
-      std::print(" pred:{}\n", pred_taken);
-    }
-#endif
-
-#if 0
-    bias = !WeakConf;
-#else
     bias = HighConf;
-#endif
     sign = GI[1];
 
 #ifdef LOOPPREDICTOR
@@ -1719,23 +1689,6 @@ public:
     ppi = state.ppi;
 #endif
 
-#if 0
-    if (GTAG[1] == 17442) {
-      std::print("upd orig_PC:{:x} resolveDir:{} bank:{}\n", e.orig_pc, e.taken, HitBank);
-      std::print(" bank:{} ", HitBank);
-      get_gentry(1).dump();
-      std::print("\n");
-    }
-
-    if (e.orig_pc == 0x13fbb8 && HitBank && pred_taken != e.taken) {
-      std::print("miss orig_PC:{:x} offset:{} PC:{:x} use_tag_offset:{} pred:{} reslv:{} "
-                , e.orig_pc, imli_tag_offset, PC, false, pred_taken, e.taken);
-
-      std::print(" bank:{} ", HitBank);
-      get_gentry(HitBank).dump();
-      std::print("\n");
-    }
-#endif
 
 #ifdef LOOPPREDICTOR
     if (LVALID) {
@@ -1882,7 +1835,6 @@ public:
         // Could not find a place to allocate
 
         TICK += (Penalty - NA);
-#if 1
         if (TICK < -127) {
           TICK = -127;
         } else if (TICK > 63) {
@@ -1902,22 +1854,7 @@ public:
             }
           }
         }
-#else
-        // just the best formula for the Championship
-        if (TICK < 0) {
-          TICK = 0;
-        }
-        if (TICK > 1023) {
-          for (int i = 1; i <= nhist; i++) {
-            for (int j = 0; j <= (1 << logg[i]) - 1; j++) {
-              gtable[i][j].u_dec();
-            }
-          }
-          TICK = 0;
-        }
-#endif
       }
-#if 1
       // TODO: recheck that this is better
       if (HitBank) {
         if (get_gentry(HitBank).isHit()) {
@@ -1926,7 +1863,6 @@ public:
           }
         }
       }
-#endif
 
       if (HitBank > 0) {
         get_gentry(HitBank).ctr_update(e.taken);

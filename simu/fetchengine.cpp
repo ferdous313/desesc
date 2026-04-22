@@ -206,13 +206,6 @@ void FetchEngine::chainPrefDone(Addr_t pc, int distance, Addr_t addr) {
   (void)pc;
   (void)distance;
   (void)addr;
-#if 0
-  bool hit = !(DL1->invalid());
-    if(hit)
-      do ldbp
-    else
-      trigger new prefetch if it can be timely
-#endif
 }
 
 void FetchEngine::chainLoadDone(Dinst* dinst) { (void)dinst; }

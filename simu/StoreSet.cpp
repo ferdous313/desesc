@@ -33,7 +33,6 @@ StoreSet::~StoreSet() {}
 SSID_t StoreSet::create_id() {
   static SSID_t rnd = 0;
   SSID_t        SSID;
-#if 1
   if (rnd < StoreSetSize) {
     SSID = rnd;
     rnd++;
@@ -41,10 +40,6 @@ SSID_t StoreSet::create_id() {
     rnd  = 0;
     SSID = rnd;
   }
-#else
-  SSID = (PC % 32671) & (StoreSetSize - 1);
-  // rnd += 1021; // prime number
-#endif
 
   return SSID;
 }

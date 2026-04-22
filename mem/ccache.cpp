@@ -25,16 +25,7 @@ void CCache::trackAddress(MemRequest* mreq) {
 }
 #endif
 
-#if 0
-template<class... Args>
-void MTRACE(Args... args) {
-  fmt::print(args...);
-  fmt::print("\n");
-}
-    // if (getName() == "DL1(0)")
-#else
 #define MTRACE(a...)
-#endif
 
 CCache::CCache(Memory_system* gms, const std::string& sec, const std::string& n)
     : MemObj(sec, n)
@@ -333,7 +324,6 @@ CCache::Line* CCache::allocateLine(Addr_t addr, MemRequest* mreq) {
     nPrefetchLineFill.inc(mreq->has_stats());
   }
 
-#if 1
   if (prefetch_megaratio < 1) {
     static int conta = 0;
     Addr_t     pendAddr[32];
@@ -362,23 +352,12 @@ CCache::Line* CCache::allocateLine(Addr_t addr, MemRequest* mreq) {
       double ratio = nHit;
       ratio        = ratio / (double)(nHit + nMiss);
       if (ratio > prefetch_megaratio && ratio < 1.0) {
-#if 1
         for (int i = 0; i < pendAddr_counter; i++) {
           tryPrefetch(pendAddr[i], mreq->has_stats(), 1, PSIGN_MEGA, mreq->getPC(), 0);
         }
-#else
-        // Mega next level
-        for (int i = 0; i < pendAddr_counter; i++) {
-          router->tryPrefetch(pendAddr[i], mreq->has_stats(), 1, PSIGN_MEGA, mreq->getPC(), 0);
-        }
-        if (pendAddr[0] != page_addr) {
-          router->tryPrefetch(page_addr, mreq->has_stats(), 1, PSIGN_MEGA, mreq->getPC(), 0);
-        }
-#endif
       }
     }
   }
-#endif
 
   I(l->getSharingCount() == 0);
 
@@ -422,9 +401,6 @@ bool CCache::CState::shouldNotifyLowerLevels(MsgAction ma, bool inc) const {
 }
 
 bool CCache::CState::shouldNotifyHigherLevels(MemRequest* mreq, int16_t portid) const {
-#if 0
-  if uncoherent, return false
-#endif
   if (nSharers == 0) {
     return false;
   }
@@ -432,12 +408,6 @@ bool CCache::CState::shouldNotifyHigherLevels(MemRequest* mreq, int16_t portid) 
   if (nSharers == 1 && share[0] == portid) {
     return false;  // Nobody but requester
   }
-
-#if 0
-  if (incoherent){
-    return false;
-  }
-#endif
 
   switch (mreq->getAction()) {
     case ma_setValid:
@@ -756,7 +726,6 @@ void CCache::doReq(MemRequest* mreq) {
   if (nlp_enabled && !retrying && !mreq->isPrefetch()) {
     Addr_t base = addr + nlp_distance * lineSize;
     for (int i = 0; i < nlp_degree; i++) {
-#if 1
       // Geometric stride
       // static int prog[] = {1,3,7,15,31,63,127,255,511};
       static int prog[] = {1, 3, 6, 25, 15, 76, 63, 229, 127, 458};
@@ -768,9 +737,6 @@ void CCache::doReq(MemRequest* mreq) {
       }
       delta = delta * nlp_stride;
       tryPrefetch(base + (delta * lineSize), mreq->has_stats(), i, PSIGN_NLINE, mreq->getPC());
-#else
-      tryPrefetch(base + (i * nlp_stride * lineSize), mreq->has_stats(), i, PSIGN_NLINE, mreq->getPC());
-#endif
     }
   }
 

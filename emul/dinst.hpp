@@ -312,10 +312,6 @@ private:
 protected:
 public:
   Dinst();
-#if 0
-  bool   isLdCache    = false;
-  Time_t memReqTimeL1 = 0;
-#endif
 
   // bool is_safe() const { return !speculative; }
   // bool is_spec() const { return speculative; }

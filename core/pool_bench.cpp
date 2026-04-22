@@ -204,7 +204,6 @@ void test_tspool_threaded() {
       ;
       // printf("e");
     }
-#if 1
     DummyObjTest2 obj;
     tsfifo.pop(&obj);
     if (obj.get() != i) {
@@ -212,14 +211,6 @@ void test_tspool_threaded() {
       pthread_kill(qemu_thread, SIGKILL);
       exit(-3);
     }
-#else
-    uint32_t j = tsfifo.pop();
-    if (j != i) {
-      printf("ERROR %d vs %d\n", j, i);
-      pthread_kill(qemu_thread, SIGKILL);
-      exit(-3);
-    }
-#endif
   }
 
   finish("Multithreaded", 7000000);

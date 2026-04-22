@@ -164,11 +164,9 @@ void MemRequest::dump_all() {
 }
 
 void MemRequest::dump_calledge(TimeDelta_t lat, bool interesting) {
-#if 1
   if (!interesting && !forcemsgdump) {
     return;
   }
-#endif
 
   Time_t total      = 0;
   Time_t last_tismo = 0;

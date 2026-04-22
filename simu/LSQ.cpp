@@ -33,18 +33,6 @@ Dinst* LSQFull::executing(Dinst* dinst)
   const Instruction* inst   = dinst->getInst();
   Dinst*             faulty = 0;
 
-#if 0
-  AddrDinstQMap::const_iterator instIt = instMap.begin();
-  I(instIt != instMap.end());
-
-  I(!dinst->isExecuted());
-
-  while(instIt != instMap.end()) {
-    if (instIt->first != tag){
-      instIt++;
-      continue;
-    }
-#endif
   std::pair<AddrDinstQMap::iterator, AddrDinstQMap::iterator> ret;
   ret = instMap.equal_range(tag);
   for (AddrDinstQMap::iterator instIt = ret.first; instIt != ret.second; ++instIt) {

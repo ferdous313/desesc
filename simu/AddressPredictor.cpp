@@ -803,11 +803,7 @@ void Indirect_address_predictor::performed(MemObj* DL1, Addr_t pc, Addr_t ld1_ad
 
   Addr_t pred_addr = adhist[pc].base + (adhist[pc].factor * ld1_data);
 
-#if 1
   DL1->tryPrefetch(pred_addr, false, 1, PSIGN_INDIRECT, pc);  // degree 1 to give high priority
-#else
-  DL1->tryPrefetch(pred_addr, false, 1, PSIGN_INDIRECT, pc);  // degree 1 to give high priority
-#endif
 }
 
 bool Indirect_address_predictor::try_chain_predict(MemObj* DL1, Addr_t pc, int distance) {

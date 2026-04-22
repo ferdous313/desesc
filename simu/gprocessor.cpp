@@ -157,11 +157,9 @@ void GProcessor::fetch() {
 }
 
 void GProcessor::flush_transient_inst_on_fetch_ready() {
-#if 1
   if (!do_random_transients) {
     return;
   }
-#endif
 
   flush_transient_inst_from_inst_queue();
   pipeQ.pipeLine.flush_transient_inst_from_buffer();
