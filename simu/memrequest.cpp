@@ -16,20 +16,6 @@ pool<MemRequest> MemRequest::actPool(2048, "MemRequest");
 bool forcemsgdump = true;
 
 MemRequest::MemRequest()
-/*<<<<<<< HEAD
-    // constructor  
-    : redoReqCB(this)
-    , redoReqAckCB(this)
-    , redoSetStateCB(this)
-    , redoSetStateAckCB(this)
-    , redoDispCB(this)
-
-    , startReqCB(this)
-    , startReqAckCB(this)
-    , startSetStateCB(this)
-    , startSetStateAckCB(this)
-    , startDispCB(this) {
-    }*/
 /* constructor  */
 {}
 
@@ -75,15 +61,15 @@ void MemRequest::startSetState() {
   currMemObj->setState(this);
 }
 void MemRequest::startSetStateAck() {
-  if(!notifyScbDirectly){
-  I(mt == mt_setStateAck);
-  I(!prefetch);
+  if (!notifyScbDirectly) {
+    I(mt == mt_setStateAck);
+    I(!prefetch);
   }
 
   currMemObj->setStateAck(this);
 }
 void MemRequest::startDisp() {
-  if(!notifyScbDirectly){
+  if (!notifyScbDirectly) {
     I(mt == mt_disp);
   }
   currMemObj->disp(this);
@@ -152,7 +138,7 @@ MemRequest* MemRequest::create(MemObj* mobj, Addr_t addr, bool keep_stats, Callb
   r->cb                 = cb;
   r->startClock         = globalClock;
   r->prefetch           = false;
-  r-> notifyScbDirectly = false;
+  r->notifyScbDirectly  = false;
   r->spec               = false;
   r->dropped            = false;
   r->retrying           = false;
@@ -208,7 +194,7 @@ void MemRequest::rawdump_calledge(TimeDelta_t lat, Time_t total) {
   }
 
   printf("digraph path{\n");
-  printf("  ce [label=\"0x%x addr id %ld delta %lu @%lld\"]\n", (unsigned int)addr, id, total, (long long)globalClock);
+  printf("  ce [label=\"0x%x addr id %llu delta %lu @%lld\"]\n", (unsigned int)addr, id, total, (long long)globalClock);
 
   CacheDebugAccess* c = CacheDebugAccess::getInstance();
   c->mapReset();

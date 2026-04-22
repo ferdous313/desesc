@@ -199,17 +199,7 @@ private:
   bool     br_ld_chain;
 #endif
 
-/*<<<<<<< HEAD
-  std::shared_ptr<Cluster>      cluster;
-  std::shared_ptr<Resource>     resource;
-  std::shared_ptr<Store_buffer> scb;
-  Dinst                         **RAT1Entry;
-  Dinst                         **RAT2Entry;
-  Dinst                         **serializeEntry;
-  FetchEngine                   *fetch;
-  GProcessor                    *gproc;
-=======*/
-  std::shared_ptr<Cluster>      cluster;
+    std::shared_ptr<Cluster>      cluster;
   std::shared_ptr<Resource>     resource;
   std::shared_ptr<Store_buffer> scb;
   Dinst**                       RAT1Entry;
@@ -217,18 +207,17 @@ private:
   Dinst**                       serializeEntry;
   FetchEngine*                  fetch;
   GProcessor*                   gproc;
-//>>>>>>> upstream/main
 
   char nDeps;
 
-  static inline Time_t currentID                = 0;
-  static inline Time_t current_original_id       = 0;
-  static inline Time_t currentID_trans          = 1000000;
-  
-  // static ID, increased every create (currentID). pointer  
+  static inline Time_t currentID           = 0;
+  static inline Time_t current_original_id = 0;
+  static inline Time_t currentID_trans     = 1000000;
+
+  // static ID, increased every create (currentID). pointer
   // static ID, increased every Non_Transient create (currentID). pointer
-  Time_t               ID;  
-  Time_t               original_id;  
+  Time_t ID;
+  Time_t original_id;
 
 #ifndef NDEBUG
   uint64_t mreq_id;
@@ -290,17 +279,17 @@ private:
     present_in_rob = false;
     in_cluster     = false;
 
-    flush_transient                      = false;
-    try_flush_transient                  = false;
-    to_be_destroyed                      = false;
-    to_be_load_destroyed                 = false;
-    load_destroyed_retired_spec          = false;
-    load_destroyed_retired_safe_write    = false;
-    load_destroyed_performed_spec        = false;
-    load_destroyed_performed_safe_write  = false;
-    destroy_transient                    = false;
-    to_be_load_scb_all                   = false;
-    write_scb_r                          = false;
+    flush_transient                     = false;
+    try_flush_transient                 = false;
+    to_be_destroyed                     = false;
+    to_be_load_destroyed                = false;
+    load_destroyed_retired_spec         = false;
+    load_destroyed_retired_safe_write   = false;
+    load_destroyed_performed_spec       = false;
+    load_destroyed_performed_safe_write = false;
+    destroy_transient                   = false;
+    to_be_load_scb_all                  = false;
+    write_scb_r                         = false;
 
 #ifdef DINST_PARENT
     pend[0].setParentDinst(nullptr);
@@ -323,26 +312,25 @@ private:
 protected:
 public:
   Dinst();
-//<<<<<<< HEAD
 #if 0
   bool   isLdCache    = false;
   Time_t memReqTimeL1 = 0;
 #endif
 
-  //bool is_safe() const { return !speculative; }
- // bool is_spec() const { return speculative; }
+  // bool is_safe() const { return !speculative; }
+  // bool is_spec() const { return speculative; }
   void set_safe() { speculative = false; }
   void set_spec() { speculative = true; }
 
- // bool isTransient() const { return transient; }
+  // bool isTransient() const { return transient; }
   void set_original_id() {
     I(!transient);
     original_id = current_original_id++;
   }
-  
+
   void setTransient() {
     transient = true;
-    //ID = currentID_trans++;
+    // ID = currentID_trans++;
   }
   void mark_to_be_destroyed() {
     to_be_destroyed = true;
@@ -357,21 +345,16 @@ public:
     // printf("Clearing is_to_be_destroyed_transient to false ::dinst %ld\n", ID);
   }
 
-  void set_write_scb_r() {
-    write_scb_r = true;   
-  }      
-  bool is_write_scb_r() {
-    return write_scb_r;  
-  }      
-   void set_load_destroyed_retired_spec() {
+  void set_write_scb_r() { write_scb_r = true; }
+  bool is_write_scb_r() { return write_scb_r; }
+  void set_load_destroyed_retired_spec() {
     load_destroyed_retired_spec = true;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
-   }
+  }
   bool is_load_destroyed_retired_spec() {
     return load_destroyed_retired_spec;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
   }
-
 
   void set_load_destroyed_retired_safe_write() {
     load_destroyed_retired_safe_write = true;
@@ -381,7 +364,6 @@ public:
     return load_destroyed_retired_safe_write;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
   }
-
 
   void set_load_destroyed_performed_spec() {
     load_destroyed_performed_spec = true;
@@ -393,7 +375,6 @@ public:
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
   }
 
-
   void set_load_destroyed_performed_safe_write() {
     load_destroyed_performed_safe_write = true;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
@@ -403,25 +384,22 @@ public:
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
   }
 
-
   void mark_destroy_transient() {
     destroy_transient = true;
     // printf("Setting mark_to_be_destroyed_transient ::dinst %ld\n", this->ID);
   }
-//=======
 
   [[nodiscard]] bool is_safe() const { return !speculative; }
   [[nodiscard]] bool is_spec() const { return speculative; }
   void               mark_safe() { speculative = false; }
 
   [[nodiscard]] bool isTransient() const { return transient; }
-  //void               setTransient() { transient = true; }
-  //void               mark_to_be_destroyed() { to_be_destroyed = true; }
+  // void               setTransient() { transient = true; }
+  // void               mark_to_be_destroyed() { to_be_destroyed = true; }
 
- // void clear_to_be_destroyed() { to_be_destroyed = false; }
+  // void clear_to_be_destroyed() { to_be_destroyed = false; }
 
-  //void mark_destroy_transient() { destroy_transient = true; }
-//>>>>>>> upstream/main
+  // void mark_destroy_transient() { destroy_transient = true; }
 
   bool is_destroy_transient() { return to_be_destroyed; }
 
@@ -439,18 +417,17 @@ public:
   void set_present_in_rob() { present_in_rob = true; }
   bool is_present_in_scb() { return present_in_scb; }
   void set_present_in_scb() { present_in_scb = true; }
-  void reset_present_in_scb() { present_in_scb = false;}
+  void reset_present_in_scb() { present_in_scb = false; }
   bool is_flush_transient() { return flush_transient; }
   bool is_try_flush_transient() { return try_flush_transient; }
   bool has_stats() const { return keep_stats; }
   bool is_del_entry() { return del_entry; }
   bool is_present_rrob() { return is_rrob; }
   bool is_to_be_destroyed() { return to_be_destroyed; }
-  
+
   bool is_to_be_load_destroyed() { return to_be_load_destroyed; }
   bool is_load_scb_all() { return to_be_load_scb_all; }
   bool set_load_scb_all() { return to_be_load_scb_all = true; }
-  //=======
 
   [[nodiscard]] static Dinst* create(Instruction&& inst, Addr_t pc, Addr_t address, Hartid_t fid, bool keep_stats) {
     Dinst* i = dInstPool.out();
@@ -588,19 +565,9 @@ public:
     cluster  = cls;
     resource = res;
   }
-//<<<<<<< HEAD
-/*  void set_scb(std::shared_ptr<Store_buffer> storebuffer) {
-    scb  = storebuffer;
-  }
-  
- std::shared_ptr<Cluster>  getCluster() const { return cluster; }
-  std::shared_ptr<Resource> getClusterResource() const { return resource; }
-  std::shared_ptr<Store_buffer> get_scb() const { return scb; }
-=======*/
 
   [[nodiscard]] std::shared_ptr<Cluster>  getCluster() const { return cluster; }
   [[nodiscard]] std::shared_ptr<Resource> getClusterResource() const { return resource; }
-//>>>>>>> upstream/main
 
   void clearRATEntry();
   void setRAT1Entry(Dinst** rentry) {
@@ -859,23 +826,14 @@ public:
 
   bool isExecuted() const { return executed; }
   void markExecuted() {
-    if(!this->is_spec()){
+    if (!this->is_spec()) {
       I(issued != 0);
       I(executed == 0);
     }
     executed = globalClock;
   }
-/*<<<<<<< HEAD
-  void markExecutedTransient() {
-    // I(issued != 0);
-    // I(executed == 0);
-    executed = globalClock;
-  }
-  
-=======*/
-  void markExecutedTransient() { executed = globalClock; }
+    void markExecutedTransient() { executed = globalClock; }
 
-//>>>>>>> upstream/main
   bool isExecuting() const { return executing; }
   void markExecuting() {
     I(issued != 0);
@@ -901,15 +859,11 @@ public:
 
   bool isPerformed() const { return performed; }
   void markPerformed() {
-//<<<<<<< HEAD
-    //<<<<<<< HEAD
     // Loads get performed first, and then executed
     // printf("Dinst ::markPerformed Insit %ld and isTransient is %b\n", getID(), isTransient());
 
     // printf("Dinst::markPerformed dinst is %ld and isTransient is %b\n", getID(), isTransient());
     // std::cout << "Dinst::markperformed:: inst asm is " << getInst()->get_asm() << std::endl;
-    //=======
-    //>>>>>>> upstream/main
     if (!this->isTransient() && !this->is_spec()) {
       GI(!inst.isLoad(), executed != 0);
     }

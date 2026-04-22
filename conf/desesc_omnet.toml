@@ -5,13 +5,8 @@
 [trace]
 #range = [0,2400]
 #range = [0,313000]
-#<<<<<<< HEAD
 #range = [50000,60000]
 range = [0,1000000]
-#=======
-#range = [3100000,3200000]
-#range = [0,0]
-#>>>>>>> upstream/main
 
 
 [soc]
@@ -59,13 +54,6 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/omnetpp/sp5"
 
 #leela_load_FIXME 
 #load     = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/leela/leela"
-##<<<<<<< HEAD
-#1.3% 
-#load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/x264/x264"
-#=======
- 
-#load      = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/x264/x264"
-#>>>>>>> upstream/main
 
 #xalancebk_load_FIXME 
 #load = "/mada/software/benchmarks/dromajo/spec2017/ck_5b/xalancebmk/xalancebmk"
@@ -85,24 +73,20 @@ load = "/mada/software/benchmarks/dromajo/spec2017/sp_lpt09/omnetpp/sp5"
 #bench      = "k1"
 
 start_roi = false
-#<<<<<<< HEAD
 #rabbit    = 1024
 #detail    = 1024
 #time      = 100e3 
 #Number of Insts
 #time      =1_000_000
-#=======
 #rabbit    = 100000
 #detail    = 30000000
 #time      = 20000000
-#<<<<<<<<<<<<<
 rabbit    = 0
 detail    = 0
 #Number of Insts
 #time      = 10000
 time      = 50000000
 #time      = 100_000_000
-#>>>>>>> upstream/main
 [rand_emu]
 type = "random"  # Generate random instructions (coverage testing?)
 
@@ -234,10 +218,8 @@ frequency_mhz = 200
 [c0]
 type  = "ooo"  # ooo or inorder or accel
 frequency_mhz = 1000
-#<<<<<<< HEAD
 #bpred         = ["bp0", "bp1"]
 #do_random_transients = true
-#=======
 bpred         = ["bp0","bp1"]
 #bpred         = ["bp1"]
 #do_random_transients = true

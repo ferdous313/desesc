@@ -88,7 +88,7 @@ void BPRas::tryPrefetch(MemObj* il1, bool doStats, int degree) {
 }
 
 Outcome BPRas::predict(Dinst* dinst, bool doUpdate, bool doStats) {
-  printf("\n\nBPred.cpp::BPRas::predict::Entering predict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("\n\nBPred.cpp::BPRas::predict::Entering predict::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   (void)doStats;
   // RAS is a little bit different than other predictors because it can update
   // the state without knowing the oracleNextPC. All the other predictors update the
@@ -140,7 +140,7 @@ Outcome BPRas::predict(Dinst* dinst, bool doUpdate, bool doStats) {
     }
   }
 
-  printf("\n\nBPred.cpp::BPRas::predict::Leavinging predict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("\n\nBPred.cpp::BPRas::predict::Leavinging predict::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   return Outcome::None;
 }
 
@@ -185,22 +185,20 @@ BPBTB::BPBTB(int32_t i, const std::string& section, const std::string& sname, co
   uint32_t shift_amt = (sizeof(uint32_t) << 3) - btb_tag_size;
   btb_tag_mask       = ((uint32_t)(-1 << shift_amt)) >> shift_amt;
 
-  int btb_nsub = 1 << log2_btb_nsub;
-  int btb_size = Config::get_power2(section, "btb_size");
-  int btb_assoc = Config::get_integer(section, "btb_assoc");
-  int btb_line_size = Config::get_power2(section, "btb_line_size", 1, 1024);
-  bool btb_xor = Config::has_entry(section, "btb_xor") ? Config::get_bool(section, "btb_xor") : false;
-  bool btb_skew = Config::has_entry(section, "btb_skew") ? Config::get_bool(section, "btb_skew") : false;
-  int btb_addr_unit = Config::has_entry(section, "btb_addrUnit") ? Config::get_power2(section, "btb_addrUnit", 0, btb_line_size) : 1;
+  int  btb_nsub      = 1 << log2_btb_nsub;
+  int  btb_size      = Config::get_power2(section, "btb_size");
+  int  btb_assoc     = Config::get_integer(section, "btb_assoc");
+  int  btb_line_size = Config::get_power2(section, "btb_line_size", 1, 1024);
+  bool btb_xor       = Config::has_entry(section, "btb_xor") ? Config::get_bool(section, "btb_xor") : false;
+  bool btb_skew      = Config::has_entry(section, "btb_skew") ? Config::get_bool(section, "btb_skew") : false;
+  int  btb_addr_unit
+      = Config::has_entry(section, "btb_addrUnit") ? Config::get_power2(section, "btb_addrUnit", 0, btb_line_size) : 1;
   auto repl_policy = Config::get_string(section, "btb_repl_policy");
 
   int btb_bank_size = btb_size >> log2_btb_nsub;
   if (btb_bank_size < btb_assoc * btb_line_size) {
-    Config::add_error(fmt::format("Section {} has btb_size {} too small for btb_nsub {} and btb_assoc {}",
-                                  sname,
-                                  btb_size,
-                                  btb_nsub,
-                                  btb_assoc));
+    Config::add_error(
+        fmt::format("Section {} has btb_size {} too small for btb_nsub {} and btb_assoc {}", sname, btb_size, btb_nsub, btb_assoc));
   }
 
   data.resize(btb_nsub, nullptr);
@@ -242,7 +240,7 @@ void BPBTB::updateOnly(Dinst* dinst) {
 
   bool force_offset = btb_taken_counter > 1 && btb_tag_hybrid;
 
-  auto [boundary_key, tag_key] = compute_index_tag(dinst, btb_tag_offset || force_offset, true);
+  auto [boundary_key, tag_key]                    = compute_index_tag(dinst, btb_tag_offset || force_offset, true);
   auto [banked_tag_key, unused_tag_bits, bank_id] = split_tag_bank(tag_key);
   (void)unused_tag_bits;
 
@@ -313,49 +311,46 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
   // I(dinst->isTaken());  // BTB should be called only when the branch is taken (predict taken & taken -> call BTB)
   ++btb_tag_counter;
 
+  if (dinst->isTransient()) {
+    doUpdate = false;
+    doStats  = false;
+  } else if (!dinst->has_stats()) {
+    doStats = false;
+  }
+
   if (data.empty()) {
     // required when BPOracle
     if (dinst->getInst()->doesCtrl2Label()) {
-      nHitLabel.inc(doUpdate && dinst->has_stats() && doStats && !dinst->isTransient());
+      nHitLabel.inc(doUpdate && doStats);
     } else {
-      nHit.inc(doUpdate && dinst->has_stats() && doStats && !dinst->isTransient());
+      nHit.inc(doUpdate && doStats);
     }
 
     return Outcome::Correct;
   }
 
-//<<<<<<< HEAD
-  //joseI(btb_taken_counter>=0);
-  //if (dinst->isTaken() && !dinst->isTransient()) {
-//=======
   if (dinst->getInst()->isFuncRet()) {
     return Outcome::NoBTB;
   }
 
   I(btb_taken_counter >= 0);
   if (dinst->isTaken()) {
-//>>>>>>> upstream/main
     btb_taken_counter++;
   }
 
   if (dinst->getInst()->doesCtrl2Label() && btbicache) {
-    nHitLabel.inc(doStats && doUpdate && dinst->has_stats() && !dinst->isTransient());
+    nHitLabel.inc(doStats && doUpdate);
     return Outcome::Correct;
   }
 
-  bool force_offset            = btb_taken_counter > 1 && btb_tag_hybrid;
-  auto [boundary_key, tag_key] = compute_index_tag(dinst, btb_tag_offset || force_offset, doUpdate);
+  bool force_offset                               = btb_taken_counter > 1 && btb_tag_hybrid;
+  auto [boundary_key, tag_key]                    = compute_index_tag(dinst, btb_tag_offset || force_offset, doUpdate);
   auto [banked_tag_key, unused_tag_bits, bank_id] = split_tag_bank(tag_key);
   (void)unused_tag_bits;
 
   BTBCache::CacheLine* cl = nullptr;
-/*<<<<<<< HEAD
-  if (doUpdate && dinst->getAddr() &&!dinst->isTransient()) {
-    cl = data->fillLine(boundary_key, tag_key, 0xdeaddead);
-=======*/
   if (doUpdate && dinst->getAddr()) {
     cl = data[bank_id]->fillLine(boundary_key, banked_tag_key, 0xdeaddead);
-//>>>>>>> upstream/main
   } else {
     cl = data[bank_id]->findLineNoEffect(boundary_key, banked_tag_key, 0xdeaddead);
   }
@@ -363,17 +358,12 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
   if (cl) {
     Addr_t predictID = cl->targetPC;
     if (predictID == dinst->getAddr()) {
-      nHit.inc(doStats && doUpdate && dinst->has_stats() && !dinst->isTransient());
+      nHit.inc(doStats && doUpdate);
       return Outcome::Correct;
     }
 
-/*<<<<<<< HEAD
-    if (doUpdate && !dinst->isTransient()) {
-      cl->inst = dinst->getAddr();
-=======*/
     if (doUpdate) {
       cl->targetPC = dinst->getAddr();
-//>>>>>>> upstream/main
     }
     if (predictID) {
 #ifdef BTB_TRACE
@@ -388,7 +378,7 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
                  dinst->getAddr(),
                  (uint64_t)cl);
 #endif
-      nMiss.inc(doStats && doUpdate && dinst->has_stats());
+      nMiss.inc(doStats && doUpdate);
       return Outcome::Miss;
     }
 #ifdef BTB_TRACE
@@ -403,14 +393,9 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
                (uint64_t)cl);
 #endif
   }
-/*<<<<<<< HEAD
-  if (!cl && btb_tag_hybrid && !dinst->isTransient()) { // Also try with offset
-    std::tie(boundary_key, tag_key) = compute_index_tag(dinst, true, doUpdate && btb_taken_counter>1);
-=======*/
   if (!cl && btb_tag_hybrid) {  // Also try with offset
-    std::tie(boundary_key, tag_key) = compute_index_tag(dinst, true, doUpdate && btb_taken_counter > 1);
+    std::tie(boundary_key, tag_key)                    = compute_index_tag(dinst, true, doUpdate && btb_taken_counter > 1);
     std::tie(banked_tag_key, unused_tag_bits, bank_id) = split_tag_bank(tag_key);
-//>>>>>>> upstream/main
 
     if (doUpdate && btb_taken_counter > 1 && dinst->getAddr()) {
       cl = data[bank_id]->fillLine(boundary_key, banked_tag_key, 0xdeaddead);
@@ -421,17 +406,12 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
     if (cl) {
       Addr_t predictID = cl->targetPC;
       if (predictID == dinst->getAddr()) {
-        nHit.inc(doStats && doUpdate && dinst->has_stats() && !dinst->isTransient());
+        nHit.inc(doStats && doUpdate);
         return Outcome::Correct;
       }
 
-/*<<<<<<< HEAD
-      if (doUpdate && btb_taken_counter>1 && !dinst->isTransient()) {
-        cl->inst = dinst->getAddr();
-=======*/
       if (doUpdate && btb_taken_counter > 1) {
         cl->targetPC = dinst->getAddr();
-//>>>>>>> upstream/main
       }
 
       if (predictID) {
@@ -447,7 +427,7 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
                    dinst->getAddr(),
                    (uint64_t)cl);
 #endif
-        nMiss.inc(doStats && doUpdate && dinst->has_stats());
+        nMiss.inc(doStats && doUpdate);
         return Outcome::Miss;
       }
 #ifdef BTB_TRACE
@@ -464,7 +444,7 @@ Outcome BPBTB::predict(Dinst* dinst, bool doUpdate, bool doStats) {
     }
   }
 
-  nMiss.inc(doStats && doUpdate && dinst->has_stats() && !dinst->isTransient());
+  nMiss.inc(doStats && doUpdate);
   return Outcome::NoBTB;
 }
 
@@ -1014,17 +994,17 @@ BPIMLI::BPIMLI(int32_t i, const std::string& section, const std::string& sname)
 
   bool statcorrector = Config::get_bool(section, "statcorrector");
 
-  imli = std::make_unique<IMLIBest>(log2_bimodal_nsub, log2_bimodal_entries, bwidth, nhist, statcorrector, log2_tage_entries,
+  imli = std::make_unique<IMLIBest>(log2_bimodal_nsub,
+                                    log2_bimodal_entries,
+                                    bwidth,
+                                    nhist,
+                                    statcorrector,
+                                    log2_tage_entries,
                                     log2_tage_nsub);
 }
 
 void BPIMLI::fetchBoundaryBegin(Dinst* dinst) {
-/*<<<<<<< HEAD
-  if (FetchPredict && !dinst->isTransient()) {
-    imli->fetchBoundaryBegin(dinst->getPC());
-=======*/
   if (FetchPredict) {
-//>>>>>>> upstream/main
     boundaryPC = dinst->getPC();
     imli->fetchBoundaryBegin(boundaryPC, dinst->getID());
   }
@@ -1045,15 +1025,7 @@ void BPIMLI::fetchBoundaryEnd() {
 }
 
 Outcome BPIMLI::predict(Dinst* dinst, bool doUpdate, bool doStats) {
-/*<<<<<<< HEAD
-  printf("Bpred.cpp::BPIMLI::predict::Entering dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-  
-  btb.add_control_offset();
-  
-  if (!FetchPredict && !dinst->isTransient()) {
-=======*/
   if (!FetchPredict) {
-//>>>>>>> upstream/main
     boundaryPC = dinst->getPC();
     imli->fetchBoundaryBegin(boundaryPC, dinst->getID());
   }
@@ -1061,14 +1033,6 @@ Outcome BPIMLI::predict(Dinst* dinst, bool doUpdate, bool doStats) {
     btb.fetchBoundaryBegin(dinst);
   }
 
-/*<<<<<<< HEAD
-  if (dinst->getInst()->isJump() || dinst->getInst()->isFuncRet()) {
-    if (doUpdate && !dinst->isTransient()) {
-      imli->TrackOtherInst(dinst->getPC(), dinst->getInst()->getOpcode(), dinst->getAddr());
-    }
-    dinst->setBiasBranch(true);
-    printf("Bpred.cpp::BPIMLI::predict::Returning btb.return dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-=======*/
   I(taken_counter >= 0 && taken_counter < 1024);  // Who does over 1024 taken fetch???
 
   if (!dinst->getInst()->isBranch()) {
@@ -1077,21 +1041,15 @@ Outcome BPIMLI::predict(Dinst* dinst, bool doUpdate, bool doStats) {
     if (!FetchPredict) {
       imli->fetchBoundaryEnd();
     }
-//>>>>>>> upstream/main
     return btb.predict(dinst, doUpdate, doStats);
   }
 
   bool taken = dinst->isTaken();
 
-  //joselimebool bias;
-  bool     bias = false;
+  // joselimebool bias;
+  bool     bias   = false;
   Addr_t   pc     = dinst->getPC();
   uint32_t sign   = 0;
-/*<<<<<<< HEAD
-  bool transient = dinst->isTransient();
-  printf("BPred.cpp::IMLI::getpredict:: takencounter is %d for dinstID %ld at clock cycle %ld\n", taken_counter, dinst->getID(), globalClock);
-  bool     ptaken = imli->getPrediction(pc, bias, sign, use_tag_offset, use_tag_hybrid, taken_counter, transient);  // pass taken for statistics
-=======*/
   bool     ptaken = imli->getPrediction(pc,
                                     dinst->getID(),
                                     bias,
@@ -1099,19 +1057,17 @@ Outcome BPIMLI::predict(Dinst* dinst, bool doUpdate, bool doStats) {
                                     use_tag_offset,
                                     use_tag_hybrid,
                                     taken_counter);  // pass taken for statistics
-//>>>>>>> upstream/main
   dinst->setBiasBranch(bias);
-  printf("BPred.cpp::IMLI::getpredict:: Calculated::ptaken is %b for dinstID %ld at clock cycle %ld\n", ptaken, dinst->getID(), globalClock);
+  printf("BPred.cpp::IMLI::getpredict:: Calculated::ptaken is %b for dinstID %llu at clock cycle %llu\n",
+         ptaken,
+         dinst->getID(),
+         globalClock);
 
   bool no_alloc = true;
   if (dinst->isUseLevel3()) {
     no_alloc = false;
   }
 
-/*<<<<<<< HEAD
-  if (doUpdate && !dinst->isTransient()) {
-    imli->updatePredictor(pc, taken, ptaken, dinst->getAddr(), no_alloc, use_tag_offset, use_tag_hybrid, taken_counter);
-=======*/
   if (doUpdate) {
     imli->deferPredictorUpdate(pc,
                                dinst->getID(),
@@ -1122,33 +1078,25 @@ Outcome BPIMLI::predict(Dinst* dinst, bool doUpdate, bool doStats) {
                                use_tag_offset,
                                use_tag_hybrid,
                                taken_counter);
-//>>>>>>> upstream/main
   }
 
   if (!FetchPredict && !dinst->isTransient()) {
     imli->fetchBoundaryEnd();
   }
 
-/*<<<<<<< HEAD
-  printf("BPred.cpp::IMLI::getpredict::dinst->taken::for dinstID %ld at clock cycle %ld and dinst->taken is %b\n",dinst->getID(), globalClock, taken);
-  printf("BPred.cpp::IMLI::getpredict::ptaken::for dinstID %ld at clock cycle %ld and ptaken is %b\n",dinst->getID(), globalClock, ptaken);
-=======*/
   Outcome result;
-//>>>>>>> upstream/main
   if (taken != ptaken) {
     if (doUpdate && !dinst->isTransient()) {
       btb.updateOnly(dinst);
     }
-/*<<<<<<< HEAD
-    printf("BPred.cpp::IMLI::getpredict::ptaken !taken::for dinstID %ld at clock cycle %ld and OUTCOME =3 MISS\n",dinst->getID(), globalClock);
-    return Outcome::Miss;
-=======*/
     result = Outcome::Miss;
   } else {
     result = ptaken ? btb.predict(dinst, doUpdate, doStats) : Outcome::Correct;
-//>>>>>>> upstream/main
   }
-  printf("BPred.cpp::IMLI::getpredict::ptaken==taken::for dinstID %ld at clock cycle %ld and ptaken is %b\n",dinst->getID(), globalClock, ptaken);
+  printf("BPred.cpp::IMLI::getpredict::ptaken==taken::for dinstID %llu at clock cycle %llu and ptaken is %b\n",
+         dinst->getID(),
+         globalClock,
+         ptaken);
 
   if (!btb_fetch_predict) {
     btb.fetchBoundaryEnd();
@@ -2263,17 +2211,20 @@ void BPredictor::fetchBoundaryEnd() {
 }
 
 Outcome BPredictor::predict1(Dinst* dinst) {
-  printf("\n\nBPred.cpp::Bpredictor::predict1::Entering predict1::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("\n\nBPred.cpp::Bpredictor::predict1::Entering predict1::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   I(dinst->getInst()->isControl());
 
   nControl.inc(dinst->has_stats() && !dinst->isTransient());
   nTaken.inc(dinst->isTaken() && dinst->has_stats() && !dinst->isTransient());
 
-
-  printf("BPred.cpp::Bpredictor::predict1:: sending pred1->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict1:: sending pred1->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
   Outcome p = pred1->doPredict(dinst);
-  printf("BPred.cpp::Bpredictor::predict1:: Ending pred1->doPredict::dinstID %ld at clock cycle %ld\n\n", dinst->getID(), globalClock);
-  
+  printf("BPred.cpp::Bpredictor::predict1:: Ending pred1->doPredict::dinstID %llu at clock cycle %llu\n\n",
+         dinst->getID(),
+         globalClock);
+
   if (dinst->getInst()->isBranch()) {
     nBranch.inc(dinst->has_stats() && !dinst->isTransient());
     nBranchMiss.inc(p == Outcome::Miss && dinst->has_stats() && !dinst->isTransient());
@@ -2284,44 +2235,52 @@ Outcome BPredictor::predict1(Dinst* dinst) {
 
   nNoPredict.inc(p == Outcome::None && dinst->has_stats() && !dinst->isTransient());
 
-  printf("BPreictor::predict1::outcome is %d for dinstID %ld at clock cycle %ld\n\n", (int)p, dinst->getID(), globalClock);
+  printf("BPreictor::predict1::outcome is %d for dinstID %llu at clock cycle %llu\n\n", (int)p, dinst->getID(), globalClock);
   return p;
 }
 
 Outcome BPredictor::predict2(Dinst* dinst) {
-  printf("\n\nBPred.cpp::Bpredictor::predict2::Entering predict2::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("\n\nBPred.cpp::Bpredictor::predict2::Entering predict2::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   I(dinst->getInst()->isControl());
 
   nControl2.inc(dinst->has_stats() && !dinst->isTransient());
   nTaken2.inc(dinst->isTaken() && dinst->has_stats() && !dinst->isTransient());
   // No RAS in L2
 
-  printf("BPred.cpp::Bpredictor::predict2:: SEnding pred1->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict2:: SEnding pred1->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
   Outcome p = pred2->doPredict(dinst);
-  printf("BPred.cpp::Bpredictor::predict2:: Ending pred1->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict2:: Ending pred1->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
 
   if (dinst->getInst()->isBranch()) {
     nBranch2.inc(dinst->has_stats() && !dinst->isTransient());
-    nBranchMiss2.inc(p == Outcome::Miss && dinst->has_stats() &&!dinst->isTransient());
+    nBranchMiss2.inc(p == Outcome::Miss && dinst->has_stats() && !dinst->isTransient());
     nBranchBTBMiss2.inc(p == Outcome::NoBTB && dinst->has_stats() && !dinst->isTransient());
   }
   nControlMiss2.inc((p == Outcome::Miss || p == Outcome::NoBTB) && dinst->has_stats() && !dinst->isTransient());
 
-  printf("BPreictor::predict2::outcome is %d for dinstID %ld at clock cycle %ld\n", (int)p, dinst->getID(), globalClock);
+  printf("BPreictor::predict2::outcome is %d for dinstID %llu at clock cycle %llu\n", (int)p, dinst->getID(), globalClock);
   return p;
 }
 
 Outcome BPredictor::predict3(Dinst* dinst) {
-  printf("\n\nBPred.cpp::Bpredictor::predict3::Entering predict3::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("\n\nBPred.cpp::Bpredictor::predict3::Entering predict3::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   I(dinst->getInst()->isControl());
 
   nControl3.inc(dinst->has_stats() && !dinst->isTransient());
   nTaken3.inc(dinst->isTaken() && dinst->has_stats() && !dinst->isTransient());
   // No RAS in L2
 
-  printf("BPred.cpp::Bpredictor::predict3:: SEnding pred1->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict3:: SEnding pred1->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
   Outcome p = pred3->doPredict(dinst);
-  printf("BPred.cpp::Bpredictor::predict3:: Ending pred1->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict3:: Ending pred1->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
 
   if (dinst->getInst()->isBranch() && !dinst->isTransient()) {
     nBranch3.inc(dinst->has_stats() && !dinst->isTransient());
@@ -2331,73 +2290,94 @@ Outcome BPredictor::predict3(Dinst* dinst) {
   nControlMiss3.inc((p == Outcome::Miss || p == Outcome::NoBTB) && dinst->has_stats() && !dinst->isTransient());
   nNoPredict3.inc(p == Outcome::None && dinst->has_stats() && !dinst->isTransient());
 
-  printf("BPreictor::predict3::outcome is %d for dinstID %ld at clock cycle %ld\n",(int)p, dinst->getID(), globalClock);
+  printf("BPreictor::predict3::outcome is %d for dinstID %llu at clock cycle %llu\n", (int)p, dinst->getID(), globalClock);
   return p;
 }
 
-//enum class Outcome { Correct(0), None(1), NoBTB(2), Miss(3)}
+// enum class Outcome { Correct(0), None(1), NoBTB(2), Miss(3)}
 TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
   *fastfix = true;
-  printf("BPred.cpp::Bpredictor::predict Entering dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-
+  printf("BPred.cpp::Bpredictor::predict Entering dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
 
   Outcome outcome1;
   Outcome outcome2 = Outcome::None;
   Outcome outcome3 = Outcome::None;
   dinst->setBiasBranch(false);
 
-  printf("BPred.cpp::Bpredictor::predict:: sending ras->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict:: sending ras->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
   outcome1 = ras->doPredict(dinst);
-  printf("BPred.cpp::Bpredictor::predict:: complete ras->doPredict::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("BPred.cpp::Bpredictor::predict:: complete ras->doPredict::dinstID %llu at clock cycle %llu\n",
+         dinst->getID(),
+         globalClock);
   bool first_bias = false;
   bool last_bias  = false;
-  
-  
-  printf("BPred.cpp::Bpredictor::Entering If nested dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-  if (outcome1 != Outcome::None) {  // If RAS, still call predictors to update history
-    printf("BPred.cpp::Bpredictor::predict:: sending predict1::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-    predict1(dinst);
-    printf("BPred.cpp::Bpredictor::predict:: complete predict1::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-    if (pred2) {
-      printf("BPred.cpp::Bpredictor::predict:: sending predict2::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-      predict2(dinst);
-      printf("BPred.cpp::Bpredictor::predict:: complete predict2::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
 
+  printf("BPred.cpp::Bpredictor::Entering If nested dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+  if (outcome1 != Outcome::None) {  // If RAS, still call predictors to update history
+    printf("BPred.cpp::Bpredictor::predict:: sending predict1::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+    predict1(dinst);
+    printf("BPred.cpp::Bpredictor::predict:: complete predict1::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+    if (pred2) {
+      printf("BPred.cpp::Bpredictor::predict:: sending predict2::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+      predict2(dinst);
+      printf("BPred.cpp::Bpredictor::predict:: complete predict2::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
     }
     if (pred3) {
-      printf("BPred.cpp::Bpredictor::predict:: sending predict3::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      printf("BPred.cpp::Bpredictor::predict:: sending predict3::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
       predict3(dinst);
-      printf("BPred.cpp::Bpredictor::predict:: complete predict3::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      printf("BPred.cpp::Bpredictor::predict:: complete predict3::dinstID %llu at clock cycle %llu\n", dinst->getID(), globalClock);
     }
     outcome2 = outcome1;
     outcome3 = outcome1;
   } else {
-    printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: sending predict1::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+    printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: sending predict1::dinstID %llu at clock cycle %llu\n",
+           dinst->getID(),
+           globalClock);
     outcome1 = predict1(dinst);
-    printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict1::outcome1 Is %d for dinstID %ld at clock cycle %ld\n", 
-        (int)outcome1, dinst->getID(), globalClock);
+    printf(
+        "BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict1::outcome1 Is %d for dinstID %llu at clock cycle "
+        "%llu\n",
+        (int)outcome1,
+        dinst->getID(),
+        globalClock);
     if (pred2) {
       if (!pred3 && !dinst->isTransient()) {
         first_bias = dinst->isBiasBranch();
       }
-      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict2::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict2::dinstID %llu at clock cycle %llu\n",
+             dinst->getID(),
+             globalClock);
       outcome2 = predict2(dinst);
-      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict2::outcome2 Is %d for dinstID %ld at clock cycle %ld\n", 
-        (int)outcome2, dinst->getID(), globalClock);
+      printf(
+          "BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict2::outcome2 Is %d for dinstID %llu at clock cycle "
+          "%llu\n",
+          (int)outcome2,
+          dinst->getID(),
+          globalClock);
     } else {
       outcome2 = outcome1;
-      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: No pred2::outcome2 Is outcome1 is %d for dinstID %ld at clock cycle %ld\n", 
-        (int)outcome2, dinst->getID(), globalClock);
+      printf(
+          "BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: No pred2::outcome2 Is outcome1 is %d for dinstID %llu at clock "
+          "cycle %llu\n",
+          (int)outcome2,
+          dinst->getID(),
+          globalClock);
     }
     if (pred3) {
       first_bias = dinst->isBiasBranch();
-      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict3::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
-      outcome3   = predict3(dinst);
-      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict3::dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict3::dinstID %llu at clock cycle %llu\n",
+             dinst->getID(),
+             globalClock);
+      outcome3 = predict3(dinst);
+      printf("BPred.cpp::Bpredictor::predict::ELSE::OUTCOME==None:: ending predict3::dinstID %llu at clock cycle %llu\n",
+             dinst->getID(),
+             globalClock);
     } else {
       outcome3 = outcome2;
     }
-    if(!dinst->isTransient()){
+    if (!dinst->isTransient()) {
       last_bias = dinst->isBiasBranch();
     }
   }
@@ -2408,21 +2388,21 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
 
   if (dinst->getInst()->isFuncRet() || dinst->getInst()->isFuncCall()) {
     dinst->setBiasBranch(true);
-    if(!dinst->isTransient()){
+    if (!dinst->isTransient()) {
       ras->tryPrefetch(il1, dinst->has_stats(), 1);
     }
   }
 
   if (first_bias && !last_bias) {
-    nFirstBias.inc(dinst->has_stats()&& !dinst->isTransient());
+    nFirstBias.inc(dinst->has_stats() && !dinst->isTransient());
     if (pred3) {  // Bias from pred2 to pred3
       if (outcome2 != Outcome::Correct && outcome3 == Outcome::Correct) {
-        nFirstBias_wrong.inc(dinst->has_stats()&& !dinst->isTransient());
+        nFirstBias_wrong.inc(dinst->has_stats() && !dinst->isTransient());
       }
       outcome3 = outcome2;
     } else {  // Bias from pred1 to pred2 (pred3 does not exit)
       if (outcome1 != Outcome::Correct && outcome3 == Outcome::Correct) {
-        nFirstBias_wrong.inc(dinst->has_stats()&& !dinst->isTransient());
+        nFirstBias_wrong.inc(dinst->has_stats() && !dinst->isTransient());
       }
       outcome2 = outcome1;
       outcome3 = outcome1;
@@ -2450,7 +2430,7 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
     dinst->setBranchHit_level3();
     if (outcome2 != Outcome::Correct) {
       dinst->setBranch_hit3_miss2();
-      if(!dinst->isTransient()){
+      if (!dinst->isTransient()) {
         nHit3_miss2.inc(true);
       }
     }
@@ -2462,7 +2442,10 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
     if (outcome1 == Outcome::Correct && outcome2 == Outcome::Correct && outcome3 == Outcome::Correct) {
       nFixes1.inc(dinst->has_stats() && !dinst->isTransient());  // Can get lucky and BB=1 predict too but weird
       // xxxx - fmt::print(" a 1\n");
-      printf("BPreictor::predict::isTaken()::bpredDelay1 is %d for dinstID %ld at clock cycle %ld\n", bpredDelay1, dinst->getID(), globalClock);
+      printf("BPreictor::predict::isTaken()::bpredDelay1 is %d for dinstID %llu at clock cycle %llu\n",
+             bpredDelay1,
+             dinst->getID(),
+             globalClock);
       return bpredDelay1;
     }
     // }else{
@@ -2480,9 +2463,11 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
 
     // Any mix of NoBTB or Correct will do it for not-taken
     if (outcome1 != Outcome::Miss && outcome2 != Outcome::Miss && outcome3 != Outcome::Miss) {
-      nFixes0.inc(dinst->has_stats()&& !dinst->isTransient());
+      nFixes0.inc(dinst->has_stats() && !dinst->isTransient());
       // xxxx - fmt::print(" c 0\n");
-      printf("BPreictor::predict::isNOTTaken()::bpredDelay is 0 for dinstID %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+      printf("BPreictor::predict::isNOTTaken()::bpredDelay is 0 for dinstID %llu at clock cycle %llu\n",
+             dinst->getID(),
+             globalClock);
       return 0;
     }
   }
@@ -2490,17 +2475,23 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
   TimeDelta_t bpred_total_delay = 0;
 
   if (outcome2 == Outcome::Correct && outcome3 == Outcome::Correct) {
-    nFixes2.inc(dinst->has_stats()&& !dinst->isTransient());
-    printf("BPreictor::predict::bpredDelay2 is %d for dinstID %ld at clock cycle %ld\n", bpredDelay2, dinst->getID(), globalClock);
+    nFixes2.inc(dinst->has_stats() && !dinst->isTransient());
+    printf("BPreictor::predict::bpredDelay2 is %d for dinstID %llu at clock cycle %llu\n",
+           bpredDelay2,
+           dinst->getID(),
+           globalClock);
     bpred_total_delay = bpredDelay2;
     // xxxx - fmt::print(" d 2\n");
   } else if (outcome3 == Outcome::Correct) {
-    nFixes3.inc(dinst->has_stats()&& !dinst->isTransient());
-    printf("BPreictor::predict::bpredDelay3 is %d for dinstID %ld at clock cycle %ld\n", bpredDelay3, dinst->getID(), globalClock);
+    nFixes3.inc(dinst->has_stats() && !dinst->isTransient());
+    printf("BPreictor::predict::bpredDelay3 is %d for dinstID %llu at clock cycle %llu\n",
+           bpredDelay3,
+           dinst->getID(),
+           globalClock);
     bpred_total_delay = bpredDelay3;
     // xxxx - fmt::print(" d 3\n");
   } else {
-    nUnFixes.inc(dinst->has_stats()&& !dinst->isTransient());
+    nUnFixes.inc(dinst->has_stats() && !dinst->isTransient());
     *fastfix          = false;
     bpred_total_delay = 1;  // Anything but zero
     // xxxx - fmt::print(" d miss\n");
@@ -2511,7 +2502,10 @@ TimeDelta_t BPredictor::predict(Dinst* dinst, bool* fastfix) {
   avgTimeBetweenControlMiss.sample(globalClock - lastControlMiss, dinst->has_stats());
   lastControlMiss = globalClock;
 
-  printf("BPreictor::predict::TotalbpredDelay is %d for dinstID %ld at clock cycle %ld\n", bpred_total_delay, dinst->getID(), globalClock);
+  printf("BPreictor::predict::TotalbpredDelay is %d for dinstID %llu at clock cycle %llu\n",
+         bpred_total_delay,
+         dinst->getID(),
+         globalClock);
   return bpred_total_delay;
 }
 

@@ -227,6 +227,7 @@ void InOrderProcessor::retire() { /*{{{*/
     }
 #endif
 
+    Tracer::commit(dinst);
     if (dinst->isPerformed()) {  // Stores can perform after retirement
       dinst->destroy();
     }

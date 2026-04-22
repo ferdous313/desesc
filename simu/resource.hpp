@@ -81,25 +81,7 @@ public:
   //
   // 4th) When the instruction is retired from the ROB retire is called
 
-/*<<<<<<< HEAD
-  virtual StallCause canIssue(Dinst *dinst)                 = 0;
-  virtual void       executing(Dinst *dinst)                = 0;
-  virtual void       executed(Dinst *dinst)                 = 0;
-  virtual bool       preretire(Dinst *dinst, bool flushing) = 0;
-  virtual bool       retire(Dinst *dinst, bool flushing)    = 0;
-  virtual void       performed(Dinst *dinst)                = 0;
-  virtual void       performed_spec(Dinst *dinst)           = 0;
-  virtual void       performed_safe_write(Dinst *dinst)     = 0;
-  virtual bool       flushed(Dinst *dinst)                  = 0;
-  virtual bool       try_flushed(Dinst *dinst)              = 0;
-
-  using executingCB                 = CallbackMember1<Resource, Dinst *, &Resource::executing>;
-  using executedCB                  = CallbackMember1<Resource, Dinst *, &Resource::executed>;
-  using performedCB                 = CallbackMember1<Resource, Dinst *, &Resource::performed>;
-  using performed_spec_CB           = CallbackMember1<Resource, Dinst *, &Resource::performed_spec>;
-  using performed_safe_write_CB     = CallbackMember1<Resource, Dinst *, &Resource::performed_safe_write>;
-=======*/
-  virtual StallCause canIssue(Dinst* dinst)                 = 0;
+    virtual StallCause canIssue(Dinst* dinst)                 = 0;
   virtual void       executing(Dinst* dinst)                = 0;
   virtual void       executed(Dinst* dinst)                 = 0;
   virtual bool       preretire(Dinst* dinst, bool flushing) = 0;
@@ -110,12 +92,11 @@ public:
   virtual bool       flushed(Dinst* dinst)                  = 0;
   virtual bool       try_flushed(Dinst* dinst)              = 0;
 
-  using executingCB                = CallbackMember1<Resource, Dinst*, &Resource::executing>;
-  using executedCB                 = CallbackMember1<Resource, Dinst*, &Resource::executed>;
-  using performedCB                = CallbackMember1<Resource, Dinst*, &Resource::performed>;
-  using performed_spec_CB          = CallbackMember1<Resource, Dinst*, &Resource::performed_spec>;
-  using performed_safe_write_CB    = CallbackMember1<Resource, Dinst*, &Resource::performed_safe_write>;
-//>>>>>>> upstream/main
+  using executingCB             = CallbackMember1<Resource, Dinst*, &Resource::executing>;
+  using executedCB              = CallbackMember1<Resource, Dinst*, &Resource::executed>;
+  using performedCB             = CallbackMember1<Resource, Dinst*, &Resource::performed>;
+  using performed_spec_CB       = CallbackMember1<Resource, Dinst*, &Resource::performed_spec>;
+  using performed_safe_write_CB = CallbackMember1<Resource, Dinst*, &Resource::performed_safe_write>;
 
   [[nodiscard]] Time_t getUsedTime() const { return usedTime; }
   void                 setUsedTime() { usedTime = globalClock; }
@@ -184,19 +165,7 @@ public:
          std::shared_ptr<Prefetcher> pref, std::shared_ptr<Store_buffer> scb, TimeDelta_t lsdelay, TimeDelta_t l,
          std::shared_ptr<Gmemory_system> ms, int32_t size, int32_t id, const std::string& cad);
 
-/*<<<<<<< HEAD
-  StallCause canIssue(Dinst *dinst) final;
-  void       executing(Dinst *dinst) final;
-  void       executed(Dinst *dinst) final;
-  bool       preretire(Dinst *dinst, bool flushing) final;
-  bool       retire(Dinst *dinst, bool flushing) final;
-  void       performed(Dinst *dinst) final;
-  void       performed_spec(Dinst *dinst) final;
-  void       performed_safe_write(Dinst *dinst) final;
-  bool       flushed(Dinst *dinst) final;
-  bool       try_flushed(Dinst *dinst) final;
-=======*/
-  StallCause canIssue(Dinst* dinst) final;
+    StallCause canIssue(Dinst* dinst) final;
   void       executing(Dinst* dinst) final;
   void       executed(Dinst* dinst) final;
   bool       preretire(Dinst* dinst, bool flushing) final;
@@ -206,7 +175,6 @@ public:
   void       performed_safe_write(Dinst* dinst) final;
   bool       flushed(Dinst* dinst) final;
   bool       try_flushed(Dinst* dinst) final;
-//>>>>>>> upstream/main
 };
 
 class FUStore : public MemResource {
@@ -222,19 +190,7 @@ public:
           std::shared_ptr<Prefetcher> pref, std::shared_ptr<Store_buffer> scb, TimeDelta_t l, std::shared_ptr<Gmemory_system> ms,
           int32_t size, int32_t id, const std::string& cad);
 
-/*<<<<<<< HEAD
-  StallCause canIssue(Dinst *dinst) final;
-  void       executing(Dinst *dinst) final;
-  void       executed(Dinst *dinst) final;
-  bool       preretire(Dinst *dinst, bool flushing) final;
-  bool       retire(Dinst *dinst, bool flushing) final;
-  void       performed(Dinst *dinst) final;
-  void       performed_spec(Dinst *dinst) final;
-  void       performed_safe_write(Dinst *dinst) final;
-  bool       flushed(Dinst *dinst) final;
-  bool       try_flushed(Dinst *dinst) final;
-=======*/
-  StallCause canIssue(Dinst* dinst) final;
+    StallCause canIssue(Dinst* dinst) final;
   void       executing(Dinst* dinst) final;
   void       executed(Dinst* dinst) final;
   bool       preretire(Dinst* dinst, bool flushing) final;
@@ -244,7 +200,6 @@ public:
   void       performed_safe_write(Dinst* dinst) final;
   bool       flushed(Dinst* dinst) final;
   bool       try_flushed(Dinst* dinst) final;
-//>>>>>>> upstream/main
 };
 
 class FUGeneric : public Resource {
@@ -256,19 +211,7 @@ protected:
 public:
   FUGeneric(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGeneric> aGen, TimeDelta_t l, uint32_t cpuid);
 
-/*<<<<<<< HEAD
-  StallCause canIssue(Dinst *dinst) final;
-  void       executing(Dinst *dinst) final;
-  void       executed(Dinst *dinst) final;
-  bool       preretire(Dinst *dinst, bool flushing) final;
-  bool       retire(Dinst *dinst, bool flushing) final;
-  void       performed(Dinst *dinst) final;
-  void       performed_spec(Dinst *dinst) final;
-  void       performed_safe_write(Dinst *dinst) final;
-  bool       flushed(Dinst *dinst) final;
-  bool       try_flushed(Dinst *dinst) final;
-=======*/
-  StallCause canIssue(Dinst* dinst) final;
+    StallCause canIssue(Dinst* dinst) final;
   void       executing(Dinst* dinst) final;
   void       executed(Dinst* dinst) final;
   bool       preretire(Dinst* dinst, bool flushing) final;
@@ -278,7 +221,6 @@ public:
   void       performed_safe_write(Dinst* dinst) final;
   bool       flushed(Dinst* dinst) final;
   bool       try_flushed(Dinst* dinst) final;
-//>>>>>>> upstream/main
 };
 
 class FUBranch : public Resource {
@@ -295,19 +237,7 @@ public:
   FUBranch(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGeneric> aGen, TimeDelta_t l, uint32_t cpuid, int32_t mb,
            bool dom);
 
-/*<<<<<<< HEAD
-  StallCause canIssue(Dinst *dinst) final;
-  void       executing(Dinst *dinst) final;
-  void       executed(Dinst *dinst) final;
-  bool       preretire(Dinst *dinst, bool flushing) final;
-  bool       retire(Dinst *dinst, bool flushing) final;
-  void       performed(Dinst *dinst) final;
-  void       performed_spec(Dinst *dinst) final;
-  void       performed_safe_write(Dinst *dinst) final;
-  bool       flushed(Dinst *dinst) final;
-  bool       try_flushed(Dinst *dinst) final;
-=======*/
-  StallCause canIssue(Dinst* dinst) final;
+    StallCause canIssue(Dinst* dinst) final;
   void       executing(Dinst* dinst) final;
   void       executed(Dinst* dinst) final;
   bool       preretire(Dinst* dinst, bool flushing) final;
@@ -317,7 +247,6 @@ public:
   void       performed_safe_write(Dinst* dinst) final;
   bool       flushed(Dinst* dinst) final;
   bool       try_flushed(Dinst* dinst) final;
-//>>>>>>> upstream/main
 };
 
 class FURALU : public Resource {
@@ -333,19 +262,7 @@ protected:
 public:
   FURALU(Opcode type, std::shared_ptr<Cluster> cls, std::shared_ptr<PortGeneric> aGen, TimeDelta_t l, int32_t id);
 
-/*<<<<<<< HEAD
-  StallCause canIssue(Dinst *dinst) final;
-  void       executing(Dinst *dinst) final;
-  void       executed(Dinst *dinst) final;
-  bool       preretire(Dinst *dinst, bool flushing) final;
-  bool       retire(Dinst *dinst, bool flushing) final;
-  void       performed(Dinst *dinst) final;
-  void       performed_spec(Dinst *dinst) final;
-  void       performed_safe_write(Dinst *dinst) final;
-  bool       flushed(Dinst *dinst) final;
-  bool       try_flushed(Dinst *dinst) final;
-=======*/
-  StallCause canIssue(Dinst* dinst) final;
+    StallCause canIssue(Dinst* dinst) final;
   void       executing(Dinst* dinst) final;
   void       executed(Dinst* dinst) final;
   bool       preretire(Dinst* dinst, bool flushing) final;
@@ -355,5 +272,4 @@ public:
   void       performed_safe_write(Dinst* dinst) final;
   bool       flushed(Dinst* dinst) final;
   bool       try_flushed(Dinst* dinst) final;
-//>>>>>>> upstream/main
 };

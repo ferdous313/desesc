@@ -44,7 +44,7 @@ protected:
 public:
   Pipeline(size_t s, size_t fetch, int32_t maxReqs);
   virtual ~Pipeline();
-  
+
   void cleanMark();
 
   // FastQueue<Dinst *>   transient_buffer;
@@ -79,8 +79,8 @@ protected:
   bool fetched;
 #endif
 
- // [[nodiscard]] Time_t getPipelineId() const noexcept { return pipeId; }
-  //void                 setPipelineId(Time_t i) { pipeId = i; }
+  // [[nodiscard]] Time_t getPipelineId() const noexcept { return pipeId; }
+  // void                 setPipelineId(Time_t i) { pipeId = i; }
 
   void markFetched();
 
@@ -98,17 +98,13 @@ public:
     Dinst* dinst = top();
     return dinst ? dinst->getID() : 0;
   }
-  
-  
+
   [[nodiscard]] Time_t getPipelineId() const noexcept { return pipeId; }
   void                 setPipelineId(Time_t i) { pipeId = i; }
-  
-  
-  
-  
-  void set_transient() { transient =true;}
-  void reset_transient() { transient =false;}
-  bool is_transient()  { return transient;}
+
+  void set_transient() { transient = true; }
+  void reset_transient() { transient = false; }
+  bool is_transient() { return transient; }
 
   using markFetchedCB = CallbackMember0<IBucket, &IBucket::markFetched>;
 };

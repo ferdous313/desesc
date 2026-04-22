@@ -101,7 +101,7 @@ protected:
       , sets(roundUpPower2(s / b) / roundUpPower2(a))
       , maskSets(sets - 1)
       , log2Sets(log2i(sets))
-      , numLines(roundUpPower2(roundUpPower2(a)/a) * s / b)
+      , numLines(roundUpPower2(roundUpPower2(a) / a) * s / b)
       , xorIndex(xr) {
     // TODO : assoc and sets must be a power of 2
   }

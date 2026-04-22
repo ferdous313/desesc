@@ -216,17 +216,15 @@ void Dinst::destroy() {
 
   I(first == nullptr);
 
-  Tracer::commit(this);
-
   resource = nullptr;
   cluster  = nullptr;
   dInstPool.in(this);
-  printf("Dinst::Destroy() :: dinst  %ld\n", getID());
+  printf("Dinst::Destroy() :: dinst  %llu\n", getID());
 }
 void Dinst::destroyTransientInst() {
   I(first == nullptr);
 
-  printf("Dinst::DestroyTransientInst() :: dinst  %ld\n", getID());
+  printf("Dinst::DestroyTransientInst() :: dinst  %llu\n", getID());
   Tracer::commit(this);
   resource = nullptr;
   cluster  = nullptr;

@@ -206,10 +206,10 @@ std::pair<std::shared_ptr<Cluster>, Opcode_array<std::shared_ptr<Resource>>> Clu
 }
 
 void Cluster::select(Dinst* dinst) {
-  printf("CLuster::::Cluster Entering select Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("CLuster::::Cluster Entering select Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   I(nready >= 0);
   nready++;
-  printf("Cluster::::Cluster Sending to cluster Inst %ld at clock cycle %ld\n", dinst->getID(), globalClock);
+  printf("Cluster::::Cluster Sending to cluster Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   window.select(dinst);
 }
 
@@ -254,14 +254,11 @@ void Cluster::add_inst(Dinst* dinst) {
   //        globalClock);
 
   window.add_inst(dinst);
-  //<<<<<<< HEAD
   /*lima_may if(!dinst->is_in_cluster()) {
      window.add_inst(dinst);
    }lima_may*/
 
   // printf("Cluster::add_inst leaving dinstID %ld\n", dinst->getID());
-  //=======
-  //>>>>>>> upstream/main
 }
 
 //************ Executing Cluster Class is active here!!!
@@ -335,14 +332,11 @@ bool ExecutingCluster::retire(Dinst* dinst, bool reply) {
 //************ Executed Cluster Class
 // Only this Executed cluster is used in desesc now: desc.toml
 void ExecutedCluster::executing(Dinst* dinst) {
-  //<<<<<<< HEAD
   // if(!dinst->is_in_cluster() && !dinst->isIssued()) {
   // window.add_inst(dinst);
   // lima}
 
   // printf("ClusterExecuted::executing Entering Insit %ld\n", dinst->getID());
-  //=======
-  //>>>>>>> upstream/main
   nready--;
 
   if (lateAlloc && dinst->getInst()->hasDstRegister()) {
@@ -354,7 +348,7 @@ void ExecutedCluster::executing(Dinst* dinst) {
 }
 
 void ExecutedCluster::executed(Dinst* dinst) {
-  printf("Cluster::ExecutedCluster:: Entering executed: for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
+  printf("Cluster::ExecutedCluster:: Entering executed: for instID %llu at @Clockcycle %llu\n", dinst->getID(), globalClock);
   window.executed(dinst);
   dinst->getGProc()->executed(dinst);
   if (!dinst->isTransient()) {
@@ -374,7 +368,9 @@ void ExecutedCluster::executed(Dinst* dinst) {
   //        get_window_size(),
   //        dinst->getID(),
   //        globalClock);
-  printf("Cluster::ExecutedCluster::executed:  Leaving  executed for instID %ld at @Clockcycle %ld\n", dinst->getID(), globalClock);
+  printf("Cluster::ExecutedCluster::executed:  Leaving  executed for instID %llu at @Clockcycle %llu\n",
+         dinst->getID(),
+         globalClock);
 }
 void ExecutedCluster::flushed(Dinst* dinst) {
   window.executed_flushed(dinst);

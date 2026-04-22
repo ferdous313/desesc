@@ -68,7 +68,7 @@ private:
 
   bool prefetch;  // This means that can be dropped at will
   bool spec;
-  //bool notifyScbDirectly;
+  // bool notifyScbDirectly;
   bool dropped;
   bool retrying;
   bool needsDisp;  // Once set, it keeps the value
@@ -162,9 +162,7 @@ public:
   void redoSetStateAck();
   void redoDisp();
   bool notifyScbDirectly;
-  bool is_notifyScbDirectly(){
-    return  notifyScbDirectly;
-  }
+  bool is_notifyScbDirectly() { return notifyScbDirectly; }
 
   using redoReqCB         = CallbackMember0<MemRequest, &MemRequest::redoReq>;
   using redoReqAckCB      = CallbackMember0<MemRequest, &MemRequest::redoReqAck>;
@@ -347,49 +345,44 @@ public:
     mreq->pc         = pc;
     m->req(mreq);
   }
-  static void send_scb_clean_disp(MemObj *m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase *cb = nullptr) {
-    MemRequest *mreq = create(m, addr, keep_stats, cb);
+  static void send_scb_clean_disp(MemObj* m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase* cb = nullptr) {
+    MemRequest* mreq        = create(m, addr, keep_stats, cb);
     mreq->mt                = mt_req;
     mreq->notifyScbDirectly = true;
-   // mreq->ma              = ma_setDirty;  // For writes, only MO are valid states
-    mreq->ma_orig           = mreq->ma;
-    mreq->pc                = pc;
+    // mreq->ma              = ma_setDirty;  // For writes, only MO are valid states
+    mreq->ma_orig = mreq->ma;
+    mreq->pc      = pc;
     m->disp(mreq);
-    //m->req(mreq); //working 
+    // m->req(mreq); //working
   }
-   static void send_scb_dirty_disp(MemObj *m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase *cb = nullptr) {
-    MemRequest *mreq = create(m, addr, keep_stats, cb);
+  static void send_scb_dirty_disp(MemObj* m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase* cb = nullptr) {
+    MemRequest* mreq        = create(m, addr, keep_stats, cb);
     mreq->mt                = mt_req;
     mreq->notifyScbDirectly = true;
     mreq->ma                = ma_setDirty;  // For writes, only MO are valid states
     mreq->ma_orig           = mreq->ma;
     mreq->pc                = pc;
     m->disp(mreq);
-    //m->req(mreq); //working 
+    // m->req(mreq); //working
   }
 
- /* static void sendDirtyDisp(MemObj *m, MemObj *creator, Addr_t addr, bool keep_stats, CallbackBase *cb = nullptr) {
-    MemRequest *mreq = create(m, addr, keep_stats, cb);
-    mreq->mt         = mt_disp;
-    mreq->ma         = ma_setDirty;
-    mreq->ma_orig    = mreq->ma;
-    I(creator);
-    mreq->creatorObj      = creator;
-    mreq->topCoherentNode = creator;
-    m->disp(mreq);
-  }
- */ 
-  
-  
-  static void sendReqWritePrefetch(MemObj *m, bool keep_stats, Addr_t addr, CallbackBase *cb = nullptr) {
-    MemRequest *mreq = create(m, addr, keep_stats, cb);
-/*=======
+  /* static void sendDirtyDisp(MemObj *m, MemObj *creator, Addr_t addr, bool keep_stats, CallbackBase *cb = nullptr) {
+     MemRequest *mreq = create(m, addr, keep_stats, cb);
+     mreq->mt         = mt_disp;
+     mreq->ma         = ma_setDirty;
+     mreq->ma_orig    = mreq->ma;
+     I(creator);
+     mreq->creatorObj      = creator;
+     mreq->topCoherentNode = creator;
+     m->disp(mreq);
+   }
+  */
+
   static void sendReqWritePrefetch(MemObj* m, bool keep_stats, Addr_t addr, CallbackBase* cb = nullptr) {
     MemRequest* mreq = create(m, addr, keep_stats, cb);
->>>>>>> upstream/main*/
-    mreq->mt         = mt_req;
-    mreq->ma         = ma_setDirty;
-    mreq->ma_orig    = mreq->ma;
+        mreq->mt      = mt_req;
+    mreq->ma      = ma_setDirty;
+    mreq->ma_orig = mreq->ma;
     m->req(mreq);
   }
 
@@ -467,12 +460,7 @@ public:
     mreq->topCoherentNode = creator;
     m->disp(mreq);
   }
-/*<<<<<<< HEAD
-
-  static void sendCleanDisp(MemObj *m, MemObj *creator, Addr_t addr, bool prefetch, bool keep_stats) {
-    MemRequest *mreq = create(m, addr, keep_stats, nullptr);
-=======*/
-  static void sendCleanDisp(MemObj* m, MemObj* creator, Addr_t addr, bool prefetch, bool keep_stats) {
+    static void sendCleanDisp(MemObj* m, MemObj* creator, Addr_t addr, bool prefetch, bool keep_stats) {
     MemRequest* mreq = create(m, addr, keep_stats, nullptr);
     mreq->mt         = mt_disp;
     mreq->ma         = ma_setValid;
@@ -538,7 +526,7 @@ public:
   bool                  isHomeNodeSpec(MemObj* cache) const { return currMemObj == cache || cache->isLastLevelCache(); }
 
   [[nodiscard]] bool isTopCoherentNode() const {
-    if(!notifyScbDirectly){
+    if (!notifyScbDirectly) {
       I(topCoherentNode);
     }
     return topCoherentNode == currMemObj;
@@ -601,7 +589,7 @@ public:
     return globalClock - startClock;
   }
   [[nodiscard]] Time_t getTimeDelay(Time_t when) const {
-    //limaI(startClock);
+    // limaI(startClock);
     I(startClock <= when);
     return when - startClock;
   }

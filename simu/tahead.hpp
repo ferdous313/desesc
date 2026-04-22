@@ -213,7 +213,7 @@ int8_t TAHEAD_FBIAS[(1 << TAHEAD_LOGFNB)];
 #define TAHEAD_PCBL ((TAHEAD_AHEAD) ? (TAHEAD_PrevPCBLOCK) : (TAHEAD_PCBLOCK))
 #endif
 
-#define TAHEAD_INDBIASPC     (((((TAHEAD_PCBL ^ (TAHEAD_PCBL >> (TAHEAD_LOGBIAS - 5))))) & ((1 << TAHEAD_LOGBIAS) - 1)) ^ TAHEAD_PSNUM)
+#define TAHEAD_INDBIASPC (((((TAHEAD_PCBL ^ (TAHEAD_PCBL >> (TAHEAD_LOGBIAS - 5))))) & ((1 << TAHEAD_LOGBIAS) - 1)) ^ TAHEAD_PSNUM)
 #define TAHEAD_INDBIASPCLMAP (TAHEAD_INDBIASPC) ^ ((TAHEAD_LongestMatchPred ^ (TAHEAD_HCpred << 1)) << (TAHEAD_LOGBIAS - 2))
 // a single  physical table but  two logic tables: indices agree on all the bits except 2
 
@@ -747,8 +747,8 @@ public:
   }
 
   bool getbim() {
-    TAHEAD_BIM      = (get_TAHEAD_btable_entry(TAHEAD_BI).pred) ? (get_TAHEAD_btable_entry(TAHEAD_BI >> TAHEAD_HYSTSHIFT).hyst)
-                                                                : -1 - (get_TAHEAD_btable_entry(TAHEAD_BI >> TAHEAD_HYSTSHIFT).hyst);
+    TAHEAD_BIM = (get_TAHEAD_btable_entry(TAHEAD_BI).pred) ? (get_TAHEAD_btable_entry(TAHEAD_BI >> TAHEAD_HYSTSHIFT).hyst)
+                                                           : -1 - (get_TAHEAD_btable_entry(TAHEAD_BI >> TAHEAD_HYSTSHIFT).hyst);
     TAHEAD_TAGECONF = 3 * (get_TAHEAD_btable_entry(TAHEAD_BI >> TAHEAD_HYSTSHIFT).hyst != 0);
 
     return (get_TAHEAD_btable_entry(TAHEAD_BI).pred != 0);

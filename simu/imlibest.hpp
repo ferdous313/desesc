@@ -437,42 +437,7 @@ public:
   bool isHit() const { return hit; }
   bool isTagHit() const { return hit; }
 
-/*<<<<<<< HEAD
-  void select(Addr_t t, int b) {
-    //changes by transient now
-    b = b >> 1;  // Drop lower bit
-
-    last_boff = b;
-    if (t != tag) {
-      hit  = false;
-      thit = false;
-      printf("IMLIBEST::select:return at t!=tag + hit=false at clock cycle %ld\n",globalClock);
-      return;
-    }
-
-    thit = true;
-    hit  = false;
-
-    pos = nsub;
-    printf("IMLIBEST::nsub is %d at clock cycle %ld\n",nsub ,globalClock);
-    for (int i = 0; i < nsub; i++) {
-      if (boff[i] == b) {
-        pos = i;
-        hit = true;
-        printf("IMLIBEST::select:return at boff[%d]==b +hit=true at clock cycle %ld\n",i ,globalClock);
-        break;
-      }
-    }
-
-    if (pos == nsub) {
-      hit = false;
-      printf("IMLIBEST::select:return at pos==nsub+ hit=false at clock cycle %ld\n",globalClock);
-      pos = nsub - 1;
-    }
-  }
-=======*/
-  void select(Addr_t t) { hit = (t == tag); }
-//>>>>>>> upstream/main
+    void select(Addr_t t) { hit = (t == tag); }
 
   void reset(uint32_t t, bool taken) {
     tag  = t;
@@ -522,44 +487,11 @@ public:
 #endif
   }
 
-/*<<<<<<< HEAD
-  bool ctr_weak() const {
-    if (!hit) {
-      printf("IMLIBEST::ctr_weak():return 1 as !hit at clock cycle %ld\n", globalClock);
-      return true;
-    }
-    
-    if(ctr[pos] == 0|| ctr[pos] == -1){
-      printf("IMLIBEST::ctr_weak():return 1 as ctr[pos]==0 at clock cycle %ld\n", globalClock);
-    } else {
-      printf("IMLIBEST::ctr_weak():return 0 as !ctr[pos]==0 at clock cycle %ld\n", globalClock);
-    }
-=======*/
-  bool ctr_weak() const { return !hit || ctr_ == 0 || ctr_ == -1; }
-//>>>>>>> upstream/main
+    bool ctr_weak() const { return !hit || ctr_ == 0 || ctr_ == -1; }
 
   bool ctr_highconf() const { return hit && (abs(2 * ctr_ + 1) >= (1 << CWIDTH) - 1); }
 
-/*<<<<<<< HEAD
-  bool ctr_highconf() const {
-    if (!hit) {
-      return false;
-    }
-
-    return (abs(2 * ctr[pos] + 1) >= (1 << CWIDTH) - 1);
-  }
-
-  int ctr_get() const {
-    if (!hit) {
-      printf("IMLIBEST::ctr_get():return 0 as hit==0 at clock cycle %ld\n", globalClock);
-      return 0;  // bias to taken if nothing is known
-    }
-    printf("IMLIBEST::ctr_get():return ctr[%d] = %d as hit==1 at clock cycle %ld\n", pos, ctr[pos], globalClock);
-    return ctr[pos];
-  }
-=======*/
-  int ctr_get() const { return hit ? ctr_ : 0; }
-//>>>>>>> upstream/main
+    int ctr_get() const { return hit ? ctr_ : 0; }
 
   bool ctr_isTaken() const { return ctr_get() >= 0; }
 
@@ -576,13 +508,8 @@ public:
       u_--;
     }
   }
-/*<<<<<<< HEAD
-  void u_clear() { u[0] = 0; }
-};//class_gentry_end
-=======*/
-  void u_clear() { u_ = 0; }
+    void u_clear() { u_ = 0; }
 };
-//>>>>>>> upstream/main
 
 class IMLIBest {
 public:
@@ -860,8 +787,8 @@ public:
       STORAGESIZE += x;
     }
 
-    STORAGESIZE += 2 * (SIZEUSEALT)*4;
-    fprintf(stderr, " altna size=%d log2entries=%d\n", 2 * (SIZEUSEALT)*4, LOGSIZEUSEALT);
+    STORAGESIZE += 2 * (SIZEUSEALT) * 4;
+    fprintf(stderr, " altna size=%d log2entries=%d\n", 2 * (SIZEUSEALT) * 4, LOGSIZEUSEALT);
 
     inter = bwidth * (1 << (log2_bimodal_nsub + log2_bimodal_entries));
     fprintf(stderr, " bimodal table bit_size=%d log2entries=%d log2nsub=%d\n", inter, log2_bimodal_entries, log2_bimodal_nsub);
@@ -884,7 +811,7 @@ public:
 
       inter += 16;                   // global histories for SC
       inter = 8 * (1 << LOGSIZEUP);  // the update threshold counters
-      inter += (PERCWIDTH)*4 * (1 << (LOGBIAS));
+      inter += (PERCWIDTH) * 4 * (1 << (LOGBIAS));
       inter += (GNB - 2) * (1 << (LOGGNB)) * (PERCWIDTH - 1) + (1 << (LOGGNB - 1)) * (2 * PERCWIDTH - 1);
 
       inter += (PNB - 2) * (1 << (LOGPNB)) * (PERCWIDTH - 1) + (1 << (LOGPNB - 1)) * (2 * PERCWIDTH - 1);
@@ -998,7 +925,7 @@ public:
           s = galloc[i];
         }
         gtable[i][j].allocate(s);
-        printf("IMLIBEST::reinit()::gtable[%d][%d].allocate() at clock cycle %ld\n", i, j, globalClock);
+        printf("IMLIBEST::reinit()::gtable[%d][%d].allocate() at clock cycle %llu\n", i, j, globalClock);
       }
     }
 
@@ -1166,7 +1093,8 @@ public:
       if (ltable[index].TAG == LTAG) {
         LHIT   = i;
         LVALID = ((ltable[index].confid == CONFLOOP) || (ltable[index].confid * ltable[index].NbIter > 128));
-        {}
+        {
+        }
         if (ltable[index].CurrentIter + 1 == ltable[index].NbIter) {
           return (!(ltable[index].dir));
         } else {
@@ -1295,30 +1223,23 @@ public:
   }
 
   void setTAGEPred() {
-    printf("IMLIBEST::setTAGEPRED():: Entering at clock cycle %ld\n", globalClock);
+    printf("IMLIBEST::setTAGEPRED():: Entering at clock cycle %llu\n", globalClock);
     HitBank = 0;
     AltBank = 0;
-    printf("IMLIBEST::setTAGEPRED():: nhist is %d at clock cycle %ld\n", nhist, globalClock);
+    printf("IMLIBEST::setTAGEPRED():: nhist is %d at clock cycle %llu\n", nhist, globalClock);
     for (int i = 1; i <= nhist; i++) {
-/*<<<<<<< HEAD
-      if (gtable[i][GI[i]].isHit()) {
-        //TODO::main diif is here limaJOSE: LongestMatchPred 
-        LongestMatchPred = (gtable[i][GI[i]].ctr_isTaken());
-        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]].isHit==>LongestMAtchPred is %b  at clock cycle %ld\n", i, i, LongestMatchPred, globalClock);
-=======*/
-      if (get_gentry(i).isHit()) {
+            if (get_gentry(i).isHit()) {
         LongestMatchPred = get_gentry(i).ctr_isTaken();
-//>>>>>>> upstream/main
-        HitBank          = i;
-        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: HitBank is %d  at clock cycle %ld\n", i, i, HitBank, globalClock);
+        HitBank = i;
+        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: HitBank is %d  at clock cycle %llu\n", i, i, HitBank, globalClock);
       }
     }
 
-    printf("IMLIBEST::setTAGEPred::LongestMAtchPred is %b  at clock cycle %ld\n",  LongestMatchPred, globalClock);
+    printf("IMLIBEST::setTAGEPred::LongestMAtchPred is %b  at clock cycle %llu\n", LongestMatchPred, globalClock);
     for (int i = HitBank - 1; i > 0; i--) {
       if (get_gentry(i).isHit()) {
         AltBank = i;
-        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: AltBank is %d  at clock cycle %ld\n", i, i, AltBank, globalClock);
+        printf("IMLIBEST::setTAGEPred::gtable[%d][GI[%d]]:: AltBank is %d  at clock cycle %llu\n", i, i, AltBank, globalClock);
         break;
       }
     }
@@ -1334,35 +1255,30 @@ public:
 
     if (HitBank > 0) {
       if (AltBank > 0) {
-/*<<<<<<< HEAD
-        alttaken = (gtable[AltBank][GI[AltBank]].ctr_isTaken());
-        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk>0::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
-=======*/
-        alttaken = get_gentry(AltBank).ctr_isTaken();
-//>>>>>>> upstream/main
+                alttaken = get_gentry(AltBank).ctr_isTaken();
       } else {
         alttaken = bimodal.predict();
-        printf("IMLIBEST::setTAGEPred::HITBANK>0::ALTBANK<= 0:: alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
+        printf("IMLIBEST::setTAGEPred::HITBANK>0::ALTBANK<= 0:: alttaken ::altaken  is %b  at clock cycle %llu\n",
+               alttaken,
+               globalClock);
       }
     } else {
       alttaken         = bimodal.predict();
       LongestMatchPred = alttaken;
-      printf("IMLIBEST::setTAGEPred::HITBank<=0::longestmatchtaken ::altaken  is %b  at clock cycle %ld\n", LongestMatchPred, globalClock);
+      printf("IMLIBEST::setTAGEPred::HITBank<=0::longestmatchtaken ::altaken  is %b  at clock cycle %llu\n",
+             LongestMatchPred,
+             globalClock);
     }
 #else
     // computes the prediction and the alternate prediction
     if (HitBank > 0) {
       if (AltBank > 0) {
-/*<<<<<<< HEAD
-        alttaken = (gtable[AltBank][GI[AltBank]].ctr_isTaken());
-        //TODO:limajose
-        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk>0::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
-=======*/
-        alttaken = get_gentry(AltBank).ctr_isTaken();
-//>>>>>>> upstream/main
+                alttaken = get_gentry(AltBank).ctr_isTaken();
       } else {
         alttaken = bimodal.predict();
-        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk<=0::BIMODAL_PREDICT::alttaken ::altaken  is %b  at clock cycle %ld\n", alttaken, globalClock);
+        printf("IMLIBEST::setTAGEPred::HITBANK>0:ALTBANk<=0::BIMODAL_PREDICT::alttaken ::altaken  is %b  at clock cycle %llu\n",
+               alttaken,
+               globalClock);
       }
 
       // if the entry is recognized as a newly allocated entry and
@@ -1372,18 +1288,13 @@ public:
 
       if (!Huse_alt_on_na || !get_gentry(HitBank).ctr_weak()) {
         tage_pred = LongestMatchPred;
-/*<<<<<<< HEAD
-        //TODO::here is the main diff_limajose tage_pred 
-        printf("IMLIBEST::setTAGEPred::!gtable[%d][GI[%d]].ctr_weak()) ::tage_pred  is %b  at clock cycle %ld\n", HitBank, HitBank, tage_pred, globalClock);
-        HighConf  = gtable[HitBank][GI[HitBank]].ctr_highconf();
-        WeakConf  = gtable[HitBank][GI[HitBank]].ctr_weak();
-=======*/
-        HighConf  = get_gentry(HitBank).ctr_highconf();
-        WeakConf  = get_gentry(HitBank).ctr_weak();
-//>>>>>>> upstream/main
+                HighConf = get_gentry(HitBank).ctr_highconf();
+        WeakConf = get_gentry(HitBank).ctr_weak();
       } else {
         tage_pred = alttaken;
-        printf("IMLIBEST::setTAGEPred:: gtable[HitBank][GI[HitBank]].ctr_weak())::tage_pred  is %b  at clock cycle %ld\n", tage_pred, globalClock);
+        printf("IMLIBEST::setTAGEPred:: gtable[HitBank][GI[HitBank]].ctr_weak())::tage_pred  is %b  at clock cycle %llu\n",
+               tage_pred,
+               globalClock);
         if (AltBank) {
           HighConf = get_gentry(AltBank).ctr_highconf();
           WeakConf = get_gentry(AltBank).ctr_weak();
@@ -1393,11 +1304,11 @@ public:
         }
       }
     } else {
-      HighConf         = bimodal.highconf();
-      WeakConf         = !HighConf;
-      alttaken         = bimodal.predict();
-      tage_pred        = alttaken;
-      printf("IMLIBEST::setTAGEPred::HitBank<=0::tage_pred  is %b  at clock cycle %ld\n", tage_pred, globalClock);
+      HighConf  = bimodal.highconf();
+      WeakConf  = !HighConf;
+      alttaken  = bimodal.predict();
+      tage_pred = alttaken;
+      printf("IMLIBEST::setTAGEPred::HitBank<=0::tage_pred  is %b  at clock cycle %llu\n", tage_pred, globalClock);
       LongestMatchPred = alttaken;
     }
 #if 0
@@ -1477,40 +1388,14 @@ public:
     bimodal.select(GI[0], imli_bpred_hash(lastBoundaryPC, 100 + orig_ID - lastBoundaryID));
 #endif
 
-/*<<<<<<< HEAD
-    lastBoundaryCtrl = true;
-
-    return boff;
-  }
-
-  void fetchBoundaryOffsetBranch(Addr_t PC, bool transient) {
-    int boff = fetchBoundaryOffsetOthers(PC);
-
-    // bimodal.select(GI[0],boff);
-    bimodal.select(PC);
-
-    if(!transient){
-=======*/
-//>>>>>>> upstream/main
     for (int i = 1; i <= nhist; i++) {
       get_gentry(i).select(GTAG[i]);
     }
   }
 
-/*<<<<<<< HEAD
-
-  
-  bool getPrediction(Addr_t PC, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid, uint32_t taken_counter, bool transient) {
-    printf("IMLIbEST::GETprediction::Entering PC %ld at clock cycle %ld\n", PC, globalClock);
-    fetchBoundaryOffsetBranch(PC, transient);
-
-    bool force_offset = (taken_counter>1 && use_tag_hybrid);
-    printf("IMLIbEST::GETprediction: force_offset is %b at clock cycle %ld\n", force_offset, globalClock);
-=======*/
-  bool getPrediction(Addr_t orig_PC, uint64_t orig_ID, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid,
+    bool getPrediction(Addr_t orig_PC, uint64_t orig_ID, bool& bias, uint32_t& sign, bool use_tag_offset, bool use_tag_hybrid,
                      uint32_t taken_counter) {
     bool force_offset = (taken_counter >= 1 && use_tag_hybrid);
-//>>>>>>> upstream/main
 
     Addr_t PC;
     if (use_tag_offset || force_offset) {
@@ -1564,7 +1449,7 @@ public:
     pred_inter = pred_taken;
 
     if (!sc) {
-      printf("IMLIBEST::getpredict:: !SC return  pred_taken is %b  at clock cycle %ld\n", pred_taken, globalClock);
+      printf("IMLIBEST::getpredict:: !SC return  pred_taken is %b  at clock cycle %llu\n", pred_taken, globalClock);
       return (pred_taken);
     }
 
@@ -1658,19 +1543,13 @@ public:
       bias = true;
     }
 
-    printf("IMLIBEST::getpredict::RETURN at LAST pred_taken is %b  at clock cycle %ld\n", pred_taken, globalClock);
+    printf("IMLIBEST::getpredict::RETURN at LAST pred_taken is %b  at clock cycle %llu\n", pred_taken, globalClock);
     return pred_taken;
-  }//get_prediction_end
+  }  // get_prediction_end
 
-/*Update History*/
+  /*Update History*/
   void HistoryUpdate(Addr_t PC, Opcode brtype, bool taken, Addr_t target, long long& X, int& Y, std::vector<folded_history>& H,
                      std::vector<folded_history>& G, std::vector<folded_history>& J, long long& LH, long long& GBRHIST) {
-/*<<<<<<< HEAD
-
-    imli_tag_offset++;
-
-=======*/
-//>>>>>>> upstream/main
     // special treatment for unconditional branchs;
     int maxt;
     if (brtype == Opcode::iBALU_LBRANCH) {
@@ -1749,7 +1628,7 @@ public:
 #endif
     }
 
-  }// HISTORY_UPDATE_END
+  }  // HISTORY_UPDATE_END
 
   // PREDICTOR UPDATE
 
@@ -2073,27 +1952,11 @@ public:
 #endif
     // END TAGE UPDATE
 
-/*<<<<<<< HEAD
-    HistoryUpdate(PC,
-                  Opcode::iBALU_LBRANCH,
-                  resolveDir,
-                  branchTarget,
-                  phist,
-                  ptghist,
-                  ch_i,
-                  ch_t[0],
-                  ch_t[1],
-                  L_shist[INDLOCAL],
-                  GHIST);
-    // END PREDICTOR UPDATE
-  }//update_predictor_end
-=======*/
-    bim_tag_offset++;
+        bim_tag_offset++;
     if (state.advance_imli_tag_offset) {
       imli_tag_offset++;
     }
   }
-//>>>>>>> upstream/main
 
   template <std::size_t S1, std::size_t S2>
   int Gpredict(const std::array<std::array<int8_t, 1 << S1>, S2>& tab) {

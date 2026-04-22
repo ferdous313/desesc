@@ -478,13 +478,13 @@ void CCache::CState::adjustState(MemRequest* mreq, int16_t portid) {
   state            = calcAdjustState(mreq);
 
   // I(ostate != state); // only if we have full MSHR
-  if(!mreq->notifyScbDirectly) {
-  GI(mreq->isReq(), mreq->getAction() == ma_setExclusive || mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setValid);
-  GI(mreq->isReqAck(),
-     mreq->getAction() == ma_setExclusive || mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setShared);
-  GI(mreq->isDisp(), mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setValid);
-  GI(mreq->isSetStateAck(), mreq->getAction() == ma_setShared || mreq->getAction() == ma_setInvalid);
-  GI(mreq->isSetState(), mreq->getAction() == ma_setShared || mreq->getAction() == ma_setInvalid);
+  if (!mreq->notifyScbDirectly) {
+    GI(mreq->isReq(), mreq->getAction() == ma_setExclusive || mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setValid);
+    GI(mreq->isReqAck(),
+       mreq->getAction() == ma_setExclusive || mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setShared);
+    GI(mreq->isDisp(), mreq->getAction() == ma_setDirty || mreq->getAction() == ma_setValid);
+    GI(mreq->isSetStateAck(), mreq->getAction() == ma_setShared || mreq->getAction() == ma_setInvalid);
+    GI(mreq->isSetState(), mreq->getAction() == ma_setShared || mreq->getAction() == ma_setInvalid);
   }
 
   if (mreq->isDisp()) {
@@ -519,9 +519,9 @@ void CCache::CState::adjustState(MemRequest* mreq, int16_t portid) {
     //      shareState = state;
     // I(portid<0);
   } else {
-  if(!mreq->notifyScbDirectly) {
-    I(state != I);
-  }
+    if (!mreq->notifyScbDirectly) {
+      I(state != I);
+    }
     I(mreq->isReq() || mreq->isReqAck());
     if (ostate != I && !mreq->isTopCoherentNode()) {
       // I(!mreq->isHomeNode());
@@ -557,15 +557,12 @@ void CCache::CState::adjustState(MemRequest* mreq, int16_t portid) {
   }
 
   GI(nSharers > 1, shareState != E && shareState != M);
-//<<<<<<< HEAD
-  //GI(shareState == E || shareState == M, nSharers == 1);
-  //GI(nSharers == 0, shareState == I);
-  //GI(shareState == I, nSharers == 0);
-//=======*/
+  // GI(shareState == E || shareState == M, nSharers == 1);
+  // GI(nSharers == 0, shareState == I);
+  // GI(shareState == I, nSharers == 0);
   GI(shareState == E || shareState == M, nSharers <= 1);
-  //GI(nSharers == 0, shareState == I);
+  // GI(nSharers == 0, shareState == I);
   GI(shareState == I, nSharers == 0);
-//>>>>>>> upstream/main
 
   if (state == I && shareState == I) {
     invalidate();
@@ -1246,10 +1243,10 @@ void CCache::tryPrefetch(Addr_t paddr, bool doStats, int degree, Addr_t pref_sig
     return;
   }
 
-  //jose_original_prefetch_working
-  //if (!allocateMiss) {
-  //jose suggest 
-    if (false && !allocateMiss) {
+  // jose_original_prefetch_working
+  // if (!allocateMiss) {
+  // jose suggest
+  if (false && !allocateMiss) {
     Addr_t page_addr = (paddr >> 10) << 10;
     if (pref_sign != PSIGN_MEGA || page_addr != paddr) {
       nPrefetchHitBusy.inc(doStats);

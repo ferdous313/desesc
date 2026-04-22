@@ -55,7 +55,7 @@ bool PortFullyPipe::is_busy_for(TimeDelta_t clk) const { return lTime - clk >= g
 
 std::pair<Time_t, bool> PortFullyPipe::tryNextSlot(bool en, Time_t priority) {
   (void)priority;  // Priority is used for queuing only with PORT_STRICT_PRIORITY
-  printf("Port::PortFullyPipe::tryNextSlot Entering at clock cycle %ld\n",globalClock);
+  printf("Port::PortFullyPipe::tryNextSlot Entering at clock cycle %llu\n", globalClock);
 
   if (lTime < globalClock) {
     lTime = globalClock;
@@ -75,12 +75,12 @@ std::pair<Time_t, bool> PortFullyPipe::tryNextSlot(bool en, Time_t priority) {
 }
 
 void PortFullyPipe::queueRequest(bool en, Time_t priority, std::function<void(Time_t)> callback) {
-  printf("Port::PortFullyPipe::Entering at clock cycle %ld\n",globalClock);
+  printf("Port::PortFullyPipe::Entering at clock cycle %llu\n", globalClock);
   pendingRequests.push({priority, callback, en});
 }
 
 void PortFullyPipe::processPendingRequests() {
-  printf("Port::PortFullyPipe::ProcessPendingRequest ::Entering at clock cycle %ld\n",globalClock);
+  printf("Port::PortFullyPipe::ProcessPendingRequest ::Entering at clock cycle %llu\n", globalClock);
   // Called at start of each cycle - process queued requests
   // With PORT_STRICT_PRIORITY: priority order (low ID first)
   // Without PORT_STRICT_PRIORITY: FIFO order (insertion order)
@@ -113,7 +113,7 @@ PortFullyNPipe::PortFullyNPipe(const std::string& name, NumUnits_t nFU) : PortGe
 
   lTime = globalClock;
 
-  printf("Port::PortFullyNPipe::freeUnits Resources:: is %d at clock cycle %ld\n", freeUnits, globalClock);
+  printf("Port::PortFullyNPipe::freeUnits Resources:: is %d at clock cycle %llu\n", freeUnits, globalClock);
   freeUnits = nFU;
 }
 
@@ -136,7 +136,7 @@ bool PortFullyNPipe::is_busy_for(TimeDelta_t clk) const { return lTime - clk >= 
 
 std::pair<Time_t, bool> PortFullyNPipe::tryNextSlot(bool en, Time_t priority) {
   (void)priority;  // Priority is used for queuing only with PORT_STRICT_PRIORITY
-  printf("Port::PortFullyNPipe::tryNextSlot Entering at clock cycle %ld\n",globalClock);
+  printf("Port::PortFullyNPipe::tryNextSlot Entering at clock cycle %llu\n", globalClock);
 
   if (lTime < globalClock) {
     lTime     = globalClock;
@@ -147,27 +147,33 @@ std::pair<Time_t, bool> PortFullyNPipe::tryNextSlot(bool en, Time_t priority) {
 
   if (resource_available) {
     // Allocate immediately
-    printf("Port::PortFullyPipe::tryNextSlot::Resource AVAILABLE::Allocate immediately clock cycle %ld\n",globalClock);
-    printf("Port::PortFullyNPipe::TryNextSlots::Resources AVAILABLE:: Before freeUnits is %d at clock cycle %ld\n", freeUnits, globalClock);
+    printf("Port::PortFullyPipe::tryNextSlot::Resource AVAILABLE::Allocate immediately clock cycle %llu\n", globalClock);
+    printf("Port::PortFullyNPipe::TryNextSlots::Resources AVAILABLE:: Before freeUnits is %d at clock cycle %llu\n",
+           freeUnits,
+           globalClock);
     freeUnits--;
-    printf("Port::PortFullyNPipe::TryNextSlotsResources:AVAILABLE::After freeUnits-- is %d at clock cycle %ld\n", freeUnits, globalClock);
+    printf("Port::PortFullyNPipe::TryNextSlotsResources:AVAILABLE::After freeUnits-- is %d at clock cycle %llu\n",
+           freeUnits,
+           globalClock);
     avgTime.sample(0, en);
     return {lTime, false};
   } else {
-    printf("Port::PortFullyPipe::tryNextSlot Resource NOT availble::NOT Allocate immediately clock cycle %ld\n",globalClock);
-    printf("Port::PortFullyNPipe::TryNextSlots::Resources NOT available::freeUnits is %d at clock cycle %ld\n", freeUnits, globalClock);
+    printf("Port::PortFullyPipe::tryNextSlot Resource NOT availble::NOT Allocate immediately clock cycle %llu\n", globalClock);
+    printf("Port::PortFullyNPipe::TryNextSlots::Resources NOT available::freeUnits is %d at clock cycle %llu\n",
+           freeUnits,
+           globalClock);
     // Defer to queue
     return {lTime, true};
   }
 }
 
 void PortFullyNPipe::queueRequest(bool en, Time_t priority, std::function<void(Time_t)> callback) {
-  printf("Port::PortFullyNPipe::Entering at clock cycle %ld\n",globalClock);
+  printf("Port::PortFullyNPipe::Entering at clock cycle %llu\n", globalClock);
   pendingRequests.push({priority, callback, en});
 }
 
 void PortFullyNPipe::processPendingRequests() {
-  printf("Port::PortFullyNPipe::ProcessPendingRequest ::Entering at clock cycle %ld\n",globalClock);
+  printf("Port::PortFullyNPipe::ProcessPendingRequest ::Entering at clock cycle %llu\n", globalClock);
   // Called at start of each cycle - process queued requests
   // With PORT_STRICT_PRIORITY: priority order (low ID first)
   // Without PORT_STRICT_PRIORITY: FIFO order (insertion order)
@@ -193,12 +199,12 @@ void PortFullyNPipe::processPendingRequests() {
 
     Time_t when = lTime;
     if (freeUnits > 0) {
-      printf("Port::PortFullyNPipe::ProcessPendingRequest:After freeUnits-- is %d at clock cycle %ld\n", freeUnits, globalClock);
+      printf("Port::PortFullyNPipe::ProcessPendingRequest:After freeUnits-- is %d at clock cycle %llu\n", freeUnits, globalClock);
       freeUnits--;
     } else {
       lTime++;
       freeUnits = nUnitsMinusOne;
-      printf("Port::PortFullyNPipe::ProcessPendingRequest:After freeUnits is %d at clock cycle %ld\n", freeUnits, globalClock);
+      printf("Port::PortFullyNPipe::ProcessPendingRequest:After freeUnits is %d at clock cycle %llu\n", freeUnits, globalClock);
     }
 
     avgTime.sample(when - globalClock, req.enable_stats);

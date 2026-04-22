@@ -97,7 +97,7 @@ TEST_F(Port_test, priority_deferred_allocation) {
   // Second request should need retry (port busy)
   auto [when2, retry2] = port->tryNextSlot(true, 101);
   EXPECT_EQ(when2, 1ULL);  // Would be allocated at cycle 1
-  EXPECT_TRUE(retry2);  // Retry needed
+  EXPECT_TRUE(retry2);     // Retry needed
 }
 
 TEST_F(Port_test, priority_ordering_single_unit) {
