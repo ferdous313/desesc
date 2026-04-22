@@ -151,7 +151,7 @@ protected:
     (void)total;
   };
   void dump_calledge(TimeDelta_t lat) { (void)lat; }
-  void upce() {};
+  void upce(){};
 #endif
   static MemRequest* create(MemObj* m, Addr_t addr, bool keep_stats, CallbackBase* cb);
 
@@ -380,9 +380,9 @@ public:
 
   static void sendReqWritePrefetch(MemObj* m, bool keep_stats, Addr_t addr, CallbackBase* cb = nullptr) {
     MemRequest* mreq = create(m, addr, keep_stats, cb);
-        mreq->mt      = mt_req;
-    mreq->ma      = ma_setDirty;
-    mreq->ma_orig = mreq->ma;
+    mreq->mt         = mt_req;
+    mreq->ma         = ma_setDirty;
+    mreq->ma_orig    = mreq->ma;
     m->req(mreq);
   }
 
@@ -460,7 +460,7 @@ public:
     mreq->topCoherentNode = creator;
     m->disp(mreq);
   }
-    static void sendCleanDisp(MemObj* m, MemObj* creator, Addr_t addr, bool prefetch, bool keep_stats) {
+  static void sendCleanDisp(MemObj* m, MemObj* creator, Addr_t addr, bool prefetch, bool keep_stats) {
     MemRequest* mreq = create(m, addr, keep_stats, nullptr);
     mreq->mt         = mt_disp;
     mreq->ma         = ma_setValid;

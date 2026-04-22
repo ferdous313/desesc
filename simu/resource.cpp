@@ -348,7 +348,6 @@ void FULoad::do_load_execution(Time_t when, Dinst* dinst) {
       pref->exe(dinst);
     }
   } else {
-    
     /* }}} */
 
     cacheDispatchedCB::scheduleAbs(when_sched, this, dinst, dinst->getID());
@@ -378,7 +377,7 @@ void FULoad::cacheDispatched(Dinst* dinst) {
                                    dinst,
                                    performed_spec_CB::create(this, dinst));
 #else
-    printf("Resource::cacheDispatched::SPEC_LOAD_SCB_ALL::PerformedCB::sendSpecL1LoadREAD cache::dinst  %ld\n", dinst->getID());
+    printf("Resource::cacheDispatched::SPEC_LOAD_SCB_ALL::PerformedCB::sendSpecL1LoadREAD cache::dinst  %llu\n", dinst->getID());
     printf("FULoad::Resource::Cachedispatched::dinst  %llu and clock cycle %llu \n", dinst->getID(), globalClock);
     dinst->set_load_scb_all();
     MemRequest::sendSpecReqDL1Read(firstLevelMemObj,
@@ -795,12 +794,6 @@ void FUStore::executed(Dinst* dinst) {
   }
 
   cluster->executed(dinst);
-  /*  #ifdef ENABLE_SCB_ALL
-  //Basic SCB is on
-      scb->add_st(dinst);
-     //if(!dinst->is_spec()){
-       performed(dinst);
-  #endif*/
 }
 
 bool FUStore::preretire(Dinst* dinst, bool flushing) {
@@ -841,7 +834,7 @@ bool FUStore::preretire(Dinst* dinst, bool flushing) {
 #else
   /*SCB is not  used here*/
   if (enableDcache && !dinst->isTransient() && !dinst->is_spec()) {
-    printf("FUStore::Resource::preretire() sendReqWrite for dinst  %ld\n", dinst->getID());
+    printf("FUStore::Resource::preretire() sendReqWrite for dinst  %llu\n", dinst->getID());
     MemRequest::sendReqWrite(firstLevelMemObj,
                              dinst->has_stats(),
                              dinst->getAddr(),
