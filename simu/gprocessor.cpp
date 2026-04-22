@@ -11,6 +11,7 @@
 #include "fetchengine.hpp"
 #include "fmt/format.h"
 #include "gmemory_system.hpp"
+#include "port.hpp"
 #include "report.hpp"
 #include "tracer.hpp"
 
@@ -166,11 +167,18 @@ void GProcessor::flush_transient_inst_on_fetch_ready() {
   pipeQ.pipeLine.flush_transient_inst_from_received_bucket();
   flush_transient_from_rob();
   flush_transient_from_scb();
+  flush_transient_ports();
 }
 
 void GProcessor::flush_transient_from_scb() {
   printf("gprocessor::flush_transient_scb on before new fetch!!!\n");
   scb->flush_transient();
+}
+
+void GProcessor::flush_transient_ports() {
+  for (auto& p : owned_ports) {
+    p->flush_transient();
+  }
 }
 
 void GProcessor::dump_rob()

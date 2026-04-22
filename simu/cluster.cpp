@@ -54,8 +54,9 @@ std::shared_ptr<Resource> Cluster::buildUnit(const std::string& clusterName, uin
     UnitEntry e;
     e.num = Config::get_integer(sUnitName, "num", 0, 1024);
 
-    e.gen = PortGeneric::create(unitName, e.num);
-    gen   = e.gen;
+    e.gen = PortGeneric::create(unitName, e.num, /*priority_managed=*/true);
+    gproc->register_owned_port(e.gen);
+    gen = e.gen;
 
     unitMap[unitName] = e;
   }
@@ -190,6 +191,8 @@ std::pair<std::shared_ptr<Cluster>, Opcode_array<std::shared_ptr<Resource>>> Clu
     I(recycleAt == "executed");
     cluster = std::make_shared<ExecutedCluster>(clusterName, pos, cpuid);
   }
+
+  gproc->register_owned_port(cluster->window.get_sched_port());
 
   cluster->nRegs     = Config::get_integer(clusterName, "num_regs", 2, 262144);
   cluster->regPool   = cluster->nRegs;

@@ -325,7 +325,7 @@ frequency_mhz = 1000
 #do_random_transients = true
 bpred         = ["bp0", "bp1", "bp2"]
 #bpred         = ["bp2"]
-do_random_transients = false
+do_random_transients = true
 #do_random_transients = true
 
 # Fetch parameters

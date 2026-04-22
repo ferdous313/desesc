@@ -33,6 +33,7 @@
 #include "wavesnap.hpp"
 
 class BPredictor;
+class PortGeneric;
 
 struct SMT_fetch {
   std::vector<std::shared_ptr<FetchEngine>> fe;
@@ -54,6 +55,8 @@ struct SMT_fetch {
 
 class GProcessor : public Simu_base {
 private:
+  std::vector<std::shared_ptr<PortGeneric>> owned_ports;
+
 protected:
   const int32_t FetchWidth;
   const int32_t IssueWidth;
@@ -153,6 +156,9 @@ public:
 
   void flush_transient_from_rob();
   void flush_transient_from_scb();
+  void flush_transient_ports();
+
+  void register_owned_port(std::shared_ptr<PortGeneric> p) { owned_ports.push_back(std::move(p)); }
   void dump_rob();
   void report(const std::string& str);
 

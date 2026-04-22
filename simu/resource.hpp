@@ -153,7 +153,7 @@ private:
   Stats_cntr tso2Replay;
 #endif
 
-  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+
   void do_load_execution(Time_t when, Dinst* dinst);
 
 protected:
@@ -182,7 +182,7 @@ private:
   int32_t freeEntries;
   bool    enableDcache;
 
-  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+
   void do_store_execution(Time_t when, Dinst* dinst);
 
 public:
@@ -204,7 +204,7 @@ public:
 
 class FUGeneric : public Resource {
 private:
-  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+
   void do_generic_execution(Time_t when, Dinst* dinst);
 
 protected:
@@ -229,7 +229,7 @@ private:
   bool        drainOnMiss;
   TimeDelta_t bpred_delay;
 
-  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+
   void do_branch_execution(Time_t when, Dinst* dinst);
 
 protected:
@@ -255,7 +255,7 @@ private:
   Stats_cntr imemoryBarrier;
   Time_t     blockUntil;
 
-  // Helper to avoid code duplication in tryNextSlot immediate vs queued paths
+
   void do_ralu_execution(Time_t when, Dinst* dinst);
 
 protected:

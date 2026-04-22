@@ -288,17 +288,10 @@ StallCause FULoad::canIssue(Dinst* dinst) {
 
 void FULoad::executing(Dinst* dinst) {
   /* executing {{{1 */
-
-  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
-
-  if (!needs_retry) {
-    do_load_execution(when, dinst);
-  } else {
-    // Resource busy - queue for priority-based retry
-    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
-      do_load_execution(allocated_time, dinst);
-    });
-  }
+  gen->schedule(dinst->has_stats(),
+                dinst->getID(),
+                dinst->isTransient(),
+                [this, dinst](Time_t allocated_time) { do_load_execution(allocated_time, dinst); });
 }
 
 /* }}} */
@@ -750,16 +743,10 @@ void FUStore::executing(Dinst* dinst) {
 
   cluster->executing(dinst);
 
-  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
-
-  if (!needs_retry) {
-    do_store_execution(when, dinst);
-  } else {
-    // Resource busy - queue for priority-based retry
-    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
-      do_store_execution(allocated_time, dinst);
-    });
-  }
+  gen->schedule(dinst->has_stats(),
+                dinst->getID(),
+                dinst->isTransient(),
+                [this, dinst](Time_t allocated_time) { do_store_execution(allocated_time, dinst); });
 }
 /* }}} */
 
@@ -940,16 +927,10 @@ StallCause FUGeneric::canIssue(Dinst* dinst) {
 
 void FUGeneric::executing(Dinst* dinst) {
   /* executing {{{1 */
-  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
-
-  if (!needs_retry) {
-    do_generic_execution(when, dinst);
-  } else {
-    // Resource busy - queue for priority-based retry
-    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
-      do_generic_execution(allocated_time, dinst);
-    });
-  }
+  gen->schedule(dinst->has_stats(),
+                dinst->getID(),
+                dinst->isTransient(),
+                [this, dinst](Time_t allocated_time) { do_generic_execution(allocated_time, dinst); });
 }
 /* }}} */
 
@@ -1039,20 +1020,10 @@ StallCause FUBranch::canIssue(Dinst* dinst) {
 
 void FUBranch::executing(Dinst* dinst) {
   /* executing {{{1 */
-  printf("Resource::FUBranch::::Executing ::Entering Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
-
-  if (!needs_retry) {
-    printf("Resource::FUBranch::::Executing::!needs_retry:::Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-    do_branch_execution(when, dinst);
-  } else {
-    printf("Resource::FUBranch::::Executing ::needs_retry:::Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-    // Resource busy - queue for priority-based retry
-    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
-      do_branch_execution(allocated_time, dinst);
-    });
-  }
-  printf("Resource::FUBranch::::Executing ::Leaving Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+  gen->schedule(dinst->has_stats(),
+                dinst->getID(),
+                dinst->isTransient(),
+                [this, dinst](Time_t allocated_time) { do_branch_execution(allocated_time, dinst); });
 }
 /* }}} */
 
@@ -1174,28 +1145,10 @@ StallCause FURALU::canIssue(Dinst* dinst)
 
 void FURALU::executing(Dinst* dinst) {
   /*executing {{{1 */
-  printf("Resource::FURALU::::Executing : Entering  Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-  if (dinst->is_flush_transient()) {
-  }
-
-  auto [when, needs_retry] = gen->tryNextSlot(dinst->has_stats(), dinst->getID());
-  printf("Resource::FURALU::::Executing : after  gen->tryNextSlot Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-
-  if (!needs_retry) {
-    printf("Resource::FURALU::::Executing : !needs_retry::Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-    do_ralu_execution(when, dinst);
-  } else {
-    // Resource busy - queue for priority-based retry
-    printf("Resource::FURALU::::Executing : needs_retry=TRUE::Resource busy::Inst %llu at clock cycle %llu\n",
-           dinst->getID(),
-           globalClock);
-    gen->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
-      do_ralu_execution(allocated_time, dinst);
-    });
-    printf("Resource::FURALU::Executing:: Leaving  Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-  }
-
-  // Recommended poweron the GPU threads and then poweroff the QEMU thread?
+  gen->schedule(dinst->has_stats(),
+                dinst->getID(),
+                dinst->isTransient(),
+                [this, dinst](Time_t allocated_time) { do_ralu_execution(allocated_time, dinst); });
 }
 /* }}} */
 

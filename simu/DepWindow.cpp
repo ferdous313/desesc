@@ -13,7 +13,7 @@ DepWindow::DepWindow(uint32_t cpuid, int src_id, const std::string& clusterName,
     : src_cluster_id(src_id), inter_cluster_fwd(fmt::format("P({})_{}{}_inter_cluster_fwd", cpuid, clusterName, pos)) {
   auto cadena    = fmt::format("P(P{}_{}{}_sched", cpuid, clusterName, pos);
   auto sched_num = Config::get_integer(clusterName, "sched_num");
-  schedPort      = PortGeneric::create(cadena, sched_num);
+  schedPort      = PortGeneric::create(cadena, sched_num, /*priority_managed=*/true);
 
   sched_lat         = Config::get_integer(clusterName, "sched_lat", 0, 32);
   inter_cluster_lat = Config::get_integer("soc", "core", cpuid, "inter_cluster_lat");
@@ -52,23 +52,10 @@ void DepWindow::preSelect(Dinst* dinst) {
 }
 
 void DepWindow::select(Dinst* dinst) {
-  printf("DepWindow::::Select Entering Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-  auto [when, needs_retry] = schedPort->tryNextSlot(dinst->has_stats(), dinst->getID());
-  printf("DepWindow::schedPort completed Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-
-  if (!needs_retry) {
-    printf("DepWindow::::Select !need_retry : sending to do_schedule Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
-    do_schedule(when, dinst);
-  } else {
-    // Resource busy - queue for priority-based retry
-    printf("DepWindow::Select need_retry:Resource busy - queue for priority-based retry Inst %llu at clock cycle %llu\n",
-           dinst->getID(),
-           globalClock);
-    schedPort->queueRequest(dinst->has_stats(), dinst->getID(), [this, dinst](Time_t allocated_time) {
-      do_schedule(allocated_time, dinst);
-    });
-  }
-  printf("DepWindow::::Select Leaving Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+  schedPort->schedule(dinst->has_stats(),
+                      dinst->getID(),
+                      dinst->isTransient(),
+                      [this, dinst](Time_t allocated_time) { do_schedule(allocated_time, dinst); });
 }
 
 void DepWindow::do_schedule(Time_t when, Dinst* dinst) {
