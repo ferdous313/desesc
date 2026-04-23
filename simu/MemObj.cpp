@@ -64,7 +64,6 @@ void MemObj::addLowerLevel(MemObj* obj) {
 }
 
 void MemObj::addUpperLevel(MemObj* obj) {
-  // printf("%s upper level is %s\n",getName(),obj->getName());
   router->addUpNode(obj);
 }
 

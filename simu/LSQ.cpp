@@ -41,7 +41,6 @@ Dinst* LSQFull::executing(Dinst* dinst)
     // inst->dump("Executed");
     Dinst* qdinst = instIt->second;
     if (qdinst == dinst) {
-      // printf("LSQFull::executing::NOTunresolve-- :: qdinst==dinst dinstID %ld\n", dinst->getID());
       continue;
     }
 
@@ -67,7 +66,6 @@ Dinst* LSQFull::executing(Dinst* dinst)
     }
   }  // map_for_loop_end
 
-  // printf("LSQFull::executing::unresolve-- dinstID %ld\n", dinst->getID());
   unresolved--;
   I(!dinst->isExecuted());  // first clear, then mark executed
   return faulty;
@@ -132,7 +130,6 @@ Dinst* LSQNone::executing(Dinst* dinst)
   I(addrTable[i] == dinst);
   addrTable[i] = 0;
 
-  // printf("LSQNone::executing::unresolve-- dinstID %ld\n", dinst->getID());
   unresolved--;
   return 0;
 }
@@ -163,7 +160,6 @@ bool LSQVPC::insert(Dinst* dinst)
 Dinst* LSQVPC::executing(Dinst* dinst) {
   (void)dinst;
   I(0);
-  // printf("LSQVPC::executing::unresolve-- dinstID %ld\n", dinst->getID());
   unresolved--;
   return 0;
 }

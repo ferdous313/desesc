@@ -63,7 +63,7 @@ private:
 public:
   DOLC(int d, int o, int l, int c) : depth(d), olderBits(o), lastBits(l), currBits(c) {
     if (o > 63 || l > 63 || c > 63) {
-      printf("ERROR: DOLC out of limits 64bits per entry\n");
+      // printf("ERROR: DOLC out of limits 64bits per entry\n");
       exit(-1);
     }
 

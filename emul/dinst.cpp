@@ -219,12 +219,12 @@ void Dinst::destroy() {
   resource = nullptr;
   cluster  = nullptr;
   dInstPool.in(this);
-  printf("Dinst::Destroy() :: dinst  %llu\n", getID());
+  // printf("Dinst::Destroy() :: dinst  %llu\n", getID());
 }
 void Dinst::destroyTransientInst() {
   I(first == nullptr);
 
-  printf("Dinst::DestroyTransientInst() :: dinst  %llu\n", getID());
+  // printf("Dinst::DestroyTransientInst() :: dinst  %llu\n", getID());
   Tracer::flush(this);
   resource = nullptr;
   cluster  = nullptr;

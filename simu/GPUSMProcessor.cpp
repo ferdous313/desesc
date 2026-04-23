@@ -131,7 +131,6 @@ StallCause GPUSMProcessor::add_inst(Dinst* dinst) {
   // dinst->dump("");
 
   inst_perpe_percyc[dinst->getPE()] = true;
-  // MSG("Setting Dinst %lld PE-%d, GlobalClock = %lld ",dinst->getID(), dinst->getPE(),globalClock);
 
   nInst[inst->getOpcode()]->inc(dinst->has_stats());
 

@@ -910,8 +910,8 @@ bool OoOProcessor::is_load_spec(Dinst* dinst_load) {
   auto robSize = ROB.size();
   if (robSize > 0) {
     for (uint32_t i = 0u; i < robSize; i++) {
-      uint32_t pos = ROB.getIDFromTop(i);
-            Dinst* dinst = ROB.getData(pos);
+      uint32_t pos   = ROB.getIDFromTop(i);
+      Dinst*   dinst = ROB.getData(pos);
       if (dinst->getInst()->isMemory()) {
         if (!dinst->isExecuting()) {
           mem_unresolved.push_back(pos);

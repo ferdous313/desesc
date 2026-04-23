@@ -124,7 +124,7 @@ bool StoreSet::insert(Dinst* dinst)
   const Instruction* inst = dinst->getInst();
 
   if (inst->isStoreAddress()) {
-    printf("Store Address passed to StoreSet insert. exit\n");
+    // printf("Store Address passed to StoreSet insert. exit\n");
     exit(1);
   }
   I(!dinst->isExecuted());

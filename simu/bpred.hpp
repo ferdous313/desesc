@@ -142,12 +142,12 @@ public:
       taken_counter++;  // increase after predict
     }
     if (pred == Outcome::None) {
-      printf("***************BPred.hpp::dopredict:: Leaving********************\n");
+      // printf("***************BPred.hpp::dopredict:: Leaving********************\n");
       return pred;
     }
 
     if (dinst->getInst()->isJump()) {
-      printf("***************BPred.hpp::dopredict:: Leaving********************\n");
+      // printf("***************BPred.hpp::dopredict:: Leaving********************\n");
       return pred;
     }
 
@@ -160,7 +160,7 @@ public:
     nHit.inc(pred == Outcome::Correct && dinst->has_stats() && doStats);
     nMiss.inc(pred == Outcome::Miss && dinst->has_stats() && doStats);
 
-    printf("***************BPred.hpp::dopredict:: Leaving********************\n\n\n");
+    // printf("***************BPred.hpp::dopredict:: Leaving********************\n\n\n");
     return pred;
   }
 

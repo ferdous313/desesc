@@ -74,7 +74,6 @@ void BimodalStride::update(Addr_t pc, Addr_t naddr) {
 
   table[get_index(pc)].addr = naddr;
 
-  // printf("UPDATE pc:%llx addr:%llx last:%llx delta:%d\n", pc, naddr, la, ndelta);
   update_delta(pc, ndelta);
 }
 
@@ -339,12 +338,12 @@ Addr_t Tage_address_predictor::predict(Addr_t pc, int distance, bool inLines) {
 
 #ifdef DEBUG_STRIDESO2
     if (pc == 0x12000e220) {
-      printf("dist:%d addr:%llx pred_delta:%d delta:%d conf:%d\n",
-             i,
-             addr,
-             pred_delta,
-             (int)addr - (int)last[get_last_index(pc)].addr,
-             pred_conf);
+      // printf("dist:%d addr:%llx pred_delta:%d delta:%d conf:%d\n",
+             // i,
+             // addr,
+             // pred_delta,
+             // (int)addr - (int)last[get_last_index(pc)].addr,
+             // pred_conf);
     }
 #endif
 
@@ -393,14 +392,14 @@ Conf_level Tage_address_predictor::exe_update(Addr_t pc, Addr_t addr, Data_t dat
 
 #ifdef DEBUG_STRIDESO2
   if (pc == 0x12000e220) {
-    printf("pc:%llx addr:%llx pred_delta:%d delta:%d conf:%d a:%d h:%d\n",
-           pc,
-           addr,
-           pred_delta,
-           ndelta,
-           pred_conf,
-           alt_bank,
-           hit_bank);
+    // printf("pc:%llx addr:%llx pred_delta:%d delta:%d conf:%d a:%d h:%d\n",
+           // pc,
+           // addr,
+           // pred_delta,
+           // ndelta,
+           // pred_conf,
+           // alt_bank,
+           // hit_bank);
   }
 #endif
 

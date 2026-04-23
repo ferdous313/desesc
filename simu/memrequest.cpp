@@ -191,8 +191,8 @@ void MemRequest::rawdump_calledge(TimeDelta_t lat, Time_t total) {
     return;
   }
 
-  printf("digraph path{\n");
-  printf("  ce [label=\"0x%x addr id %llu delta %lu @%lld\"]\n", (unsigned int)addr, id, total, (long long)globalClock);
+  // printf("digraph path{\n");
+  // printf("  ce [label=\"0x%x addr id %llu delta %lu @%lld\"]\n", (unsigned int)addr, id, total, (long long)globalClock);
 
   CacheDebugAccess* c = CacheDebugAccess::getInstance();
   c->mapReset();
@@ -227,7 +227,7 @@ void MemRequest::rawdump_calledge(TimeDelta_t lat, Time_t total) {
     // get START NAME
     k = 0;
     if (ce.s == 0) {
-      printf("  CPU ");
+      // printf("  CPU ");
     } else {
       name = ce.s->getName();
       for (int j = 0; name[j] != 0; j++) {
@@ -236,7 +236,7 @@ void MemRequest::rawdump_calledge(TimeDelta_t lat, Time_t total) {
         }
       }
       gname[k] = 0;
-      printf("  %s", gname);
+      // printf("  %s", gname);
 
       c->setCacheAccess(gname);
     }
@@ -249,18 +249,18 @@ void MemRequest::rawdump_calledge(TimeDelta_t lat, Time_t total) {
       }
     }
     gname[k] = 0;
-    printf(" -> %s", gname);
+    // printf(" -> %s", gname);
 
     if (last_tismo == 0xdeadbeef) {
       last_tismo = ce.tismo;
     }
-    printf(" [label=\"%d%s_%s_%lld_d%d\"]\n", (int)i, t, a, (long long int)ce.tismo, (int)(ce.tismo - last_tismo));
+    // printf(" [label=\"%d%s_%s_%lld_d%d\"]\n", (int)i, t, a, (long long int)ce.tismo, (int)(ce.tismo - last_tismo));
     last_tismo = ce.tismo;
   }
-  printf("  %s -> CPU [label=\"%dRA%d\"]\n", gname, (int)calledge.size(), lat);
+  // printf("  %s -> CPU [label=\"%dRA%d\"]\n", gname, (int)calledge.size(), lat);
 
-  printf("  {rank=same; P0DL1 P0IL1 P1DL1 P1IL1}\n");
-  printf("}\n");
+  // printf("  {rank=same; P0DL1 P0IL1 P1DL1 P1IL1}\n");
+  // printf("}\n");
 }
 
 void MemRequest::upce() {

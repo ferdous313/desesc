@@ -39,14 +39,14 @@ void DepWindow::preSelect(Dinst* dinst) {
   // At the end of the wakeUp, we can start to read the register file
   I(!dinst->hasDeps());
 
-  printf("DepWindow::::Preselect Entering preSelect Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::::Preselect Entering preSelect Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
   dinst->markIssued();
-  printf("DepWindow::::Preselect markIsssue Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::::Preselect markIsssue Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
   Tracer::stage(dinst, "WS");
-  printf("DepWindow::::Preselect WS done Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::::Preselect WS done Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
 
   I(dinst->getCluster());
-  printf("DepWindow::::Preselect Sending to Cluster Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::::Preselect Sending to Cluster Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
 
   dinst->getCluster()->select(dinst);
 }
@@ -59,32 +59,31 @@ void DepWindow::select(Dinst* dinst) {
 }
 
 void DepWindow::do_schedule(Time_t when, Dinst* dinst) {
-  printf("DepWindow::::do_schedule Entering  Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::::do_schedule Entering  Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
   Time_t schedTime = when;
   if (dinst->hasInterCluster()) {
-    printf("DepWindow::::do_schedule   inter_cluster_lat Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+    // printf("DepWindow::::do_schedule   inter_cluster_lat Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
     schedTime += inter_cluster_lat;
-    printf("DepWindow::::do_schedule::inter_cluster::  Inst %llu  schedTime= %llu at clock cycle %llu\n",
-           dinst->getID(),
-           schedTime,
-           globalClock);
+    // printf("DepWindow::::do_schedule::inter_cluster::  Inst %llu  schedTime= %llu at clock cycle %llu\n",
+           // dinst->getID(),
+           // schedTime,
+           // globalClock);
   } else {
-    printf("DepWindow::::do_schedule sched_lat Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+    // printf("DepWindow::::do_schedule sched_lat Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
     schedTime += sched_lat;
-    printf("DepWindow::::do_schedule::scheduled::  Inst %llu  schedTime= %llu at clock cycle %llu\n",
-           dinst->getID(),
-           schedTime,
-           globalClock);
+    // printf("DepWindow::::do_schedule::scheduled::  Inst %llu  schedTime= %llu at clock cycle %llu\n",
+           // dinst->getID(),
+           // schedTime,
+           // globalClock);
   }
 
   I(src_cluster_id == dinst->getCluster()->get_id());
   // only diff is the resource::receiving::schedTime same
-  printf("DepWindow:::do_shedule:: Sendingto  execution Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow:::do_shedule:: Sendingto  execution Inst %llui at clock cycle %llu\n", dinst->getID(), globalClock);
   Resource::executingCB::scheduleAbs(schedTime, dinst->getClusterResource().get(), dinst, dinst->getID());
 }
 
 void DepWindow::executed_flushed(Dinst* dinst) {
-  //  MSG("execute [0x%x] @%lld",dinst, globalClock);
 
   if (dinst->isTransient()) {
     dinst->markExecutedTransient();
@@ -93,14 +92,13 @@ void DepWindow::executed_flushed(Dinst* dinst) {
   }
 
   dinst->clearRATEntry();
-  printf("Resource::DepWindow::Entering   dinst  %llu\n", dinst->getID());
+  // printf("Resource::DepWindow::Entering   dinst  %llu\n", dinst->getID());
   Tracer::stage(dinst, "WB");
 }
 
 // Called when dinst finished execution. Look for dependent to wakeUp
 void DepWindow::executed(Dinst* dinst) {
-  //  MSG("execute [0x%x] @%lld",dinst, globalClock);
-  printf("DepWindow::Executed:: Entering  executed for instID %llu at @Clockcycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::Executed:: Entering  executed for instID %llu at @Clockcycle %llu\n", dinst->getID(), globalClock);
 
   if (!dinst->isTransient()) {
     I(!dinst->hasDeps());
@@ -112,16 +110,14 @@ void DepWindow::executed(Dinst* dinst) {
     dinst->markExecuted();
   }
 
-  printf("DepWindow::::Executed mark_executed Inst %llu\n", dinst->getID());
+  // printf("DepWindow::::Executed mark_executed Inst %llu\n", dinst->getID());
   dinst->clearRATEntry();
-  printf("DepWindow::::Executed clear RAT  Inst %llu\n", dinst->getID());
-  printf("Resource::DepWindow::Stage WB  dinst  %llu\n", dinst->getID());
+  // printf("DepWindow::::Executed clear RAT  Inst %llu\n", dinst->getID());
+  // printf("Resource::DepWindow::Stage WB  dinst  %llu\n", dinst->getID());
   Tracer::stage(dinst, "WB");
-  // printf("DepWindow::::Executed stage WB Inst %ld\n", dinst->getID());
 
   // if (!dinst->hasPending() || dinst->isTransient()) {
   if (!dinst->hasPending()) {  //(dinst->first !=0)
-    // printf("DepWindow::::Executed Inst %ld has !dinst->hasPending\n", dinst->getID());
     return;
   }
 
@@ -155,28 +151,27 @@ void DepWindow::executed(Dinst* dinst) {
       I(dstReady->getCluster());
       auto dst_cluster_id = dstReady->getCluster()->get_id();
       I(dst_cluster_id);
-      printf("DepWindow::::Executed  dstReady Inst is Inst %llu\n", dstReady->getID());
-      printf("DepWindow::::Executed DstReadyInst clusterID is  %d and src_cluster_id is %d\n", dst_cluster_id, src_cluster_id);
+      // printf("DepWindow::::Executed  dstReady Inst is Inst %llu\n", dstReady->getID());
+      // printf("DepWindow::::Executed DstReadyInst clusterID is  %d and src_cluster_id is %d\n", dst_cluster_id, src_cluster_id);
 
       if (dst_cluster_id != src_cluster_id) {
-        printf("DepWindow::::Executed DstReadyInst clusterID!=src_cluster_id::dst_cluster_id is %d and src_cluster_id is %d\n",
-               dst_cluster_id,
-               src_cluster_id);
+        // printf("DepWindow::::Executed DstReadyInst clusterID!=src_cluster_id::dst_cluster_id is %d and src_cluster_id is %d\n",
+               // dst_cluster_id,
+               // src_cluster_id);
         inter_cluster_fwd.inc(dstReady->has_stats());
         dstReady->markInterCluster();
-        printf("DepWindow::::Executed markInterCluster DstReadyInst markInterCluster for dstReady Inst %llu\n", dstReady->getID());
+        // printf("DepWindow::::Executed markInterCluster DstReadyInst markInterCluster for dstReady Inst %llu\n", dstReady->getID());
       } else {
-        printf("DepWindow::::Executed !markInterCluster DstReadyInst !markInterCluster for dstReady Inst %llu\n",
-               dstReady->getID());
+        // printf("DepWindow::::Executed !markInterCluster DstReadyInst !markInterCluster for dstReady Inst %llu\n",
+               // dstReady->getID());
       }
 
       // need todo resetInterCluster()
-      printf("DepWindow::::Executed dependency: DstReady sent to preselect :dstReadyInst %llu\n", dstReady->getID());
+      // printf("DepWindow::::Executed dependency: DstReady sent to preselect :dstReadyInst %llu\n", dstReady->getID());
       preSelect(dstReady);
     }
   }
-  printf("DepWindow::Executed:: Leaving  executed for instID %llu at @Clockcycle %llu\n", dinst->getID(), globalClock);
+  // printf("DepWindow::Executed:: Leaving  executed for instID %llu at @Clockcycle %llu\n", dinst->getID(), globalClock);
 
   // dinst->flushfirst();//parent->first=0
-  // printf("DepWindow::::Executed Exiting Transient Inst %ld\n", dinst->getID());
 }
