@@ -225,7 +225,7 @@ void Dinst::destroyTransientInst() {
   I(first == nullptr);
 
   printf("Dinst::DestroyTransientInst() :: dinst  %llu\n", getID());
-  Tracer::commit(this);
+  Tracer::flush(this);
   resource = nullptr;
   cluster  = nullptr;
 
