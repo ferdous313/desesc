@@ -325,7 +325,7 @@ frequency_mhz = 1000
 #do_random_transients = true
 bpred         = ["bp0", "bp1", "bp2"]
 #bpred         = ["bp2"]
-do_random_transients = false
+do_random_transients = true
 #do_random_transients = true
 
 # Fetch parameters
@@ -447,7 +447,7 @@ iSALU_SC      = "lsu"
 iSALU_ADDR    = "lsu"
 
 [dl1_cache]
-type       = "cache"   # or nice
+type       = "nice"   # or nice
 cold_misses = true
 size       = 65536
 line_size  = 64
