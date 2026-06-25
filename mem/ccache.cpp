@@ -148,10 +148,10 @@ CCache::CCache(Memory_system* gms, const std::string& sec, const std::string& n)
     prefetch_megaratio = 2.0;  // >1 means never active
   }
 
-  if (!allocateMiss && prefetch_megaratio < 1.0) {
+  /*if (!allocateMiss && prefetch_megaratio < 1.0) {
     Config::add_error(fmt::format("{} CCache prefetch_megaratio can be set only for allocateMiss caches", section));
     return;
-  }
+  } for freerunning caches Jose*/
 
   {
     int16_t lineSize2 = lineSize;
@@ -1210,9 +1210,8 @@ void CCache::tryPrefetch(Addr_t paddr, bool doStats, int degree, Addr_t pref_sig
   }
 
   // jose_original_prefetch_working
-  // if (!allocateMiss) {
-  // jose suggest
-  if (false && !allocateMiss) {
+   if (!allocateMiss) {
+  // jose suggest ::if (false && !allocateMiss) {
     Addr_t page_addr = (paddr >> 10) << 10;
     if (pref_sign != PSIGN_MEGA || page_addr != paddr) {
       nPrefetchHitBusy.inc(doStats);

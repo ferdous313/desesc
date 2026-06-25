@@ -59,10 +59,18 @@ Prefetcher::Prefetcher(MemObj* _l1, int hartid)
 void Prefetcher::exe(Dinst* dinst)
 /* forward bus read {{{1 */
 {
+  if(dinst->is_spec()){
+    //printf("Prefetcher::exe::Entering exe ()\n");
+  }
+
   if (apred == nullptr) {
     return;
   }
 
+  if(dinst->is_spec()){
+    //printf("Prefetcher::exe::Prefetcher is executed ()\n");
+  }
+  apred->ret_update(dinst->getPC(), dinst->getAddr(), dinst->getData());
   auto conf_level = apred->exe_update(dinst->getPC(), dinst->getAddr(), dinst->getData());
 
   if (pending_preq_pc == dinst->getPC() && pending_preq_conf > 4 * static_cast<int>(conf_level)) {
@@ -107,6 +115,9 @@ void Prefetcher::ret(Dinst* dinst)
     return;
   }
 
+  if(dinst->is_spec()){
+    printf("Prefetcher::ret::Prefetcher is updated at ret()\n");
+  }
   apred->ret_update(dinst->getPC(), dinst->getAddr(), dinst->getData());
 }
 // 1}}}

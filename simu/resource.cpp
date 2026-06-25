@@ -332,6 +332,9 @@ void FULoad::do_load_execution(Time_t when, Dinst* dinst) {
       dinst->set_load_scb_all();
       performedCB::scheduleAbs(when + LSDelay, this, dinst);
       dinst->markDispatched();
+      //jose prefetcher is called in isspec()
+      //pref->exe(dinst);
+      pref->exe(dinst);
 #endif
     } else if (dinst->is_safe()) {
       dinst->set_load_scb_all();
