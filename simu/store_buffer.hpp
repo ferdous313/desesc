@@ -12,6 +12,8 @@
 #include "opcode.hpp"
 #include "resource.hpp"
 
+// SCB SPEC buffer : directly L3->SCB //#define ENABLE_SCB_SPEC
+#define ENABLE_SCB_SPEC
 class MemObj;  // To break circular dependencies
 class FUStore;
 class Store_buffer_line {
@@ -24,7 +26,11 @@ public:
   std::vector<bool> word_present;  // FIXME: dinst does byte info
 
   Addr_t line_addr;
-
+  
+  bool   prefetch_line;       // true = this is a spec prefetch due to spec load, not a store
+  Addr_t inducing_spec_ld_addr;  // calc_line(load_addr) of the spec load that triggered this prefetch
+  
+  
   Store_buffer_line() { state = State::Invalid; }
 
   void init(size_t line_size, Addr_t addr) {
@@ -34,7 +40,27 @@ public:
     line_addr = addr;
     transient = false;
   }
+
+  // NEW: separate init path for a speculative prefetch line (no word_present needed -- never stored to)
+  void init_prefetch(Addr_t addr, Addr_t inducing_spec_ld_line) {
+    I(state == State::Invalid);
+    state              = State::Uncoherent;
+    line_addr          = addr;
+    transient          = true;
+    prefetch_line      = true;
+    inducing_spec_ld_addr = inducing_spec_ld_line;
+  }
+
+
   void set_waiting_wb() { state = State::Uncoherent; }
+  
+  void convert_to_store(size_t line_size) {  //NEW                                      
+    if (!prefetch_line) {
+      return;             
+    }                                                                                                                                                                 
+    word_present.assign(line_size >> 2, false);                                                                                                                       
+    prefetch_line = false;                                                
+  } 
 
   void add_st(Addr_t addr_off) {
     I((addr_off >> 2) < word_present.size());  // pass only the line offset
@@ -47,6 +73,7 @@ public:
   bool is_clean() const { return state == State::Clean; }
   void set_transient() { transient = true; }
   bool is_transient() const { return transient; }
+  bool is_prefetch_line() const { return prefetch_line; }
   bool is_waiting_wb() const { return state == State::Uncoherent; }
 };
 
@@ -88,4 +115,15 @@ public:
   void flush_transient();
 
   bool is_ld_forward(Addr_t ld_addr) const;
+ 
+  // NEW: prefetcher hook -- record a speculative prefetch line, tagged with the load that induced it
+  //void try_prefetch(Addr_t paddr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, Addr_t inducing_spec_load_addr);
+  void try_prefetch(Addr_t paddr, bool doStats, Addr_t pc, Addr_t inducing_spec_load_addr);
+
+  // NEW: callback fired when the prefetch's data arrives from memory
+  void prefetch_done(Addr_t paddr);
+
+  // NEW: called from FULoad::preretire() once the inducing spec load becomes safe
+  void promote_prefetch_scb_to_cache(Addr_t inducing_load_addr, MemObj* l1, bool doStats, Addr_t pc);
+
 };

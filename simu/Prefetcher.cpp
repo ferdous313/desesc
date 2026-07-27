@@ -9,16 +9,19 @@
 
 #include "config.hpp"
 #include "fetchengine.hpp"
+#include "store_buffer.hpp"
 #include "memobj.hpp"
 
 // #define PREFETCH_HIST 1
 
-Prefetcher::Prefetcher(MemObj* _l1, int hartid)
+Prefetcher::Prefetcher(MemObj* _l1, int hartid, std::shared_ptr<Store_buffer> _scb)
     /* constructor {{{1 */
     : DL1(_l1)
+    , scb(std::move(_scb))  
     , avgPrefetchNum(fmt::format("P({})_pref_avgPrefetchNum", hartid))
     , avgPrefetchConf(fmt::format("P({})_pref__avgPrefetchConf", hartid))
     , histPrefetchDelta(fmt::format("P({})_pref__histPrefetchDelta", hartid))
+    , inducing_spec_load(false)
     , nextPrefetchCB(this) {
   auto section = Config::get_string("soc", "core", hartid, "prefetcher");
 
@@ -89,6 +92,11 @@ void Prefetcher::exe(Dinst* dinst)
   pending_preq_pc   = dinst->getPC();
   pending_preq_conf = 4 * static_cast<int>(conf_level);
   pending_statsFlag = dinst->has_stats();
+  inducing_spec_load   = dinst->is_spec();  //NEW -- remember whether the inducing load is speculative
+  inducing_spec_load_addr = dinst->getAddr();  
+
+
+
   if (dinst->getChained()) {
     I(dinst->getFetchEngine());
     curPrefetch         = dinst->getChained();
@@ -168,11 +176,24 @@ void Prefetcher::nextPrefetch()
     histPrefetchDelta.sample((paddr - pending_preq_addr), pending_statsFlag, 1);
 #endif
     pending_preq_addr = paddr;
-    CallbackBase* cb  = 0;
-    if (pending_chain_fetch) {
-      cb = FetchEngine::chainPrefDoneCB::create(pending_chain_fetch, pending_preq_pc, curPrefetch + 4, paddr);
+    
+
+#ifdef ENABLE_SCB_SPEC                                                                        //NEW
+    if (inducing_spec_load && scb) {                                                              //NEW
+      // NEW: spec-induced prefetch -- stage it in the SCB (checked against L1 hit/miss inside
+      // add_prefetch), tagged with the load that induced it. Use pending_inducing_load_addr here,
+      // NOT pending_preq_addr -- that was just reassigned to paddr on the line above (fix 1).
+      //scb->try_prefetch(paddr, pending_statsFlag, curPrefetch, pref_sign, pending_preq_pc, inducing_spec_load_addr);  //NEW
+      scb->try_prefetch(paddr, pending_statsFlag, pending_preq_pc, inducing_spec_load_addr);  //NEW
+    } else                                                                                       //NEW
+#endif                                                                                            //NEW
+    {   
+      CallbackBase* cb  = 0;
+      if (pending_chain_fetch) {
+        cb = FetchEngine::chainPrefDoneCB::create(pending_chain_fetch, pending_preq_pc, curPrefetch + 4, paddr);
+      }
+      DL1->tryPrefetch(paddr, pending_statsFlag, curPrefetch, pref_sign, pending_preq_pc, cb);
     }
-    DL1->tryPrefetch(paddr, pending_statsFlag, curPrefetch, pref_sign, pending_preq_pc, cb);
   }
 
   if (paddr == pending_preq_addr) {  // Offset 0

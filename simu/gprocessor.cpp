@@ -58,7 +58,7 @@ GProcessor::GProcessor(std::shared_ptr<Gmemory_system> gm, Hartid_t i)
 
   scb        = std::make_shared<Store_buffer>(i, gm);
   storeset   = std::make_shared<StoreSet>(i);
-  prefetcher = std::make_shared<Prefetcher>(gm->getDL1(), i);
+  prefetcher = std::make_shared<Prefetcher>(gm->getDL1(), i, scb);
 
   use_stats = false;
 

@@ -244,25 +244,26 @@ void OoOProcessor::flushed(Dinst* dinst)
 }
 
 StallCause OoOProcessor::add_inst(Dinst* dinst) {
-  // if (dinst->isTransient()) {
-  //   printf("OOOProc::add_inst_Transient Entering for  dinstID %ld\n", dinst->getID());
-  // }
+   printf("OOOProc::add_inst Entering for  dinstID %ld at clockcycle%lu\n", dinst->getID(), globalClock);
+   if (dinst->isTransient()) {
+     printf("OOOProc::add_inst_Transient Entering for  dinstID %ld at clockcycle %lu\n", dinst->getID(), globalClock);
+   }
 
   if (dinst->getInst()->isLoad()) {
-    //printf("OOOProc::add_inst Load_add_inst for  dinstID %lu\n", dinst->getID());
+    printf("OOOProc::add_inst Load_add_inst for  dinstID %lu at clockcycle %lu \n", dinst->getID(), globalClock);
   }
   //printf("OOOProc::add_inst Entering for  dinstID %lu\n", dinst->getID());
   if (replayRecovering && dinst->getID() > replayID) {
-    //printf("OOOProc::add_inst::Replay stalls for  dinstID %lu\n", dinst->getID());
+    printf("OOOProc::add_inst::Replay stalls for  dinstID %lu\n", dinst->getID());
     Tracer::stage(dinst, "Wrep");
     return ReplaysStall;
   }
 
-  //printf("OOOProc::add_inst::ROBSIZE for  dinstID %lu is %zu\n", dinst->getID(), (ROB.size() + rROB.size()));
+  printf("OOOProc::add_inst::ROBSIZE for  dinstID %lu is %zu\n", dinst->getID(), (ROB.size() + rROB.size()));
   if ((ROB.size() + rROB.size()) >= (MaxROBSize - 1)) {
     Tracer::stage(dinst, "Wrob");
-    //printf("OOOProc::add_inst::smallrobstall for  dinstID %lu\n", dinst->getID());
-    //printf("OOOProc::add_inst::ROBSIZE for  dinstID %lu is %zu\n", dinst->getID(), ROB.size() + rROB.size());
+    printf("OOOProc::add_inst::smallrobstall for  dinstID %lu\n", dinst->getID());
+    printf("OOOProc::add_inst::ROBSIZE for  dinstID %lu is %zu\n", dinst->getID(), ROB.size() + rROB.size());
     return SmallROBStall;
   }
 
@@ -270,7 +271,7 @@ StallCause OoOProcessor::add_inst(Dinst* dinst) {
 
   if (nTotalRegs <= 0) {
     Tracer::stage(dinst, "Wreg");
-    //printf("OOOProc::add_inst::smallregstall for  dinstID %lu\n", dinst->getID());
+    printf("OOOProc::add_inst::smallregstall for  dinstID %lu\n", dinst->getID());
     return SmallREGStall;
   }
 
@@ -456,6 +457,7 @@ StallCause OoOProcessor::add_inst(Dinst* dinst) {
 
   I(!dinst->isExecuted());
 
+  printf("OOOPROCCESOR::add_inst : dinst->getCluster()->add_inst(dinst) for  instID %ld at clockcycle %lu\n", dinst->getID(), globalClock);
   dinst->getCluster()->add_inst(dinst);
   // printLimas
   if (!dinst->isExecuted()) {

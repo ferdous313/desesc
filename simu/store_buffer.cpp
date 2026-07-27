@@ -9,6 +9,7 @@
 #include "resource.hpp"
 
 using ownership_doneCB = CallbackMember1<Store_buffer, Addr_t, &Store_buffer::ownership_done>;
+using prefetch_doneCB = CallbackMember1<Store_buffer, Addr_t, &Store_buffer::prefetch_done>;
 
 Store_buffer::Store_buffer(Hartid_t hid, std::shared_ptr<Gmemory_system> ms) {
   std::vector<std::string> v      = absl::StrSplit(Config::get_string("soc", "core", hid, "il1"), ' ');
@@ -31,6 +32,72 @@ Store_buffer::Store_buffer(Hartid_t hid, std::shared_ptr<Gmemory_system> ms) {
   scb_clean_lines = scb_size;
   // scb_lines_num       = 0;
 }
+
+void Store_buffer::try_prefetch(Addr_t addr, bool doStats, Addr_t pc, Addr_t inducing_spec_ld_addr) {
+//void Store_buffer::try_prefetch(Addr_t addr, bool doStats, int degree, Addr_t pref_sign, Addr_t pc, Addr_t inducing_spec_ld_addr) {
+  
+  auto line_addr = calc_line(addr);
+
+  // if the line is already tracked (store, prior prefetch, etc.) don't clobber it
+  if (scb_lines_map.find(line_addr) != scb_lines_map.end()) {
+    return;
+  }
+
+  if (static_cast<int>(scb_lines_map.size()) > scb_size) {
+    remove_clean();
+  }
+
+  Store_buffer_line line;
+  line.init_prefetch(line_addr, calc_line(inducing_spec_ld_addr));
+
+  scb_lines_map.insert({line_addr, line});
+
+  if (dl1) {
+    CallbackBase* cb = prefetch_doneCB::create(this, addr);
+    //add send_req_read_prefetch
+    MemRequest::send_req_read_prefetch_scb(dl1, doStats, addr, pc, cb);
+  //static MemRequest* createReqReadPrefetch(MemObj* m, bool keep_stats, Addr_t addr, Addr_t pref_sign, int32_t degree, Addr_t pc,
+    //                                       CallbackBase* cb = 0) {
+      //DL1->tryPrefetch(paddr, pending_statsFlag, curPrefetch, pref_sign, pending_preq_pc, cb);
+    //MemRequest::sendReqReadPrefetch(dl1, doStats, addr, pref_sign, degree, pc, cb);
+  }
+}
+
+void Store_buffer::prefetch_done(Addr_t addr) {
+  auto line_addr = calc_line(addr);
+  auto it        = scb_lines_map.find(line_addr);
+  if (it != scb_lines_map.end() && it->second.is_prefetch_line()) {
+    it->second.set_clean();
+  }
+  // if not found: entry was already dropped (squash or promote_prefetch_for ran first) -- no-op
+}
+
+
+void Store_buffer::promote_prefetch_scb_to_cache(Addr_t inducing_ld_addr, MemObj* l1, bool doStats, Addr_t pc) {
+  Addr_t inducing_line = calc_line(inducing_ld_addr);
+  
+  for (auto it = scb_lines_map.begin(); it != scb_lines_map.end();) {                                                          
+       auto& line = it->second;                                                                                                   
+       if (!line.is_prefetch_line() || line.inducing_spec_ld_addr != inducing_line) {                                                
+         ++it;                                                                                                                    
+         continue;                                                                                                                
+          }                                                                                                                          
+       // line.inducing_spec_ld_addr == inducing_line                                                                                                                           
+       if (line.is_clean()) {     
+         Addr_t byte_addr = it->first << line_size_addr_bits;                                                                     
+         //MemRequest::sendReqWrite(dl1, dinst->has_stats(), st_addr, dinst->getPC(), cb);
+         MemRequest::send_req_write_prefetch_scb(l1, doStats, byte_addr, pc);
+         //write to L1 cache + delete from SCB the prefetched lines.
+       }
+      // if still Uncoherent (fetch in flight), drop it below --
+      // prefetch_done() will find no entry and no-op when it eventually fires
+      // if !(line.is_clean() do ++iterator and then erase iterator; otherwise returns null )
+       auto erase_it = it;
+       it++;
+       scb_lines_map.erase(erase_it);                                                                                              
+  }
+}
+  
 
 bool Store_buffer::can_accept_st(Addr_t st_addr) const {
   /* scb_clean_lines can be wrtiteback to L1cache and new entry can be accepted*/
@@ -89,7 +156,7 @@ void Store_buffer::remove_clean() {
 
   absl::erase_if(scb_lines_map, [&num](std::pair<const Addr_t, Store_buffer_line> p) {
     // if (p.second.is_safe()) { stores safe only can be write back to L1cache from scb_spec
-    if (p.second.is_clean()) {
+    if (p.second.is_clean() || p.second.is_prefetch_line()) {
       // printf("Store_buffer::remove_clean():: Removing  st_addr_line %llu from scb\n", p.first);
       ++num;
       return true;
@@ -192,6 +259,7 @@ void Store_buffer::set_clean_scb(Dinst* dinst) {
   // printf("Store_buffer::set_clean_scb::: AFter scb.size() %ld and scb_clean%d\n", scb_lines_map.size(), scb_clean_after);
   // printf("Store_buffer::set_clean_scb:: After scb_clean is  %d \n", scb_clean);
 }
+ 
 
 void Store_buffer::add_st(Dinst* dinst) {
   auto st_addr = dinst->getAddr();
@@ -256,6 +324,10 @@ void Store_buffer::add_st(Dinst* dinst) {
   // printf("Store_buffer::add_st::SCB already have this addr for store st_addr %llu and st_addr_line %llu\n",
          // st_addr,
          // calc_line(st_addr));
+  
+  
+  //Store_buffer::add_st(), existing-entry may be as prefetch/ previous st/ld:change the prefetch entry to->st entry
+  it->second.convert_to_store(line_size);
   it->second.add_st(calc_offset(st_addr));
   if (it->second.is_waiting_wb()) {
     // printf(
@@ -306,7 +378,7 @@ void Store_buffer::ownership_done(Addr_t st_addr) {
 
 bool Store_buffer::is_ld_forward(Addr_t addr) const {
   const auto it = scb_lines_map.find(calc_line(addr));
-  if (it == scb_lines_map.end()) {
+  if (it == scb_lines_map.end() || it->second.is_prefetch_line()) {
     return false;
   }
 

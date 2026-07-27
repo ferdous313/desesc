@@ -345,11 +345,37 @@ public:
     mreq->pc         = pc;
     m->req(mreq);
   }
+  
+   static void send_req_write_prefetch_scb(MemObj* m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase* cb = nullptr) {
+    MemRequest* mreq = create(m, addr, keep_stats, cb);
+    mreq->mt         = mt_req;
+    //mreq->ma         = ma_setDirty;  // For writes, only MO are valid states
+    mreq->ma         = ma_setValid;  // For writes, only MO are valid states
+    mreq->notifyScbDirectly = true;
+    mreq->ma_orig    = mreq->ma;
+    mreq->pc         = pc;
+    mreq->prefetch   = true;
+    m->disp(mreq);
+  }
+  
+   static void send_req_read_prefetch_scb(MemObj* m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase* cb = nullptr) {
+    MemRequest* mreq = create(m, addr, keep_stats, cb);
+    mreq->mt         = mt_req;
+    //mreq->ma         = ma_setDirty;  // For writes, only MO are valid states
+    mreq->ma         = ma_setValid;  // For writes, only MO are valid states
+    mreq->notifyScbDirectly = true;
+    mreq->ma_orig    = mreq->ma;
+    mreq->pc         = pc;
+    mreq->prefetch   = true;
+    m->req(mreq);
+  }
+  
   static void send_scb_clean_disp(MemObj* m, bool keep_stats, Addr_t addr, Addr_t pc, CallbackBase* cb = nullptr) {
     MemRequest* mreq        = create(m, addr, keep_stats, cb);
     mreq->mt                = mt_req;
     mreq->notifyScbDirectly = true;
     // mreq->ma              = ma_setDirty;  // For writes, only MO are valid states
+    mreq->ma = ma_setValid;
     mreq->ma_orig = mreq->ma;
     mreq->pc      = pc;
     m->disp(mreq);

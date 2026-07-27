@@ -209,7 +209,8 @@ std::pair<std::shared_ptr<Cluster>, Opcode_array<std::shared_ptr<Resource>>> Clu
 }
 
 void Cluster::select(Dinst* dinst) {
-  // printf("CLuster::::Cluster Entering select Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
+  printf("CLuster::::Cluster Entering select Inst %ld at clock cycle %lu\n", dinst->getID(), globalClock);
+
   I(nready >= 0);
   nready++;
   // printf("Cluster::::Cluster Sending to cluster Inst %llu at clock cycle %llu\n", dinst->getID(), globalClock);
@@ -246,6 +247,7 @@ void Cluster::add_inst(Dinst* dinst) {
 
   newEntry();
 
+  printf("CLuster::::add_inst Entering add_inst Inst %ld at clock cycle %lu\n", dinst->getID(), globalClock);
   window.add_inst(dinst);
   /*lima_may if(!dinst->is_in_cluster()) {
      window.add_inst(dinst);
@@ -339,7 +341,7 @@ void ExecutedCluster::executing(Dinst* dinst) {
 }
 
 void ExecutedCluster::executed(Dinst* dinst) {
-  // printf("Cluster::ExecutedCluster:: Entering executed: for instID %llu at @Clockcycle %llu\n", dinst->getID(), globalClock);
+  printf("Cluster::ExecutedCluster:: Entering executed: for instID %ld at @Clockcycle %lu\n", dinst->getID(), globalClock);
   window.executed(dinst);
   dinst->getGProc()->executed(dinst);
   if (!dinst->isTransient()) {
